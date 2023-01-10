@@ -415,10 +415,12 @@ color: white;
   border-collapse: collapse;
   width: 50%;
   position: relative;
-  top: -10px;
-  left: 22rem;
+  left: 25%;
+ 
 }
-
+@media (max-width: 600px ){
+    
+}
 
 .th_al, .td_al {
   padding: .5%;

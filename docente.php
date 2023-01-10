@@ -220,9 +220,9 @@ include ('database.php');
                 <td>Grados</td>
 
                 <td>
-                    <input type="checkbox" class="form-check-input" name="primero" value="1">1°
-                    <input type="checkbox" class="form-check-input" name="segundo" value="2">2°
-                    <input type="checkbox" class="form-check-input" name="tercero" value="3">3°
+                    <input type="checkbox" name="primero" value="1">1°
+                    <input type="checkbox" name="segundo" value="2">2°
+                    <input type="checkbox" name="tercero" value="3">3°
                 </td>
             </tr>
 
