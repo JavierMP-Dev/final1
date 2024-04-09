@@ -25,6 +25,10 @@ $stmt->execute([$id_rubro]);
 <?php require 'partials/header.php' ?>
 
     <h1>Registro eliminado</h1>
-    <a href="inventario.php" class="btn_volver">Volver</a>
+    <a href="inventario.php" type="button" class="btn btn-info">Volver</a>
+    <br>    
+    <img src="assets/img/eliminar.png" class="" alt="">
+<br>
+
 </body>
 </html>

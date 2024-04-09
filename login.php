@@ -18,7 +18,9 @@
       $_SESSION['user_id'] = $results['id'];
       header("Location: /php-login");
     } else {
-      $message = 'Verifique sus datos!!!';
+      echo "<div class='alert alert-danger' role='alert'>Verifique sus datos</div>";
+      //$message = 'Verifique sus datos!!!';
+    
     }
   }
 ?>
@@ -36,6 +38,8 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<!---Logo de la pagina---->
+<link rel="shortcut icon" href="assets/img/edomex-logo.png" type="image/x-icon">
 
 </head>
 
@@ -69,6 +73,8 @@
         </form>
     </div>
 
+
+      <img src="assets/img/logo.jpg" alt="" class="responsiva">
 
 </body>
 

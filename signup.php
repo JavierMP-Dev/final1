@@ -1,4 +1,4 @@
-<?php
+    <?php
   require 'database.php';
   $message = '';
 
@@ -11,8 +11,11 @@
     $stmt->bindParam(':password', $password);
 
     if ($stmt->execute()) {
-      $message = 'Usuario creado con exito!!!!';
+        echo "<div class='alert alert-success' role='alert'>Usuario creado con exito</div>";
+      //$message = 'Verifique sus datos!!!';
+      //$message = 'Usuario creado con exito!!!!';
     } else {
+        echo "<div class='alert alert-danger' role='alert'>Verifique sus datos</div>";
       $message = 'Verifique los datos';
     }
   }
@@ -23,15 +26,17 @@
 <head>
     <meta charset="utf-8">
     <title>Agregar docente</title>
+    <!---Logo de la pagina---->
+<link rel="shortcut icon" href="assets/img/edomex-logo.png" type="image/x-icon">
+
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     <link rel="stylesheet" href="css/bootstrap.min.css">
-
 </head>
 
-<body>
+<body> 
 
     <?php if(!empty($message)): ?>
     <p> <?= $message ?></p>
@@ -40,27 +45,15 @@
 
     <div>
 
-
-
-
         <!---- <h1>SignUp</h1>  ---->
         <!---<span>or <a href="login.php">Login</a></span>--->
         <h3 style="margin: auto; width: 250px;">Registrar docente</h3>
-        <br><br>
+        <a href="index.php" class="btn btn-primary">Volver</a>
+        <br>
         <main class="form-signin">
 
-            <form class="nuevo_docentee" action="signup.php" method="POST">
-                <!---    
-                     <tr>
-                    <td width="50%">Rol:</td>
-                    <td width="50%">
-                        <select name="rol" id="">
-                            <option value="1">Orientador</option>
-                            <option value="2">Docente</option>
-                        </select>
-                    </td>
-                  </tr>
-                --->
+            <form class="form" action="signup.php" method="POST">
+              
                 <div class="form-floating">
 
                     <input name="email" type="email" id="floatingInput" class="form-control">
@@ -75,20 +68,11 @@
 
                     </select>
 
-                    <!------
-                    <div class="mb-3">
-                        <label for="formFile" class="form-label"></label>
-                        <input class="form-control" type="file" id="col-sm-2 col-form-label  formFile">
-                    </div>
-            ----->
+                    
                     <div class="datosMateria">
                         <input ID="Password" type="password" onkeyup="validarClaves()" name="clave1"
                             placeholder="Contraseña" class="col-sm-2 col-form-label form-control">
-                        <!----
-                        
-                        --->
                     </div>
-
 
                     <div class="datosMateria">
                         <input ID="Contraseña" type="password" onkeyup="validarClaves()" name="clave2"
@@ -103,7 +87,7 @@
                             onclick="mostrarContrasenia()">
                     </abbr>
                 </div>
-                <input type="submit" value="Enviar" class="btn_form_signup">
+                <input type="submit" value="Enviar"  class="btn btn-info">
     </div>
     <!----->
 
@@ -148,10 +132,66 @@
     }
     </script>
 
-
-
-
-
 </body>
+
+
+<br><br><br><br><br>
+
+<!-- Site footer -->
+<footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-12 col-md-6">
+            <h6>Registrar nuevo docente</h6>
+            <p class="text-justify">
+              <i>Crear cuenta </i>
+               En esta seccion se encuentra un formulario para dar de alta una nueva cuenta
+               para ingresar al sistema, dependiendo del rol con el que se cuente el usuario
+               tendra acceso a diferentes funciones, si el usuario se da de alta desde este formulario
+               solo se registrar su correo, rol y contraseña para que en los dias siguientes sea el usuario
+               mismo quien se encargue de rellenar sus propios datos. 
+            </p>
+          </div>
+
+          <div class="col-xs-6 col-md-3">
+            <h6>Categorias</h6>
+            <ul class="footer-links">
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+            </ul>
+          </div>
+
+          <div class="col-xs-6 col-md-3">
+            <h6>Quick Links</h6>
+            <ul class="footer-links">
+              <li><a href="">Asignar materias</a></li>
+              <li><a href="">Mensaje</a></li>
+              <li><a href="">Asignar Grupos</a></li>
+              
+            </ul>
+          </div>
+        </div>
+        <hr>
+      </div>
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8 col-sm-6 col-xs-12">
+            <p class="copyright-text">Copyright &copy; 2023 All Rights Reserved by 
+       
+            </p>
+          </div>
+
+          
+        </div>
+      </div>
+</footer>
+
+
+
+
 
 </html>

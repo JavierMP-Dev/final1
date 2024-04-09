@@ -14,6 +14,9 @@ include ('database.php');
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
     <!---  <link rel="stylesheet" href="./css/bootstrap.min.css"> -->
+    
+<!---Logo de la pagina---->
+<link rel="shortcut icon" href="assets/img/edomex-logo.png" type="image/x-icon">
 </head>
 
 <body>
@@ -22,11 +25,11 @@ include ('database.php');
         <h2>Actividades internas</h2>
 
 
-        <form action="#" method="post">
+        <form action="#" method="post" style="margin: auto; width: 250px;">
             <tr>
-                <td width="50%">Filtro</td>
+             
                 <td width="50%">
-                    <select name="filtro_docente" id="">
+                    <select name="filtro_docente" class="form-select mt-3" id="">
                         <option value="1">Mostrar todos</option>
                         <option value="2">Mujeres</option>
                         <option value="3">Hombres</option>
@@ -40,21 +43,19 @@ include ('database.php');
                 </td>
             </tr>
             <br>
-            <br>
-            <input type="submit" value="Buscar" class="btn_form" name="validar">
+            <input type="submit" value="Buscar" class="btn btn-success" name="validar">
             <!----filtro--->
-
-            <!------->
+<br>
+          
 
         </form>
         <!-----Inicio del form para historial---->
-        <br>
-        <br>
-        <table class="tabla_act">
+        
+        <table class="tabla_act" id="tabla-act-internas" style="margin: auto; width: 250px;">
 
             <thead class="thead_act">
                 <tr>
-                    <th>Selecciona</th>
+                    <th></th>
                     <th>Docentes</th>
                     <th>Grado</th>
                 </tr>
@@ -63,31 +64,31 @@ include ('database.php');
                 if(isset($_POST['validar'])){
                   $sql = "";
                   if($_POST['filtro_docente'] == '1'){
-                    echo "Buscar por todos";
+                    //echo "Buscar por todos";
                     $sql="SELECT*FROM users ";
                   }else if ($_POST['filtro_docente'] == '2'){
-                    echo "buscar mujer";
+                    //echo "buscar mujer";
                     $sql="SELECT*FROM users where sexo = 'F' ";
                   }else if ($_POST['filtro_docente'] == '3'){
-                    echo "Busca hombre";
+                   // echo "Busca hombre";
                     $sql="SELECT*FROM users where sexo = 'M' ";
                   }else if ($_POST['filtro_docente'] == '4'){
-                    echo "Busca matutino";
+                    //echo "Busca matutino";
                     $sql="SELECT*FROM users where matutino = '1' ";
                   }else if ($_POST['filtro_docente'] == '5'){
-                    echo "Busca vespertino";
+                    //echo "Busca vespertino";
                     $sql="SELECT*FROM users where vespertino = '1' ";
                   }else if ($_POST['filtro_docente'] == '6'){
-                    echo "Busca primer grado";
+                   // echo "Busca primer grado";
                     $sql="SELECT*FROM users where primero = '1' ";
                   }else if ($_POST['filtro_docente'] == '7'){
-                    echo "Busca segundo grado";
+                    //echo "Busca segundo grado";
                     $sql="SELECT*FROM users where segundo = '2' ";
                   }else if ($_POST['filtro_docente'] == '8'){
-                    echo "Busca tercer grado";
+                    //echo "Busca tercer grado";
                     $sql="SELECT*FROM users where tercero = '3' ";
                   }else if ($_POST['filtro_docente'] == '9'){
-                    echo "Busca orientador";
+                    //echo "Busca orientador";
                     $sql="SELECT*FROM users where rol = '3' ";
                   }
                 
@@ -97,11 +98,11 @@ include ('database.php');
                     $contador++;
                     ?>
 
-            <form action="https://formspree.io/f/mpznlyao" method="POST">z
+            <form action="https://formspree.io/f/mpznlyao" method="POST">
                 <!---form historial---->
                 <tr>
                     <!---Check box de filtro de maestros--->
-                    <td> <input type="checkbox" value=<?php echo $row["nombre"]; ?> name="Nombre" id="tema1"
+                    <td> <input class="anchos" type="checkbox" value=<?php echo $row["nombre"]; ?> name="Nombre" id="tema1"
                             class="valores"></td>
                     <td class="separacion"><strong>
                             <div><?php echo $row["nombre"]; ?></div>
@@ -122,13 +123,10 @@ include ('database.php');
                 </tr>
                 <?php
                   }
-                  echo "Total seleccionados--->".$contador;
+                 // echo "Total seleccionados--->".$contador; 
                 }
               ?>
-                <input type="text" name="Motivo" id="" Placeholder="Motivo" class="form-control">
-
-                <input type="submit" value="Enviar" class="btn_form" name="validar">
-            </form>
+              
             <?php
 
               $resultado = mysqli_query($conexion, $usuarios);
@@ -139,38 +137,117 @@ include ('database.php');
               }
               ?>
         </table>
+        <br>
+                <input type="text" name="Motivo" id="" Placeholder="Motivo" class="form-control"
+                    style="margin: auto; width: 250px;">
+                <br>
+                <input type="submit" value="Enviar" class="btn btn-info" name="validar">
+            </form>
+       
+        <br>
+        <button onclick="exportTableToExcel('tabla-act-internas')" class="buttonDownload">Exportar a Excel</button>
 
-        --->
-        <br><br><br>
+<br>
 
-        <p>
-            <br>
-            <button type="button" id="boton"> Mostrar seleccionados </button>
-        </p>
-        <form action="">
-            <h2>Valores seleccionados</h2>
-            <ul id="lista" class="list-group"> </ul>
 
-            <script>
-            var boton = document.getElementById('boton');
-            var lista = document.getElementById('lista');
-            var checks = document.querySelectorAll('.valores');
-
-            boton.addEventListener('click', function() {
-                lista.innerHTML = '';
-                checks.forEach((e) => {
-                    console.log(e.value)
-                    if (e.checked == true) {
-                        var elemento = document.createElement('li');
-                        elemento.className = 'list-group-item';
-                        elemento.innerHTML = e.value;
-                        lista.appendChild(elemento);
-                    }
-                });
-            });
-            </script>
-        </form>
 
 </body>
+
+
+
+
+
+
+
+
+
+              <!--Funcion para exportar la tabla a excel--->
+              <script>
+                function exportTableToExcel(tableID) {
+  var wb = XLSX.utils.table_to_book(document.getElementById(tableID));
+  var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+  function s2ab(s) {
+    var buf = new ArrayBuffer(s.length);
+    var view = new Uint8Array(buf);
+    for (var i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+    return buf;
+  }
+
+  saveAs(new Blob([s2ab(wbout)], {type:"application/octet-stream"}), 'tabla-act-internas.xlsx');
+}
+
+              </script>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="FileSaver.js-master/src/FileSaver.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<!-- Site footer -->
+<footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-12 col-md-6">
+            <h6>Actividades internas (Intrucciones)</h6>
+            <p class="text-justify">
+              <i>Formulario de registro de actividades </i>
+               En esta seccion se encuentra un filtro para docentes, asi mismo
+               un,una tabla con nombres y un campo a rellenar para que se les pueda 
+               asociar a una actividad y se envia via correo electronico
+               para guardar el registro a modo de historial</p>
+          </div>
+
+          <div class="col-xs-6 col-md-3">
+            <h6>Categories</h6>
+            <ul class="footer-links">
+              <li><a href="">Agregar</a></li>
+              <li><a href="">Docentes</a></li>
+              <li><a href="">Alumnos</a></li>
+              <li><a href="">Escuela</a></li>
+              <li><a href="">Act Internas</a></li>
+              <li><a href="">Materiales</a></li>
+            </ul>
+          </div>
+
+          <div class="col-xs-6 col-md-3">
+            <h6>Quick Links</h6>
+            <ul class="footer-links">
+              <li><a href="">Asignar materias</a></li>
+              <li><a href="">Mensaje</a></li>
+              <li><a href="">Asignar Grupos</a></li>
+              
+            </ul>
+          </div>
+        </div>
+        <hr>
+      </div>
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8 col-sm-6 col-xs-12">
+            <p class="copyright-text">Copyright &copy; 2023 All Rights Reserved by 
+       
+            </p>
+          </div>
+
+          <div class="col-md-4 col-sm-6 col-xs-12">
+            <ul class="social-icons">
+              <li><a class="facebook" href="#"><i class="fa fa-facebook"></i></a></li>
+              <li><a class="twitter" href="#"><i class="fa fa-twitter"></i></a></li>
+              <li><a class="dribbble" href="#"><i class="fa fa-dribbble"></i></a></li>
+              <li><a class="linkedin" href="#"><i class="fa fa-linkedin"></i></a></li>   
+            </ul>
+          </div>
+        </div>
+      </div>
+</footer>
 
 </html>

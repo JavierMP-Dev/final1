@@ -25,6 +25,8 @@ $stmt->execute([$id_evento]);
 <?php require 'partials/header.php' ?>
 
     <h1>Registro eliminado</h1>
-    <a href="evento.php" class="btn_volver">Volver</a>
+    <a href="evento.php" ctype="button" class="btn btn-info">Volver</a>
+    <br>    
+    <img src="assets/img/eliminar.png" class="" alt="">     
 </body>
 </html>

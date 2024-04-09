@@ -8,6 +8,7 @@ if(isset($_SESSION['ID'])){
 }else{
        $alumno_id = $_SESSION['user_id'];
 }
+
 echo $alumno_id;
 $message = '';
 $usuarios ="SELECT * FROM alumno";
@@ -54,7 +55,7 @@ $sql = "UPDATE alumno SET nombre=:nombre, sexo=:sexo, email=:email, curp=:curp, 
 
 <body>
     <?php require 'partials/header.php' ?>
-    <a href="alumno.php" class="btn_volver">Volver</a>
+   
     <h1>Actualizar datos Alumnos</h1>
     <?php
        if(!empty ($message)){
@@ -313,5 +314,58 @@ $sql = "UPDATE alumno SET nombre=:nombre, sexo=:sexo, email=:email, curp=:curp, 
 
 
 </body>
+
+<!-- Site footer -->
+<footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-12 col-md-6">
+            <h6>Actualizar datos de alumno</h6>
+            <p class="text-justify">
+         
+               En esta seccion se encuentra un formulario para actualizar 
+               los datos de un alumno en especifico, en los campos se precargan los datos 
+               ya existentes dentro de la base de datos para actualizar. 
+            </p>
+          </div>
+
+          <div class="col-xs-6 col-md-3">
+            <h6>Categorias</h6>
+            <ul class="footer-links">
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+            </ul>
+          </div>
+
+          <div class="col-xs-6 col-md-3">
+            <h6>Quick Links</h6>
+            <ul class="footer-links">
+              <li><a href="">Asignar materias</a></li>
+              <li><a href="">Mensaje</a></li>
+              <li><a href="">Asignar Grupos</a></li>
+              
+            </ul>
+          </div>
+        </div>
+        <hr>
+      </div>
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8 col-sm-6 col-xs-12">
+            <p class="copyright-text">Copyright &copy; 2023 All Rights Reserved by 
+       
+            </p>
+          </div>
+
+          
+        </div>
+      </div>
+</footer>
+
+
 
 </html>

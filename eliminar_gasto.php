@@ -25,6 +25,11 @@ $stmt->execute([$id_gasto]);
 <?php require 'partials/header.php' ?>
 
     <h1>Registro eliminado</h1>
-    <a href="gasto.php" class="btn_volver">Volver</a>
+    <a href="gasto.php" type="button" class="btn btn-info">Volver</a>
+<br>    
+    <img src="assets/img/eliminar.png" class="" alt="">
+<br>
+    <i class="fa-solid fa-trash-check">s</i>
+    
 </body>
 </html>

@@ -160,10 +160,61 @@
 
 
         </table>
-
-        <input type="submit" value="Enviar" class="btn_nav">
+<br>
+        <input type="submit" value="Enviar" class="btn btn-info btn-lg">
     </form>
     </div>
 </body>
+
+<!-- Site footer -->
+<footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-12 col-md-6">
+            <h6>Registro alumno</h6>
+            <p class="text-justify">
+
+               En esta seccion se encuentra un formulario para registrar 
+               a los alumnos, en este se recaban los datos personales de cada uno de los alumnos.
+            </p>
+          </div>
+
+          <div class="col-xs-6 col-md-3">
+            <h6>Categorias</h6>
+            <ul class="footer-links">
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+            </ul>
+          </div>
+
+          <div class="col-xs-6 col-md-3">
+            <h6>Quick Links</h6>
+            <ul class="footer-links">
+              <li><a href="">Asignar materias</a></li>
+              <li><a href="">Mensaje</a></li>
+              <li><a href="">Asignar Grupos</a></li>
+              
+            </ul>
+          </div>
+        </div>
+        <hr>
+      </div>
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8 col-sm-6 col-xs-12">
+            <p class="copyright-text">Copyright &copy; 2023 All Rights Reserved by 
+       
+            </p>
+          </div>
+
+          
+        </div>
+      </div>
+</footer>
+
 
 </html>

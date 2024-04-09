@@ -4,9167 +4,11 @@
  *
  * To rebuild or modify this file with the latest versions of the included
  * software please visit:
- *   https://datatables.net/download/#bs4/jszip-2.5.0/pdfmake-0.1.36/dt-1.11.5/b-2.2.2/b-html5-2.2.2/b-print-2.2.2
+ *   https://datatables.net/download/#bs4/pdfmake-0.1.36/dt-1.13.1/b-2.3.3/b-html5-2.3.3/b-print-2.3.3
  *
  * Included libraries:
- *   JSZip 2.5.0, pdfmake 0.1.36, DataTables 1.11.5, Buttons 2.2.2, HTML5 export 2.2.2, Print view 2.2.2
+ *   pdfmake 0.1.36, DataTables 1.13.1, Buttons 2.3.3, HTML5 export 2.3.3, Print view 2.3.3
  */
-
-/*!
-
-JSZip - A Javascript class for generating and reading zip files
-<http://stuartk.com/jszip>
-
-(c) 2009-2014 Stuart Knightley <stuart [at] stuartk.com>
-Dual licenced under the MIT license or GPLv3. See https://raw.github.com/Stuk/jszip/master/LICENSE.markdown.
-
-JSZip uses the library pako released under the MIT license :
-https://github.com/nodeca/pako/blob/master/LICENSE
-*/
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.JSZip=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-'use strict';
-// private property
-var _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-
-
-// public method for encoding
-exports.encode = function(input, utf8) {
-    var output = "";
-    var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
-    var i = 0;
-
-    while (i < input.length) {
-
-        chr1 = input.charCodeAt(i++);
-        chr2 = input.charCodeAt(i++);
-        chr3 = input.charCodeAt(i++);
-
-        enc1 = chr1 >> 2;
-        enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-        enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-        enc4 = chr3 & 63;
-
-        if (isNaN(chr2)) {
-            enc3 = enc4 = 64;
-        }
-        else if (isNaN(chr3)) {
-            enc4 = 64;
-        }
-
-        output = output + _keyStr.charAt(enc1) + _keyStr.charAt(enc2) + _keyStr.charAt(enc3) + _keyStr.charAt(enc4);
-
-    }
-
-    return output;
-};
-
-// public method for decoding
-exports.decode = function(input, utf8) {
-    var output = "";
-    var chr1, chr2, chr3;
-    var enc1, enc2, enc3, enc4;
-    var i = 0;
-
-    input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
-
-    while (i < input.length) {
-
-        enc1 = _keyStr.indexOf(input.charAt(i++));
-        enc2 = _keyStr.indexOf(input.charAt(i++));
-        enc3 = _keyStr.indexOf(input.charAt(i++));
-        enc4 = _keyStr.indexOf(input.charAt(i++));
-
-        chr1 = (enc1 << 2) | (enc2 >> 4);
-        chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
-        chr3 = ((enc3 & 3) << 6) | enc4;
-
-        output = output + String.fromCharCode(chr1);
-
-        if (enc3 != 64) {
-            output = output + String.fromCharCode(chr2);
-        }
-        if (enc4 != 64) {
-            output = output + String.fromCharCode(chr3);
-        }
-
-    }
-
-    return output;
-
-};
-
-},{}],2:[function(_dereq_,module,exports){
-'use strict';
-function CompressedObject() {
-    this.compressedSize = 0;
-    this.uncompressedSize = 0;
-    this.crc32 = 0;
-    this.compressionMethod = null;
-    this.compressedContent = null;
-}
-
-CompressedObject.prototype = {
-    /**
-     * Return the decompressed content in an unspecified format.
-     * The format will depend on the decompressor.
-     * @return {Object} the decompressed content.
-     */
-    getContent: function() {
-        return null; // see implementation
-    },
-    /**
-     * Return the compressed content in an unspecified format.
-     * The format will depend on the compressed conten source.
-     * @return {Object} the compressed content.
-     */
-    getCompressedContent: function() {
-        return null; // see implementation
-    }
-};
-module.exports = CompressedObject;
-
-},{}],3:[function(_dereq_,module,exports){
-'use strict';
-exports.STORE = {
-    magic: "\x00\x00",
-    compress: function(content, compressionOptions) {
-        return content; // no compression
-    },
-    uncompress: function(content) {
-        return content; // no compression
-    },
-    compressInputType: null,
-    uncompressInputType: null
-};
-exports.DEFLATE = _dereq_('./flate');
-
-},{"./flate":8}],4:[function(_dereq_,module,exports){
-'use strict';
-
-var utils = _dereq_('./utils');
-
-var table = [
-    0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA,
-    0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3,
-    0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988,
-    0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91,
-    0x1DB71064, 0x6AB020F2, 0xF3B97148, 0x84BE41DE,
-    0x1ADAD47D, 0x6DDDE4EB, 0xF4D4B551, 0x83D385C7,
-    0x136C9856, 0x646BA8C0, 0xFD62F97A, 0x8A65C9EC,
-    0x14015C4F, 0x63066CD9, 0xFA0F3D63, 0x8D080DF5,
-    0x3B6E20C8, 0x4C69105E, 0xD56041E4, 0xA2677172,
-    0x3C03E4D1, 0x4B04D447, 0xD20D85FD, 0xA50AB56B,
-    0x35B5A8FA, 0x42B2986C, 0xDBBBC9D6, 0xACBCF940,
-    0x32D86CE3, 0x45DF5C75, 0xDCD60DCF, 0xABD13D59,
-    0x26D930AC, 0x51DE003A, 0xC8D75180, 0xBFD06116,
-    0x21B4F4B5, 0x56B3C423, 0xCFBA9599, 0xB8BDA50F,
-    0x2802B89E, 0x5F058808, 0xC60CD9B2, 0xB10BE924,
-    0x2F6F7C87, 0x58684C11, 0xC1611DAB, 0xB6662D3D,
-    0x76DC4190, 0x01DB7106, 0x98D220BC, 0xEFD5102A,
-    0x71B18589, 0x06B6B51F, 0x9FBFE4A5, 0xE8B8D433,
-    0x7807C9A2, 0x0F00F934, 0x9609A88E, 0xE10E9818,
-    0x7F6A0DBB, 0x086D3D2D, 0x91646C97, 0xE6635C01,
-    0x6B6B51F4, 0x1C6C6162, 0x856530D8, 0xF262004E,
-    0x6C0695ED, 0x1B01A57B, 0x8208F4C1, 0xF50FC457,
-    0x65B0D9C6, 0x12B7E950, 0x8BBEB8EA, 0xFCB9887C,
-    0x62DD1DDF, 0x15DA2D49, 0x8CD37CF3, 0xFBD44C65,
-    0x4DB26158, 0x3AB551CE, 0xA3BC0074, 0xD4BB30E2,
-    0x4ADFA541, 0x3DD895D7, 0xA4D1C46D, 0xD3D6F4FB,
-    0x4369E96A, 0x346ED9FC, 0xAD678846, 0xDA60B8D0,
-    0x44042D73, 0x33031DE5, 0xAA0A4C5F, 0xDD0D7CC9,
-    0x5005713C, 0x270241AA, 0xBE0B1010, 0xC90C2086,
-    0x5768B525, 0x206F85B3, 0xB966D409, 0xCE61E49F,
-    0x5EDEF90E, 0x29D9C998, 0xB0D09822, 0xC7D7A8B4,
-    0x59B33D17, 0x2EB40D81, 0xB7BD5C3B, 0xC0BA6CAD,
-    0xEDB88320, 0x9ABFB3B6, 0x03B6E20C, 0x74B1D29A,
-    0xEAD54739, 0x9DD277AF, 0x04DB2615, 0x73DC1683,
-    0xE3630B12, 0x94643B84, 0x0D6D6A3E, 0x7A6A5AA8,
-    0xE40ECF0B, 0x9309FF9D, 0x0A00AE27, 0x7D079EB1,
-    0xF00F9344, 0x8708A3D2, 0x1E01F268, 0x6906C2FE,
-    0xF762575D, 0x806567CB, 0x196C3671, 0x6E6B06E7,
-    0xFED41B76, 0x89D32BE0, 0x10DA7A5A, 0x67DD4ACC,
-    0xF9B9DF6F, 0x8EBEEFF9, 0x17B7BE43, 0x60B08ED5,
-    0xD6D6A3E8, 0xA1D1937E, 0x38D8C2C4, 0x4FDFF252,
-    0xD1BB67F1, 0xA6BC5767, 0x3FB506DD, 0x48B2364B,
-    0xD80D2BDA, 0xAF0A1B4C, 0x36034AF6, 0x41047A60,
-    0xDF60EFC3, 0xA867DF55, 0x316E8EEF, 0x4669BE79,
-    0xCB61B38C, 0xBC66831A, 0x256FD2A0, 0x5268E236,
-    0xCC0C7795, 0xBB0B4703, 0x220216B9, 0x5505262F,
-    0xC5BA3BBE, 0xB2BD0B28, 0x2BB45A92, 0x5CB36A04,
-    0xC2D7FFA7, 0xB5D0CF31, 0x2CD99E8B, 0x5BDEAE1D,
-    0x9B64C2B0, 0xEC63F226, 0x756AA39C, 0x026D930A,
-    0x9C0906A9, 0xEB0E363F, 0x72076785, 0x05005713,
-    0x95BF4A82, 0xE2B87A14, 0x7BB12BAE, 0x0CB61B38,
-    0x92D28E9B, 0xE5D5BE0D, 0x7CDCEFB7, 0x0BDBDF21,
-    0x86D3D2D4, 0xF1D4E242, 0x68DDB3F8, 0x1FDA836E,
-    0x81BE16CD, 0xF6B9265B, 0x6FB077E1, 0x18B74777,
-    0x88085AE6, 0xFF0F6A70, 0x66063BCA, 0x11010B5C,
-    0x8F659EFF, 0xF862AE69, 0x616BFFD3, 0x166CCF45,
-    0xA00AE278, 0xD70DD2EE, 0x4E048354, 0x3903B3C2,
-    0xA7672661, 0xD06016F7, 0x4969474D, 0x3E6E77DB,
-    0xAED16A4A, 0xD9D65ADC, 0x40DF0B66, 0x37D83BF0,
-    0xA9BCAE53, 0xDEBB9EC5, 0x47B2CF7F, 0x30B5FFE9,
-    0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6,
-    0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF,
-    0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94,
-    0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
-];
-
-/**
- *
- *  Javascript crc32
- *  http://www.webtoolkit.info/
- *
- */
-module.exports = function crc32(input, crc) {
-    if (typeof input === "undefined" || !input.length) {
-        return 0;
-    }
-
-    var isArray = utils.getTypeOf(input) !== "string";
-
-    if (typeof(crc) == "undefined") {
-        crc = 0;
-    }
-    var x = 0;
-    var y = 0;
-    var b = 0;
-
-    crc = crc ^ (-1);
-    for (var i = 0, iTop = input.length; i < iTop; i++) {
-        b = isArray ? input[i] : input.charCodeAt(i);
-        y = (crc ^ b) & 0xFF;
-        x = table[y];
-        crc = (crc >>> 8) ^ x;
-    }
-
-    return crc ^ (-1);
-};
-// vim: set shiftwidth=4 softtabstop=4:
-
-},{"./utils":21}],5:[function(_dereq_,module,exports){
-'use strict';
-var utils = _dereq_('./utils');
-
-function DataReader(data) {
-    this.data = null; // type : see implementation
-    this.length = 0;
-    this.index = 0;
-}
-DataReader.prototype = {
-    /**
-     * Check that the offset will not go too far.
-     * @param {string} offset the additional offset to check.
-     * @throws {Error} an Error if the offset is out of bounds.
-     */
-    checkOffset: function(offset) {
-        this.checkIndex(this.index + offset);
-    },
-    /**
-     * Check that the specifed index will not be too far.
-     * @param {string} newIndex the index to check.
-     * @throws {Error} an Error if the index is out of bounds.
-     */
-    checkIndex: function(newIndex) {
-        if (this.length < newIndex || newIndex < 0) {
-            throw new Error("End of data reached (data length = " + this.length + ", asked index = " + (newIndex) + "). Corrupted zip ?");
-        }
-    },
-    /**
-     * Change the index.
-     * @param {number} newIndex The new index.
-     * @throws {Error} if the new index is out of the data.
-     */
-    setIndex: function(newIndex) {
-        this.checkIndex(newIndex);
-        this.index = newIndex;
-    },
-    /**
-     * Skip the next n bytes.
-     * @param {number} n the number of bytes to skip.
-     * @throws {Error} if the new index is out of the data.
-     */
-    skip: function(n) {
-        this.setIndex(this.index + n);
-    },
-    /**
-     * Get the byte at the specified index.
-     * @param {number} i the index to use.
-     * @return {number} a byte.
-     */
-    byteAt: function(i) {
-        // see implementations
-    },
-    /**
-     * Get the next number with a given byte size.
-     * @param {number} size the number of bytes to read.
-     * @return {number} the corresponding number.
-     */
-    readInt: function(size) {
-        var result = 0,
-            i;
-        this.checkOffset(size);
-        for (i = this.index + size - 1; i >= this.index; i--) {
-            result = (result << 8) + this.byteAt(i);
-        }
-        this.index += size;
-        return result;
-    },
-    /**
-     * Get the next string with a given byte size.
-     * @param {number} size the number of bytes to read.
-     * @return {string} the corresponding string.
-     */
-    readString: function(size) {
-        return utils.transformTo("string", this.readData(size));
-    },
-    /**
-     * Get raw data without conversion, <size> bytes.
-     * @param {number} size the number of bytes to read.
-     * @return {Object} the raw data, implementation specific.
-     */
-    readData: function(size) {
-        // see implementations
-    },
-    /**
-     * Find the last occurence of a zip signature (4 bytes).
-     * @param {string} sig the signature to find.
-     * @return {number} the index of the last occurence, -1 if not found.
-     */
-    lastIndexOfSignature: function(sig) {
-        // see implementations
-    },
-    /**
-     * Get the next date.
-     * @return {Date} the date.
-     */
-    readDate: function() {
-        var dostime = this.readInt(4);
-        return new Date(
-        ((dostime >> 25) & 0x7f) + 1980, // year
-        ((dostime >> 21) & 0x0f) - 1, // month
-        (dostime >> 16) & 0x1f, // day
-        (dostime >> 11) & 0x1f, // hour
-        (dostime >> 5) & 0x3f, // minute
-        (dostime & 0x1f) << 1); // second
-    }
-};
-module.exports = DataReader;
-
-},{"./utils":21}],6:[function(_dereq_,module,exports){
-'use strict';
-exports.base64 = false;
-exports.binary = false;
-exports.dir = false;
-exports.createFolders = false;
-exports.date = null;
-exports.compression = null;
-exports.compressionOptions = null;
-exports.comment = null;
-exports.unixPermissions = null;
-exports.dosPermissions = null;
-
-},{}],7:[function(_dereq_,module,exports){
-'use strict';
-var utils = _dereq_('./utils');
-
-/**
- * @deprecated
- * This function will be removed in a future version without replacement.
- */
-exports.string2binary = function(str) {
-    return utils.string2binary(str);
-};
-
-/**
- * @deprecated
- * This function will be removed in a future version without replacement.
- */
-exports.string2Uint8Array = function(str) {
-    return utils.transformTo("uint8array", str);
-};
-
-/**
- * @deprecated
- * This function will be removed in a future version without replacement.
- */
-exports.uint8Array2String = function(array) {
-    return utils.transformTo("string", array);
-};
-
-/**
- * @deprecated
- * This function will be removed in a future version without replacement.
- */
-exports.string2Blob = function(str) {
-    var buffer = utils.transformTo("arraybuffer", str);
-    return utils.arrayBuffer2Blob(buffer);
-};
-
-/**
- * @deprecated
- * This function will be removed in a future version without replacement.
- */
-exports.arrayBuffer2Blob = function(buffer) {
-    return utils.arrayBuffer2Blob(buffer);
-};
-
-/**
- * @deprecated
- * This function will be removed in a future version without replacement.
- */
-exports.transformTo = function(outputType, input) {
-    return utils.transformTo(outputType, input);
-};
-
-/**
- * @deprecated
- * This function will be removed in a future version without replacement.
- */
-exports.getTypeOf = function(input) {
-    return utils.getTypeOf(input);
-};
-
-/**
- * @deprecated
- * This function will be removed in a future version without replacement.
- */
-exports.checkSupport = function(type) {
-    return utils.checkSupport(type);
-};
-
-/**
- * @deprecated
- * This value will be removed in a future version without replacement.
- */
-exports.MAX_VALUE_16BITS = utils.MAX_VALUE_16BITS;
-
-/**
- * @deprecated
- * This value will be removed in a future version without replacement.
- */
-exports.MAX_VALUE_32BITS = utils.MAX_VALUE_32BITS;
-
-
-/**
- * @deprecated
- * This function will be removed in a future version without replacement.
- */
-exports.pretty = function(str) {
-    return utils.pretty(str);
-};
-
-/**
- * @deprecated
- * This function will be removed in a future version without replacement.
- */
-exports.findCompression = function(compressionMethod) {
-    return utils.findCompression(compressionMethod);
-};
-
-/**
- * @deprecated
- * This function will be removed in a future version without replacement.
- */
-exports.isRegExp = function (object) {
-    return utils.isRegExp(object);
-};
-
-
-},{"./utils":21}],8:[function(_dereq_,module,exports){
-'use strict';
-var USE_TYPEDARRAY = (typeof Uint8Array !== 'undefined') && (typeof Uint16Array !== 'undefined') && (typeof Uint32Array !== 'undefined');
-
-var pako = _dereq_("pako");
-exports.uncompressInputType = USE_TYPEDARRAY ? "uint8array" : "array";
-exports.compressInputType = USE_TYPEDARRAY ? "uint8array" : "array";
-
-exports.magic = "\x08\x00";
-exports.compress = function(input, compressionOptions) {
-    return pako.deflateRaw(input, {
-        level : compressionOptions.level || -1 // default compression
-    });
-};
-exports.uncompress =  function(input) {
-    return pako.inflateRaw(input);
-};
-
-},{"pako":24}],9:[function(_dereq_,module,exports){
-'use strict';
-
-var base64 = _dereq_('./base64');
-
-/**
-Usage:
-   zip = new JSZip();
-   zip.file("hello.txt", "Hello, World!").file("tempfile", "nothing");
-   zip.folder("images").file("smile.gif", base64Data, {base64: true});
-   zip.file("Xmas.txt", "Ho ho ho !", {date : new Date("December 25, 2007 00:00:01")});
-   zip.remove("tempfile");
-
-   base64zip = zip.generate();
-
-**/
-
-/**
- * Representation a of zip file in js
- * @constructor
- * @param {String=|ArrayBuffer=|Uint8Array=} data the data to load, if any (optional).
- * @param {Object=} options the options for creating this objects (optional).
- */
-function JSZip(data, options) {
-    // if this constructor is used without `new`, it adds `new` before itself:
-    if(!(this instanceof JSZip)) return new JSZip(data, options);
-
-    // object containing the files :
-    // {
-    //   "folder/" : {...},
-    //   "folder/data.txt" : {...}
-    // }
-    this.files = {};
-
-    this.comment = null;
-
-    // Where we are in the hierarchy
-    this.root = "";
-    if (data) {
-        this.load(data, options);
-    }
-    this.clone = function() {
-        var newObj = new JSZip();
-        for (var i in this) {
-            if (typeof this[i] !== "function") {
-                newObj[i] = this[i];
-            }
-        }
-        return newObj;
-    };
-}
-JSZip.prototype = _dereq_('./object');
-JSZip.prototype.load = _dereq_('./load');
-JSZip.support = _dereq_('./support');
-JSZip.defaults = _dereq_('./defaults');
-
-/**
- * @deprecated
- * This namespace will be removed in a future version without replacement.
- */
-JSZip.utils = _dereq_('./deprecatedPublicUtils');
-
-JSZip.base64 = {
-    /**
-     * @deprecated
-     * This method will be removed in a future version without replacement.
-     */
-    encode : function(input) {
-        return base64.encode(input);
-    },
-    /**
-     * @deprecated
-     * This method will be removed in a future version without replacement.
-     */
-    decode : function(input) {
-        return base64.decode(input);
-    }
-};
-JSZip.compressions = _dereq_('./compressions');
-module.exports = JSZip;
-
-},{"./base64":1,"./compressions":3,"./defaults":6,"./deprecatedPublicUtils":7,"./load":10,"./object":13,"./support":17}],10:[function(_dereq_,module,exports){
-'use strict';
-var base64 = _dereq_('./base64');
-var ZipEntries = _dereq_('./zipEntries');
-module.exports = function(data, options) {
-    var files, zipEntries, i, input;
-    options = options || {};
-    if (options.base64) {
-        data = base64.decode(data);
-    }
-
-    zipEntries = new ZipEntries(data, options);
-    files = zipEntries.files;
-    for (i = 0; i < files.length; i++) {
-        input = files[i];
-        this.file(input.fileName, input.decompressed, {
-            binary: true,
-            optimizedBinaryString: true,
-            date: input.date,
-            dir: input.dir,
-            comment : input.fileComment.length ? input.fileComment : null,
-            unixPermissions : input.unixPermissions,
-            dosPermissions : input.dosPermissions,
-            createFolders: options.createFolders
-        });
-    }
-    if (zipEntries.zipComment.length) {
-        this.comment = zipEntries.zipComment;
-    }
-
-    return this;
-};
-
-},{"./base64":1,"./zipEntries":22}],11:[function(_dereq_,module,exports){
-(function (Buffer){
-'use strict';
-module.exports = function(data, encoding){
-    return new Buffer(data, encoding);
-};
-module.exports.test = function(b){
-    return Buffer.isBuffer(b);
-};
-
-}).call(this,(typeof Buffer !== "undefined" ? Buffer : undefined))
-},{}],12:[function(_dereq_,module,exports){
-'use strict';
-var Uint8ArrayReader = _dereq_('./uint8ArrayReader');
-
-function NodeBufferReader(data) {
-    this.data = data;
-    this.length = this.data.length;
-    this.index = 0;
-}
-NodeBufferReader.prototype = new Uint8ArrayReader();
-
-/**
- * @see DataReader.readData
- */
-NodeBufferReader.prototype.readData = function(size) {
-    this.checkOffset(size);
-    var result = this.data.slice(this.index, this.index + size);
-    this.index += size;
-    return result;
-};
-module.exports = NodeBufferReader;
-
-},{"./uint8ArrayReader":18}],13:[function(_dereq_,module,exports){
-'use strict';
-var support = _dereq_('./support');
-var utils = _dereq_('./utils');
-var crc32 = _dereq_('./crc32');
-var signature = _dereq_('./signature');
-var defaults = _dereq_('./defaults');
-var base64 = _dereq_('./base64');
-var compressions = _dereq_('./compressions');
-var CompressedObject = _dereq_('./compressedObject');
-var nodeBuffer = _dereq_('./nodeBuffer');
-var utf8 = _dereq_('./utf8');
-var StringWriter = _dereq_('./stringWriter');
-var Uint8ArrayWriter = _dereq_('./uint8ArrayWriter');
-
-/**
- * Returns the raw data of a ZipObject, decompress the content if necessary.
- * @param {ZipObject} file the file to use.
- * @return {String|ArrayBuffer|Uint8Array|Buffer} the data.
- */
-var getRawData = function(file) {
-    if (file._data instanceof CompressedObject) {
-        file._data = file._data.getContent();
-        file.options.binary = true;
-        file.options.base64 = false;
-
-        if (utils.getTypeOf(file._data) === "uint8array") {
-            var copy = file._data;
-            // when reading an arraybuffer, the CompressedObject mechanism will keep it and subarray() a Uint8Array.
-            // if we request a file in the same format, we might get the same Uint8Array or its ArrayBuffer (the original zip file).
-            file._data = new Uint8Array(copy.length);
-            // with an empty Uint8Array, Opera fails with a "Offset larger than array size"
-            if (copy.length !== 0) {
-                file._data.set(copy, 0);
-            }
-        }
-    }
-    return file._data;
-};
-
-/**
- * Returns the data of a ZipObject in a binary form. If the content is an unicode string, encode it.
- * @param {ZipObject} file the file to use.
- * @return {String|ArrayBuffer|Uint8Array|Buffer} the data.
- */
-var getBinaryData = function(file) {
-    var result = getRawData(file),
-        type = utils.getTypeOf(result);
-    if (type === "string") {
-        if (!file.options.binary) {
-            // unicode text !
-            // unicode string => binary string is a painful process, check if we can avoid it.
-            if (support.nodebuffer) {
-                return nodeBuffer(result, "utf-8");
-            }
-        }
-        return file.asBinary();
-    }
-    return result;
-};
-
-/**
- * Transform this._data into a string.
- * @param {function} filter a function String -> String, applied if not null on the result.
- * @return {String} the string representing this._data.
- */
-var dataToString = function(asUTF8) {
-    var result = getRawData(this);
-    if (result === null || typeof result === "undefined") {
-        return "";
-    }
-    // if the data is a base64 string, we decode it before checking the encoding !
-    if (this.options.base64) {
-        result = base64.decode(result);
-    }
-    if (asUTF8 && this.options.binary) {
-        // JSZip.prototype.utf8decode supports arrays as input
-        // skip to array => string step, utf8decode will do it.
-        result = out.utf8decode(result);
-    }
-    else {
-        // no utf8 transformation, do the array => string step.
-        result = utils.transformTo("string", result);
-    }
-
-    if (!asUTF8 && !this.options.binary) {
-        result = utils.transformTo("string", out.utf8encode(result));
-    }
-    return result;
-};
-/**
- * A simple object representing a file in the zip file.
- * @constructor
- * @param {string} name the name of the file
- * @param {String|ArrayBuffer|Uint8Array|Buffer} data the data
- * @param {Object} options the options of the file
- */
-var ZipObject = function(name, data, options) {
-    this.name = name;
-    this.dir = options.dir;
-    this.date = options.date;
-    this.comment = options.comment;
-    this.unixPermissions = options.unixPermissions;
-    this.dosPermissions = options.dosPermissions;
-
-    this._data = data;
-    this.options = options;
-
-    /*
-     * This object contains initial values for dir and date.
-     * With them, we can check if the user changed the deprecated metadata in
-     * `ZipObject#options` or not.
-     */
-    this._initialMetadata = {
-      dir : options.dir,
-      date : options.date
-    };
-};
-
-ZipObject.prototype = {
-    /**
-     * Return the content as UTF8 string.
-     * @return {string} the UTF8 string.
-     */
-    asText: function() {
-        return dataToString.call(this, true);
-    },
-    /**
-     * Returns the binary content.
-     * @return {string} the content as binary.
-     */
-    asBinary: function() {
-        return dataToString.call(this, false);
-    },
-    /**
-     * Returns the content as a nodejs Buffer.
-     * @return {Buffer} the content as a Buffer.
-     */
-    asNodeBuffer: function() {
-        var result = getBinaryData(this);
-        return utils.transformTo("nodebuffer", result);
-    },
-    /**
-     * Returns the content as an Uint8Array.
-     * @return {Uint8Array} the content as an Uint8Array.
-     */
-    asUint8Array: function() {
-        var result = getBinaryData(this);
-        return utils.transformTo("uint8array", result);
-    },
-    /**
-     * Returns the content as an ArrayBuffer.
-     * @return {ArrayBuffer} the content as an ArrayBufer.
-     */
-    asArrayBuffer: function() {
-        return this.asUint8Array().buffer;
-    }
-};
-
-/**
- * Transform an integer into a string in hexadecimal.
- * @private
- * @param {number} dec the number to convert.
- * @param {number} bytes the number of bytes to generate.
- * @returns {string} the result.
- */
-var decToHex = function(dec, bytes) {
-    var hex = "",
-        i;
-    for (i = 0; i < bytes; i++) {
-        hex += String.fromCharCode(dec & 0xff);
-        dec = dec >>> 8;
-    }
-    return hex;
-};
-
-/**
- * Merge the objects passed as parameters into a new one.
- * @private
- * @param {...Object} var_args All objects to merge.
- * @return {Object} a new object with the data of the others.
- */
-var extend = function() {
-    var result = {}, i, attr;
-    for (i = 0; i < arguments.length; i++) { // arguments is not enumerable in some browsers
-        for (attr in arguments[i]) {
-            if (arguments[i].hasOwnProperty(attr) && typeof result[attr] === "undefined") {
-                result[attr] = arguments[i][attr];
-            }
-        }
-    }
-    return result;
-};
-
-/**
- * Transforms the (incomplete) options from the user into the complete
- * set of options to create a file.
- * @private
- * @param {Object} o the options from the user.
- * @return {Object} the complete set of options.
- */
-var prepareFileAttrs = function(o) {
-    o = o || {};
-    if (o.base64 === true && (o.binary === null || o.binary === undefined)) {
-        o.binary = true;
-    }
-    o = extend(o, defaults);
-    o.date = o.date || new Date();
-    if (o.compression !== null) o.compression = o.compression.toUpperCase();
-
-    return o;
-};
-
-/**
- * Add a file in the current folder.
- * @private
- * @param {string} name the name of the file
- * @param {String|ArrayBuffer|Uint8Array|Buffer} data the data of the file
- * @param {Object} o the options of the file
- * @return {Object} the new file.
- */
-var fileAdd = function(name, data, o) {
-    // be sure sub folders exist
-    var dataType = utils.getTypeOf(data),
-        parent;
-
-    o = prepareFileAttrs(o);
-
-    if (typeof o.unixPermissions === "string") {
-        o.unixPermissions = parseInt(o.unixPermissions, 8);
-    }
-
-    // UNX_IFDIR  0040000 see zipinfo.c
-    if (o.unixPermissions && (o.unixPermissions & 0x4000)) {
-        o.dir = true;
-    }
-    // Bit 4    Directory
-    if (o.dosPermissions && (o.dosPermissions & 0x0010)) {
-        o.dir = true;
-    }
-
-    if (o.dir) {
-        name = forceTrailingSlash(name);
-    }
-
-    if (o.createFolders && (parent = parentFolder(name))) {
-        folderAdd.call(this, parent, true);
-    }
-
-    if (o.dir || data === null || typeof data === "undefined") {
-        o.base64 = false;
-        o.binary = false;
-        data = null;
-        dataType = null;
-    }
-    else if (dataType === "string") {
-        if (o.binary && !o.base64) {
-            // optimizedBinaryString == true means that the file has already been filtered with a 0xFF mask
-            if (o.optimizedBinaryString !== true) {
-                // this is a string, not in a base64 format.
-                // Be sure that this is a correct "binary string"
-                data = utils.string2binary(data);
-            }
-        }
-    }
-    else { // arraybuffer, uint8array, ...
-        o.base64 = false;
-        o.binary = true;
-
-        if (!dataType && !(data instanceof CompressedObject)) {
-            throw new Error("The data of '" + name + "' is in an unsupported format !");
-        }
-
-        // special case : it's way easier to work with Uint8Array than with ArrayBuffer
-        if (dataType === "arraybuffer") {
-            data = utils.transformTo("uint8array", data);
-        }
-    }
-
-    var object = new ZipObject(name, data, o);
-    this.files[name] = object;
-    return object;
-};
-
-/**
- * Find the parent folder of the path.
- * @private
- * @param {string} path the path to use
- * @return {string} the parent folder, or ""
- */
-var parentFolder = function (path) {
-    if (path.slice(-1) == '/') {
-        path = path.substring(0, path.length - 1);
-    }
-    var lastSlash = path.lastIndexOf('/');
-    return (lastSlash > 0) ? path.substring(0, lastSlash) : "";
-};
-
-
-/**
- * Returns the path with a slash at the end.
- * @private
- * @param {String} path the path to check.
- * @return {String} the path with a trailing slash.
- */
-var forceTrailingSlash = function(path) {
-    // Check the name ends with a /
-    if (path.slice(-1) != "/") {
-        path += "/"; // IE doesn't like substr(-1)
-    }
-    return path;
-};
-/**
- * Add a (sub) folder in the current folder.
- * @private
- * @param {string} name the folder's name
- * @param {boolean=} [createFolders] If true, automatically create sub
- *  folders. Defaults to false.
- * @return {Object} the new folder.
- */
-var folderAdd = function(name, createFolders) {
-    createFolders = (typeof createFolders !== 'undefined') ? createFolders : false;
-
-    name = forceTrailingSlash(name);
-
-    // Does this folder already exist?
-    if (!this.files[name]) {
-        fileAdd.call(this, name, null, {
-            dir: true,
-            createFolders: createFolders
-        });
-    }
-    return this.files[name];
-};
-
-/**
- * Generate a JSZip.CompressedObject for a given zipOject.
- * @param {ZipObject} file the object to read.
- * @param {JSZip.compression} compression the compression to use.
- * @param {Object} compressionOptions the options to use when compressing.
- * @return {JSZip.CompressedObject} the compressed result.
- */
-var generateCompressedObjectFrom = function(file, compression, compressionOptions) {
-    var result = new CompressedObject(),
-        content;
-
-    // the data has not been decompressed, we might reuse things !
-    if (file._data instanceof CompressedObject) {
-        result.uncompressedSize = file._data.uncompressedSize;
-        result.crc32 = file._data.crc32;
-
-        if (result.uncompressedSize === 0 || file.dir) {
-            compression = compressions['STORE'];
-            result.compressedContent = "";
-            result.crc32 = 0;
-        }
-        else if (file._data.compressionMethod === compression.magic) {
-            result.compressedContent = file._data.getCompressedContent();
-        }
-        else {
-            content = file._data.getContent();
-            // need to decompress / recompress
-            result.compressedContent = compression.compress(utils.transformTo(compression.compressInputType, content), compressionOptions);
-        }
-    }
-    else {
-        // have uncompressed data
-        content = getBinaryData(file);
-        if (!content || content.length === 0 || file.dir) {
-            compression = compressions['STORE'];
-            content = "";
-        }
-        result.uncompressedSize = content.length;
-        result.crc32 = crc32(content);
-        result.compressedContent = compression.compress(utils.transformTo(compression.compressInputType, content), compressionOptions);
-    }
-
-    result.compressedSize = result.compressedContent.length;
-    result.compressionMethod = compression.magic;
-
-    return result;
-};
-
-
-
-
-/**
- * Generate the UNIX part of the external file attributes.
- * @param {Object} unixPermissions the unix permissions or null.
- * @param {Boolean} isDir true if the entry is a directory, false otherwise.
- * @return {Number} a 32 bit integer.
- *
- * adapted from http://unix.stackexchange.com/questions/14705/the-zip-formats-external-file-attribute :
- *
- * TTTTsstrwxrwxrwx0000000000ADVSHR
- * ^^^^____________________________ file type, see zipinfo.c (UNX_*)
- *     ^^^_________________________ setuid, setgid, sticky
- *        ^^^^^^^^^________________ permissions
- *                 ^^^^^^^^^^______ not used ?
- *                           ^^^^^^ DOS attribute bits : Archive, Directory, Volume label, System file, Hidden, Read only
- */
-var generateUnixExternalFileAttr = function (unixPermissions, isDir) {
-
-    var result = unixPermissions;
-    if (!unixPermissions) {
-        // I can't use octal values in strict mode, hence the hexa.
-        //  040775 => 0x41fd
-        // 0100664 => 0x81b4
-        result = isDir ? 0x41fd : 0x81b4;
-    }
-
-    return (result & 0xFFFF) << 16;
-};
-
-/**
- * Generate the DOS part of the external file attributes.
- * @param {Object} dosPermissions the dos permissions or null.
- * @param {Boolean} isDir true if the entry is a directory, false otherwise.
- * @return {Number} a 32 bit integer.
- *
- * Bit 0     Read-Only
- * Bit 1     Hidden
- * Bit 2     System
- * Bit 3     Volume Label
- * Bit 4     Directory
- * Bit 5     Archive
- */
-var generateDosExternalFileAttr = function (dosPermissions, isDir) {
-
-    // the dir flag is already set for compatibility
-
-    return (dosPermissions || 0)  & 0x3F;
-};
-
-/**
- * Generate the various parts used in the construction of the final zip file.
- * @param {string} name the file name.
- * @param {ZipObject} file the file content.
- * @param {JSZip.CompressedObject} compressedObject the compressed object.
- * @param {number} offset the current offset from the start of the zip file.
- * @param {String} platform let's pretend we are this platform (change platform dependents fields)
- * @return {object} the zip parts.
- */
-var generateZipParts = function(name, file, compressedObject, offset, platform) {
-    var data = compressedObject.compressedContent,
-        utfEncodedFileName = utils.transformTo("string", utf8.utf8encode(file.name)),
-        comment = file.comment || "",
-        utfEncodedComment = utils.transformTo("string", utf8.utf8encode(comment)),
-        useUTF8ForFileName = utfEncodedFileName.length !== file.name.length,
-        useUTF8ForComment = utfEncodedComment.length !== comment.length,
-        o = file.options,
-        dosTime,
-        dosDate,
-        extraFields = "",
-        unicodePathExtraField = "",
-        unicodeCommentExtraField = "",
-        dir, date;
-
-
-    // handle the deprecated options.dir
-    if (file._initialMetadata.dir !== file.dir) {
-        dir = file.dir;
-    } else {
-        dir = o.dir;
-    }
-
-    // handle the deprecated options.date
-    if(file._initialMetadata.date !== file.date) {
-        date = file.date;
-    } else {
-        date = o.date;
-    }
-
-    var extFileAttr = 0;
-    var versionMadeBy = 0;
-    if (dir) {
-        // dos or unix, we set the dos dir flag
-        extFileAttr |= 0x00010;
-    }
-    if(platform === "UNIX") {
-        versionMadeBy = 0x031E; // UNIX, version 3.0
-        extFileAttr |= generateUnixExternalFileAttr(file.unixPermissions, dir);
-    } else { // DOS or other, fallback to DOS
-        versionMadeBy = 0x0014; // DOS, version 2.0
-        extFileAttr |= generateDosExternalFileAttr(file.dosPermissions, dir);
-    }
-
-    // date
-    // @see http://www.delorie.com/djgpp/doc/rbinter/it/52/13.html
-    // @see http://www.delorie.com/djgpp/doc/rbinter/it/65/16.html
-    // @see http://www.delorie.com/djgpp/doc/rbinter/it/66/16.html
-
-    dosTime = date.getHours();
-    dosTime = dosTime << 6;
-    dosTime = dosTime | date.getMinutes();
-    dosTime = dosTime << 5;
-    dosTime = dosTime | date.getSeconds() / 2;
-
-    dosDate = date.getFullYear() - 1980;
-    dosDate = dosDate << 4;
-    dosDate = dosDate | (date.getMonth() + 1);
-    dosDate = dosDate << 5;
-    dosDate = dosDate | date.getDate();
-
-    if (useUTF8ForFileName) {
-        // set the unicode path extra field. unzip needs at least one extra
-        // field to correctly handle unicode path, so using the path is as good
-        // as any other information. This could improve the situation with
-        // other archive managers too.
-        // This field is usually used without the utf8 flag, with a non
-        // unicode path in the header (winrar, winzip). This helps (a bit)
-        // with the messy Windows' default compressed folders feature but
-        // breaks on p7zip which doesn't seek the unicode path extra field.
-        // So for now, UTF-8 everywhere !
-        unicodePathExtraField =
-            // Version
-            decToHex(1, 1) +
-            // NameCRC32
-            decToHex(crc32(utfEncodedFileName), 4) +
-            // UnicodeName
-            utfEncodedFileName;
-
-        extraFields +=
-            // Info-ZIP Unicode Path Extra Field
-            "\x75\x70" +
-            // size
-            decToHex(unicodePathExtraField.length, 2) +
-            // content
-            unicodePathExtraField;
-    }
-
-    if(useUTF8ForComment) {
-
-        unicodeCommentExtraField =
-            // Version
-            decToHex(1, 1) +
-            // CommentCRC32
-            decToHex(this.crc32(utfEncodedComment), 4) +
-            // UnicodeName
-            utfEncodedComment;
-
-        extraFields +=
-            // Info-ZIP Unicode Path Extra Field
-            "\x75\x63" +
-            // size
-            decToHex(unicodeCommentExtraField.length, 2) +
-            // content
-            unicodeCommentExtraField;
-    }
-
-    var header = "";
-
-    // version needed to extract
-    header += "\x0A\x00";
-    // general purpose bit flag
-    // set bit 11 if utf8
-    header += (useUTF8ForFileName || useUTF8ForComment) ? "\x00\x08" : "\x00\x00";
-    // compression method
-    header += compressedObject.compressionMethod;
-    // last mod file time
-    header += decToHex(dosTime, 2);
-    // last mod file date
-    header += decToHex(dosDate, 2);
-    // crc-32
-    header += decToHex(compressedObject.crc32, 4);
-    // compressed size
-    header += decToHex(compressedObject.compressedSize, 4);
-    // uncompressed size
-    header += decToHex(compressedObject.uncompressedSize, 4);
-    // file name length
-    header += decToHex(utfEncodedFileName.length, 2);
-    // extra field length
-    header += decToHex(extraFields.length, 2);
-
-
-    var fileRecord = signature.LOCAL_FILE_HEADER + header + utfEncodedFileName + extraFields;
-
-    var dirRecord = signature.CENTRAL_FILE_HEADER +
-    // version made by (00: DOS)
-    decToHex(versionMadeBy, 2) +
-    // file header (common to file and central directory)
-    header +
-    // file comment length
-    decToHex(utfEncodedComment.length, 2) +
-    // disk number start
-    "\x00\x00" +
-    // internal file attributes TODO
-    "\x00\x00" +
-    // external file attributes
-    decToHex(extFileAttr, 4) +
-    // relative offset of local header
-    decToHex(offset, 4) +
-    // file name
-    utfEncodedFileName +
-    // extra field
-    extraFields +
-    // file comment
-    utfEncodedComment;
-
-    return {
-        fileRecord: fileRecord,
-        dirRecord: dirRecord,
-        compressedObject: compressedObject
-    };
-};
-
-
-// return the actual prototype of JSZip
-var out = {
-    /**
-     * Read an existing zip and merge the data in the current JSZip object.
-     * The implementation is in jszip-load.js, don't forget to include it.
-     * @param {String|ArrayBuffer|Uint8Array|Buffer} stream  The stream to load
-     * @param {Object} options Options for loading the stream.
-     *  options.base64 : is the stream in base64 ? default : false
-     * @return {JSZip} the current JSZip object
-     */
-    load: function(stream, options) {
-        throw new Error("Load method is not defined. Is the file jszip-load.js included ?");
-    },
-
-    /**
-     * Filter nested files/folders with the specified function.
-     * @param {Function} search the predicate to use :
-     * function (relativePath, file) {...}
-     * It takes 2 arguments : the relative path and the file.
-     * @return {Array} An array of matching elements.
-     */
-    filter: function(search) {
-        var result = [],
-            filename, relativePath, file, fileClone;
-        for (filename in this.files) {
-            if (!this.files.hasOwnProperty(filename)) {
-                continue;
-            }
-            file = this.files[filename];
-            // return a new object, don't let the user mess with our internal objects :)
-            fileClone = new ZipObject(file.name, file._data, extend(file.options));
-            relativePath = filename.slice(this.root.length, filename.length);
-            if (filename.slice(0, this.root.length) === this.root && // the file is in the current root
-            search(relativePath, fileClone)) { // and the file matches the function
-                result.push(fileClone);
-            }
-        }
-        return result;
-    },
-
-    /**
-     * Add a file to the zip file, or search a file.
-     * @param   {string|RegExp} name The name of the file to add (if data is defined),
-     * the name of the file to find (if no data) or a regex to match files.
-     * @param   {String|ArrayBuffer|Uint8Array|Buffer} data  The file data, either raw or base64 encoded
-     * @param   {Object} o     File options
-     * @return  {JSZip|Object|Array} this JSZip object (when adding a file),
-     * a file (when searching by string) or an array of files (when searching by regex).
-     */
-    file: function(name, data, o) {
-        if (arguments.length === 1) {
-            if (utils.isRegExp(name)) {
-                var regexp = name;
-                return this.filter(function(relativePath, file) {
-                    return !file.dir && regexp.test(relativePath);
-                });
-            }
-            else { // text
-                return this.filter(function(relativePath, file) {
-                    return !file.dir && relativePath === name;
-                })[0] || null;
-            }
-        }
-        else { // more than one argument : we have data !
-            name = this.root + name;
-            fileAdd.call(this, name, data, o);
-        }
-        return this;
-    },
-
-    /**
-     * Add a directory to the zip file, or search.
-     * @param   {String|RegExp} arg The name of the directory to add, or a regex to search folders.
-     * @return  {JSZip} an object with the new directory as the root, or an array containing matching folders.
-     */
-    folder: function(arg) {
-        if (!arg) {
-            return this;
-        }
-
-        if (utils.isRegExp(arg)) {
-            return this.filter(function(relativePath, file) {
-                return file.dir && arg.test(relativePath);
-            });
-        }
-
-        // else, name is a new folder
-        var name = this.root + arg;
-        var newFolder = folderAdd.call(this, name);
-
-        // Allow chaining by returning a new object with this folder as the root
-        var ret = this.clone();
-        ret.root = newFolder.name;
-        return ret;
-    },
-
-    /**
-     * Delete a file, or a directory and all sub-files, from the zip
-     * @param {string} name the name of the file to delete
-     * @return {JSZip} this JSZip object
-     */
-    remove: function(name) {
-        name = this.root + name;
-        var file = this.files[name];
-        if (!file) {
-            // Look for any folders
-            if (name.slice(-1) != "/") {
-                name += "/";
-            }
-            file = this.files[name];
-        }
-
-        if (file && !file.dir) {
-            // file
-            delete this.files[name];
-        } else {
-            // maybe a folder, delete recursively
-            var kids = this.filter(function(relativePath, file) {
-                return file.name.slice(0, name.length) === name;
-            });
-            for (var i = 0; i < kids.length; i++) {
-                delete this.files[kids[i].name];
-            }
-        }
-
-        return this;
-    },
-
-    /**
-     * Generate the complete zip file
-     * @param {Object} options the options to generate the zip file :
-     * - base64, (deprecated, use type instead) true to generate base64.
-     * - compression, "STORE" by default.
-     * - type, "base64" by default. Values are : string, base64, uint8array, arraybuffer, blob.
-     * @return {String|Uint8Array|ArrayBuffer|Buffer|Blob} the zip file
-     */
-    generate: function(options) {
-        options = extend(options || {}, {
-            base64: true,
-            compression: "STORE",
-            compressionOptions : null,
-            type: "base64",
-            platform: "DOS",
-            comment: null,
-            mimeType: 'application/zip'
-        });
-
-        utils.checkSupport(options.type);
-
-        // accept nodejs `process.platform`
-        if(
-          options.platform === 'darwin' ||
-          options.platform === 'freebsd' ||
-          options.platform === 'linux' ||
-          options.platform === 'sunos'
-        ) {
-          options.platform = "UNIX";
-        }
-        if (options.platform === 'win32') {
-          options.platform = "DOS";
-        }
-
-        var zipData = [],
-            localDirLength = 0,
-            centralDirLength = 0,
-            writer, i,
-            utfEncodedComment = utils.transformTo("string", this.utf8encode(options.comment || this.comment || ""));
-
-        // first, generate all the zip parts.
-        for (var name in this.files) {
-            if (!this.files.hasOwnProperty(name)) {
-                continue;
-            }
-            var file = this.files[name];
-
-            var compressionName = file.options.compression || options.compression.toUpperCase();
-            var compression = compressions[compressionName];
-            if (!compression) {
-                throw new Error(compressionName + " is not a valid compression method !");
-            }
-            var compressionOptions = file.options.compressionOptions || options.compressionOptions || {};
-
-            var compressedObject = generateCompressedObjectFrom.call(this, file, compression, compressionOptions);
-
-            var zipPart = generateZipParts.call(this, name, file, compressedObject, localDirLength, options.platform);
-            localDirLength += zipPart.fileRecord.length + compressedObject.compressedSize;
-            centralDirLength += zipPart.dirRecord.length;
-            zipData.push(zipPart);
-        }
-
-        var dirEnd = "";
-
-        // end of central dir signature
-        dirEnd = signature.CENTRAL_DIRECTORY_END +
-        // number of this disk
-        "\x00\x00" +
-        // number of the disk with the start of the central directory
-        "\x00\x00" +
-        // total number of entries in the central directory on this disk
-        decToHex(zipData.length, 2) +
-        // total number of entries in the central directory
-        decToHex(zipData.length, 2) +
-        // size of the central directory   4 bytes
-        decToHex(centralDirLength, 4) +
-        // offset of start of central directory with respect to the starting disk number
-        decToHex(localDirLength, 4) +
-        // .ZIP file comment length
-        decToHex(utfEncodedComment.length, 2) +
-        // .ZIP file comment
-        utfEncodedComment;
-
-
-        // we have all the parts (and the total length)
-        // time to create a writer !
-        var typeName = options.type.toLowerCase();
-        if(typeName==="uint8array"||typeName==="arraybuffer"||typeName==="blob"||typeName==="nodebuffer") {
-            writer = new Uint8ArrayWriter(localDirLength + centralDirLength + dirEnd.length);
-        }else{
-            writer = new StringWriter(localDirLength + centralDirLength + dirEnd.length);
-        }
-
-        for (i = 0; i < zipData.length; i++) {
-            writer.append(zipData[i].fileRecord);
-            writer.append(zipData[i].compressedObject.compressedContent);
-        }
-        for (i = 0; i < zipData.length; i++) {
-            writer.append(zipData[i].dirRecord);
-        }
-
-        writer.append(dirEnd);
-
-        var zip = writer.finalize();
-
-
-
-        switch(options.type.toLowerCase()) {
-            // case "zip is an Uint8Array"
-            case "uint8array" :
-            case "arraybuffer" :
-            case "nodebuffer" :
-               return utils.transformTo(options.type.toLowerCase(), zip);
-            case "blob" :
-               return utils.arrayBuffer2Blob(utils.transformTo("arraybuffer", zip), options.mimeType);
-            // case "zip is a string"
-            case "base64" :
-               return (options.base64) ? base64.encode(zip) : zip;
-            default : // case "string" :
-               return zip;
-         }
-
-    },
-
-    /**
-     * @deprecated
-     * This method will be removed in a future version without replacement.
-     */
-    crc32: function (input, crc) {
-        return crc32(input, crc);
-    },
-
-    /**
-     * @deprecated
-     * This method will be removed in a future version without replacement.
-     */
-    utf8encode: function (string) {
-        return utils.transformTo("string", utf8.utf8encode(string));
-    },
-
-    /**
-     * @deprecated
-     * This method will be removed in a future version without replacement.
-     */
-    utf8decode: function (input) {
-        return utf8.utf8decode(input);
-    }
-};
-module.exports = out;
-
-},{"./base64":1,"./compressedObject":2,"./compressions":3,"./crc32":4,"./defaults":6,"./nodeBuffer":11,"./signature":14,"./stringWriter":16,"./support":17,"./uint8ArrayWriter":19,"./utf8":20,"./utils":21}],14:[function(_dereq_,module,exports){
-'use strict';
-exports.LOCAL_FILE_HEADER = "PK\x03\x04";
-exports.CENTRAL_FILE_HEADER = "PK\x01\x02";
-exports.CENTRAL_DIRECTORY_END = "PK\x05\x06";
-exports.ZIP64_CENTRAL_DIRECTORY_LOCATOR = "PK\x06\x07";
-exports.ZIP64_CENTRAL_DIRECTORY_END = "PK\x06\x06";
-exports.DATA_DESCRIPTOR = "PK\x07\x08";
-
-},{}],15:[function(_dereq_,module,exports){
-'use strict';
-var DataReader = _dereq_('./dataReader');
-var utils = _dereq_('./utils');
-
-function StringReader(data, optimizedBinaryString) {
-    this.data = data;
-    if (!optimizedBinaryString) {
-        this.data = utils.string2binary(this.data);
-    }
-    this.length = this.data.length;
-    this.index = 0;
-}
-StringReader.prototype = new DataReader();
-/**
- * @see DataReader.byteAt
- */
-StringReader.prototype.byteAt = function(i) {
-    return this.data.charCodeAt(i);
-};
-/**
- * @see DataReader.lastIndexOfSignature
- */
-StringReader.prototype.lastIndexOfSignature = function(sig) {
-    return this.data.lastIndexOf(sig);
-};
-/**
- * @see DataReader.readData
- */
-StringReader.prototype.readData = function(size) {
-    this.checkOffset(size);
-    // this will work because the constructor applied the "& 0xff" mask.
-    var result = this.data.slice(this.index, this.index + size);
-    this.index += size;
-    return result;
-};
-module.exports = StringReader;
-
-},{"./dataReader":5,"./utils":21}],16:[function(_dereq_,module,exports){
-'use strict';
-
-var utils = _dereq_('./utils');
-
-/**
- * An object to write any content to a string.
- * @constructor
- */
-var StringWriter = function() {
-    this.data = [];
-};
-StringWriter.prototype = {
-    /**
-     * Append any content to the current string.
-     * @param {Object} input the content to add.
-     */
-    append: function(input) {
-        input = utils.transformTo("string", input);
-        this.data.push(input);
-    },
-    /**
-     * Finalize the construction an return the result.
-     * @return {string} the generated string.
-     */
-    finalize: function() {
-        return this.data.join("");
-    }
-};
-
-module.exports = StringWriter;
-
-},{"./utils":21}],17:[function(_dereq_,module,exports){
-(function (Buffer){
-'use strict';
-exports.base64 = true;
-exports.array = true;
-exports.string = true;
-exports.arraybuffer = typeof ArrayBuffer !== "undefined" && typeof Uint8Array !== "undefined";
-// contains true if JSZip can read/generate nodejs Buffer, false otherwise.
-// Browserify will provide a Buffer implementation for browsers, which is
-// an augmented Uint8Array (i.e., can be used as either Buffer or U8).
-exports.nodebuffer = typeof Buffer !== "undefined";
-// contains true if JSZip can read/generate Uint8Array, false otherwise.
-exports.uint8array = typeof Uint8Array !== "undefined";
-
-if (typeof ArrayBuffer === "undefined") {
-    exports.blob = false;
-}
-else {
-    var buffer = new ArrayBuffer(0);
-    try {
-        exports.blob = new Blob([buffer], {
-            type: "application/zip"
-        }).size === 0;
-    }
-    catch (e) {
-        try {
-            var Builder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
-            var builder = new Builder();
-            builder.append(buffer);
-            exports.blob = builder.getBlob('application/zip').size === 0;
-        }
-        catch (e) {
-            exports.blob = false;
-        }
-    }
-}
-
-}).call(this,(typeof Buffer !== "undefined" ? Buffer : undefined))
-},{}],18:[function(_dereq_,module,exports){
-'use strict';
-var DataReader = _dereq_('./dataReader');
-
-function Uint8ArrayReader(data) {
-    if (data) {
-        this.data = data;
-        this.length = this.data.length;
-        this.index = 0;
-    }
-}
-Uint8ArrayReader.prototype = new DataReader();
-/**
- * @see DataReader.byteAt
- */
-Uint8ArrayReader.prototype.byteAt = function(i) {
-    return this.data[i];
-};
-/**
- * @see DataReader.lastIndexOfSignature
- */
-Uint8ArrayReader.prototype.lastIndexOfSignature = function(sig) {
-    var sig0 = sig.charCodeAt(0),
-        sig1 = sig.charCodeAt(1),
-        sig2 = sig.charCodeAt(2),
-        sig3 = sig.charCodeAt(3);
-    for (var i = this.length - 4; i >= 0; --i) {
-        if (this.data[i] === sig0 && this.data[i + 1] === sig1 && this.data[i + 2] === sig2 && this.data[i + 3] === sig3) {
-            return i;
-        }
-    }
-
-    return -1;
-};
-/**
- * @see DataReader.readData
- */
-Uint8ArrayReader.prototype.readData = function(size) {
-    this.checkOffset(size);
-    if(size === 0) {
-        // in IE10, when using subarray(idx, idx), we get the array [0x00] instead of [].
-        return new Uint8Array(0);
-    }
-    var result = this.data.subarray(this.index, this.index + size);
-    this.index += size;
-    return result;
-};
-module.exports = Uint8ArrayReader;
-
-},{"./dataReader":5}],19:[function(_dereq_,module,exports){
-'use strict';
-
-var utils = _dereq_('./utils');
-
-/**
- * An object to write any content to an Uint8Array.
- * @constructor
- * @param {number} length The length of the array.
- */
-var Uint8ArrayWriter = function(length) {
-    this.data = new Uint8Array(length);
-    this.index = 0;
-};
-Uint8ArrayWriter.prototype = {
-    /**
-     * Append any content to the current array.
-     * @param {Object} input the content to add.
-     */
-    append: function(input) {
-        if (input.length !== 0) {
-            // with an empty Uint8Array, Opera fails with a "Offset larger than array size"
-            input = utils.transformTo("uint8array", input);
-            this.data.set(input, this.index);
-            this.index += input.length;
-        }
-    },
-    /**
-     * Finalize the construction an return the result.
-     * @return {Uint8Array} the generated array.
-     */
-    finalize: function() {
-        return this.data;
-    }
-};
-
-module.exports = Uint8ArrayWriter;
-
-},{"./utils":21}],20:[function(_dereq_,module,exports){
-'use strict';
-
-var utils = _dereq_('./utils');
-var support = _dereq_('./support');
-var nodeBuffer = _dereq_('./nodeBuffer');
-
-/**
- * The following functions come from pako, from pako/lib/utils/strings
- * released under the MIT license, see pako https://github.com/nodeca/pako/
- */
-
-// Table with utf8 lengths (calculated by first byte of sequence)
-// Note, that 5 & 6-byte values and some 4-byte values can not be represented in JS,
-// because max possible codepoint is 0x10ffff
-var _utf8len = new Array(256);
-for (var i=0; i<256; i++) {
-  _utf8len[i] = (i >= 252 ? 6 : i >= 248 ? 5 : i >= 240 ? 4 : i >= 224 ? 3 : i >= 192 ? 2 : 1);
-}
-_utf8len[254]=_utf8len[254]=1; // Invalid sequence start
-
-// convert string to array (typed, when possible)
-var string2buf = function (str) {
-    var buf, c, c2, m_pos, i, str_len = str.length, buf_len = 0;
-
-    // count binary size
-    for (m_pos = 0; m_pos < str_len; m_pos++) {
-        c = str.charCodeAt(m_pos);
-        if ((c & 0xfc00) === 0xd800 && (m_pos+1 < str_len)) {
-            c2 = str.charCodeAt(m_pos+1);
-            if ((c2 & 0xfc00) === 0xdc00) {
-                c = 0x10000 + ((c - 0xd800) << 10) + (c2 - 0xdc00);
-                m_pos++;
-            }
-        }
-        buf_len += c < 0x80 ? 1 : c < 0x800 ? 2 : c < 0x10000 ? 3 : 4;
-    }
-
-    // allocate buffer
-    if (support.uint8array) {
-        buf = new Uint8Array(buf_len);
-    } else {
-        buf = new Array(buf_len);
-    }
-
-    // convert
-    for (i=0, m_pos = 0; i < buf_len; m_pos++) {
-        c = str.charCodeAt(m_pos);
-        if ((c & 0xfc00) === 0xd800 && (m_pos+1 < str_len)) {
-            c2 = str.charCodeAt(m_pos+1);
-            if ((c2 & 0xfc00) === 0xdc00) {
-                c = 0x10000 + ((c - 0xd800) << 10) + (c2 - 0xdc00);
-                m_pos++;
-            }
-        }
-        if (c < 0x80) {
-            /* one byte */
-            buf[i++] = c;
-        } else if (c < 0x800) {
-            /* two bytes */
-            buf[i++] = 0xC0 | (c >>> 6);
-            buf[i++] = 0x80 | (c & 0x3f);
-        } else if (c < 0x10000) {
-            /* three bytes */
-            buf[i++] = 0xE0 | (c >>> 12);
-            buf[i++] = 0x80 | (c >>> 6 & 0x3f);
-            buf[i++] = 0x80 | (c & 0x3f);
-        } else {
-            /* four bytes */
-            buf[i++] = 0xf0 | (c >>> 18);
-            buf[i++] = 0x80 | (c >>> 12 & 0x3f);
-            buf[i++] = 0x80 | (c >>> 6 & 0x3f);
-            buf[i++] = 0x80 | (c & 0x3f);
-        }
-    }
-
-    return buf;
-};
-
-// Calculate max possible position in utf8 buffer,
-// that will not break sequence. If that's not possible
-// - (very small limits) return max size as is.
-//
-// buf[] - utf8 bytes array
-// max   - length limit (mandatory);
-var utf8border = function(buf, max) {
-    var pos;
-
-    max = max || buf.length;
-    if (max > buf.length) { max = buf.length; }
-
-    // go back from last position, until start of sequence found
-    pos = max-1;
-    while (pos >= 0 && (buf[pos] & 0xC0) === 0x80) { pos--; }
-
-    // Fuckup - very small and broken sequence,
-    // return max, because we should return something anyway.
-    if (pos < 0) { return max; }
-
-    // If we came to start of buffer - that means vuffer is too small,
-    // return max too.
-    if (pos === 0) { return max; }
-
-    return (pos + _utf8len[buf[pos]] > max) ? pos : max;
-};
-
-// convert array to string
-var buf2string = function (buf) {
-    var str, i, out, c, c_len;
-    var len = buf.length;
-
-    // Reserve max possible length (2 words per char)
-    // NB: by unknown reasons, Array is significantly faster for
-    //     String.fromCharCode.apply than Uint16Array.
-    var utf16buf = new Array(len*2);
-
-    for (out=0, i=0; i<len;) {
-        c = buf[i++];
-        // quick process ascii
-        if (c < 0x80) { utf16buf[out++] = c; continue; }
-
-        c_len = _utf8len[c];
-        // skip 5 & 6 byte codes
-        if (c_len > 4) { utf16buf[out++] = 0xfffd; i += c_len-1; continue; }
-
-        // apply mask on first byte
-        c &= c_len === 2 ? 0x1f : c_len === 3 ? 0x0f : 0x07;
-        // join the rest
-        while (c_len > 1 && i < len) {
-            c = (c << 6) | (buf[i++] & 0x3f);
-            c_len--;
-        }
-
-        // terminated by end of string?
-        if (c_len > 1) { utf16buf[out++] = 0xfffd; continue; }
-
-        if (c < 0x10000) {
-            utf16buf[out++] = c;
-        } else {
-            c -= 0x10000;
-            utf16buf[out++] = 0xd800 | ((c >> 10) & 0x3ff);
-            utf16buf[out++] = 0xdc00 | (c & 0x3ff);
-        }
-    }
-
-    // shrinkBuf(utf16buf, out)
-    if (utf16buf.length !== out) {
-        if(utf16buf.subarray) {
-            utf16buf = utf16buf.subarray(0, out);
-        } else {
-            utf16buf.length = out;
-        }
-    }
-
-    // return String.fromCharCode.apply(null, utf16buf);
-    return utils.applyFromCharCode(utf16buf);
-};
-
-
-// That's all for the pako functions.
-
-
-/**
- * Transform a javascript string into an array (typed if possible) of bytes,
- * UTF-8 encoded.
- * @param {String} str the string to encode
- * @return {Array|Uint8Array|Buffer} the UTF-8 encoded string.
- */
-exports.utf8encode = function utf8encode(str) {
-    if (support.nodebuffer) {
-        return nodeBuffer(str, "utf-8");
-    }
-
-    return string2buf(str);
-};
-
-
-/**
- * Transform a bytes array (or a representation) representing an UTF-8 encoded
- * string into a javascript string.
- * @param {Array|Uint8Array|Buffer} buf the data de decode
- * @return {String} the decoded string.
- */
-exports.utf8decode = function utf8decode(buf) {
-    if (support.nodebuffer) {
-        return utils.transformTo("nodebuffer", buf).toString("utf-8");
-    }
-
-    buf = utils.transformTo(support.uint8array ? "uint8array" : "array", buf);
-
-    // return buf2string(buf);
-    // Chrome prefers to work with "small" chunks of data
-    // for the method buf2string.
-    // Firefox and Chrome has their own shortcut, IE doesn't seem to really care.
-    var result = [], k = 0, len = buf.length, chunk = 65536;
-    while (k < len) {
-        var nextBoundary = utf8border(buf, Math.min(k + chunk, len));
-        if (support.uint8array) {
-            result.push(buf2string(buf.subarray(k, nextBoundary)));
-        } else {
-            result.push(buf2string(buf.slice(k, nextBoundary)));
-        }
-        k = nextBoundary;
-    }
-    return result.join("");
-
-};
-// vim: set shiftwidth=4 softtabstop=4:
-
-},{"./nodeBuffer":11,"./support":17,"./utils":21}],21:[function(_dereq_,module,exports){
-'use strict';
-var support = _dereq_('./support');
-var compressions = _dereq_('./compressions');
-var nodeBuffer = _dereq_('./nodeBuffer');
-/**
- * Convert a string to a "binary string" : a string containing only char codes between 0 and 255.
- * @param {string} str the string to transform.
- * @return {String} the binary string.
- */
-exports.string2binary = function(str) {
-    var result = "";
-    for (var i = 0; i < str.length; i++) {
-        result += String.fromCharCode(str.charCodeAt(i) & 0xff);
-    }
-    return result;
-};
-exports.arrayBuffer2Blob = function(buffer, mimeType) {
-    exports.checkSupport("blob");
-	mimeType = mimeType || 'application/zip';
-
-    try {
-        // Blob constructor
-        return new Blob([buffer], {
-            type: mimeType
-        });
-    }
-    catch (e) {
-
-        try {
-            // deprecated, browser only, old way
-            var Builder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
-            var builder = new Builder();
-            builder.append(buffer);
-            return builder.getBlob(mimeType);
-        }
-        catch (e) {
-
-            // well, fuck ?!
-            throw new Error("Bug : can't construct the Blob.");
-        }
-    }
-
-
-};
-/**
- * The identity function.
- * @param {Object} input the input.
- * @return {Object} the same input.
- */
-function identity(input) {
-    return input;
-}
-
-/**
- * Fill in an array with a string.
- * @param {String} str the string to use.
- * @param {Array|ArrayBuffer|Uint8Array|Buffer} array the array to fill in (will be mutated).
- * @return {Array|ArrayBuffer|Uint8Array|Buffer} the updated array.
- */
-function stringToArrayLike(str, array) {
-    for (var i = 0; i < str.length; ++i) {
-        array[i] = str.charCodeAt(i) & 0xFF;
-    }
-    return array;
-}
-
-/**
- * Transform an array-like object to a string.
- * @param {Array|ArrayBuffer|Uint8Array|Buffer} array the array to transform.
- * @return {String} the result.
- */
-function arrayLikeToString(array) {
-    // Performances notes :
-    // --------------------
-    // String.fromCharCode.apply(null, array) is the fastest, see
-    // see http://jsperf.com/converting-a-uint8array-to-a-string/2
-    // but the stack is limited (and we can get huge arrays !).
-    //
-    // result += String.fromCharCode(array[i]); generate too many strings !
-    //
-    // This code is inspired by http://jsperf.com/arraybuffer-to-string-apply-performance/2
-    var chunk = 65536;
-    var result = [],
-        len = array.length,
-        type = exports.getTypeOf(array),
-        k = 0,
-        canUseApply = true;
-      try {
-         switch(type) {
-            case "uint8array":
-               String.fromCharCode.apply(null, new Uint8Array(0));
-               break;
-            case "nodebuffer":
-               String.fromCharCode.apply(null, nodeBuffer(0));
-               break;
-         }
-      } catch(e) {
-         canUseApply = false;
-      }
-
-      // no apply : slow and painful algorithm
-      // default browser on android 4.*
-      if (!canUseApply) {
-         var resultStr = "";
-         for(var i = 0; i < array.length;i++) {
-            resultStr += String.fromCharCode(array[i]);
-         }
-    return resultStr;
-    }
-    while (k < len && chunk > 1) {
-        try {
-            if (type === "array" || type === "nodebuffer") {
-                result.push(String.fromCharCode.apply(null, array.slice(k, Math.min(k + chunk, len))));
-            }
-            else {
-                result.push(String.fromCharCode.apply(null, array.subarray(k, Math.min(k + chunk, len))));
-            }
-            k += chunk;
-        }
-        catch (e) {
-            chunk = Math.floor(chunk / 2);
-        }
-    }
-    return result.join("");
-}
-
-exports.applyFromCharCode = arrayLikeToString;
-
-
-/**
- * Copy the data from an array-like to an other array-like.
- * @param {Array|ArrayBuffer|Uint8Array|Buffer} arrayFrom the origin array.
- * @param {Array|ArrayBuffer|Uint8Array|Buffer} arrayTo the destination array which will be mutated.
- * @return {Array|ArrayBuffer|Uint8Array|Buffer} the updated destination array.
- */
-function arrayLikeToArrayLike(arrayFrom, arrayTo) {
-    for (var i = 0; i < arrayFrom.length; i++) {
-        arrayTo[i] = arrayFrom[i];
-    }
-    return arrayTo;
-}
-
-// a matrix containing functions to transform everything into everything.
-var transform = {};
-
-// string to ?
-transform["string"] = {
-    "string": identity,
-    "array": function(input) {
-        return stringToArrayLike(input, new Array(input.length));
-    },
-    "arraybuffer": function(input) {
-        return transform["string"]["uint8array"](input).buffer;
-    },
-    "uint8array": function(input) {
-        return stringToArrayLike(input, new Uint8Array(input.length));
-    },
-    "nodebuffer": function(input) {
-        return stringToArrayLike(input, nodeBuffer(input.length));
-    }
-};
-
-// array to ?
-transform["array"] = {
-    "string": arrayLikeToString,
-    "array": identity,
-    "arraybuffer": function(input) {
-        return (new Uint8Array(input)).buffer;
-    },
-    "uint8array": function(input) {
-        return new Uint8Array(input);
-    },
-    "nodebuffer": function(input) {
-        return nodeBuffer(input);
-    }
-};
-
-// arraybuffer to ?
-transform["arraybuffer"] = {
-    "string": function(input) {
-        return arrayLikeToString(new Uint8Array(input));
-    },
-    "array": function(input) {
-        return arrayLikeToArrayLike(new Uint8Array(input), new Array(input.byteLength));
-    },
-    "arraybuffer": identity,
-    "uint8array": function(input) {
-        return new Uint8Array(input);
-    },
-    "nodebuffer": function(input) {
-        return nodeBuffer(new Uint8Array(input));
-    }
-};
-
-// uint8array to ?
-transform["uint8array"] = {
-    "string": arrayLikeToString,
-    "array": function(input) {
-        return arrayLikeToArrayLike(input, new Array(input.length));
-    },
-    "arraybuffer": function(input) {
-        return input.buffer;
-    },
-    "uint8array": identity,
-    "nodebuffer": function(input) {
-        return nodeBuffer(input);
-    }
-};
-
-// nodebuffer to ?
-transform["nodebuffer"] = {
-    "string": arrayLikeToString,
-    "array": function(input) {
-        return arrayLikeToArrayLike(input, new Array(input.length));
-    },
-    "arraybuffer": function(input) {
-        return transform["nodebuffer"]["uint8array"](input).buffer;
-    },
-    "uint8array": function(input) {
-        return arrayLikeToArrayLike(input, new Uint8Array(input.length));
-    },
-    "nodebuffer": identity
-};
-
-/**
- * Transform an input into any type.
- * The supported output type are : string, array, uint8array, arraybuffer, nodebuffer.
- * If no output type is specified, the unmodified input will be returned.
- * @param {String} outputType the output type.
- * @param {String|Array|ArrayBuffer|Uint8Array|Buffer} input the input to convert.
- * @throws {Error} an Error if the browser doesn't support the requested output type.
- */
-exports.transformTo = function(outputType, input) {
-    if (!input) {
-        // undefined, null, etc
-        // an empty string won't harm.
-        input = "";
-    }
-    if (!outputType) {
-        return input;
-    }
-    exports.checkSupport(outputType);
-    var inputType = exports.getTypeOf(input);
-    var result = transform[inputType][outputType](input);
-    return result;
-};
-
-/**
- * Return the type of the input.
- * The type will be in a format valid for JSZip.utils.transformTo : string, array, uint8array, arraybuffer.
- * @param {Object} input the input to identify.
- * @return {String} the (lowercase) type of the input.
- */
-exports.getTypeOf = function(input) {
-    if (typeof input === "string") {
-        return "string";
-    }
-    if (Object.prototype.toString.call(input) === "[object Array]") {
-        return "array";
-    }
-    if (support.nodebuffer && nodeBuffer.test(input)) {
-        return "nodebuffer";
-    }
-    if (support.uint8array && input instanceof Uint8Array) {
-        return "uint8array";
-    }
-    if (support.arraybuffer && input instanceof ArrayBuffer) {
-        return "arraybuffer";
-    }
-};
-
-/**
- * Throw an exception if the type is not supported.
- * @param {String} type the type to check.
- * @throws {Error} an Error if the browser doesn't support the requested type.
- */
-exports.checkSupport = function(type) {
-    var supported = support[type.toLowerCase()];
-    if (!supported) {
-        throw new Error(type + " is not supported by this browser");
-    }
-};
-exports.MAX_VALUE_16BITS = 65535;
-exports.MAX_VALUE_32BITS = -1; // well, "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" is parsed as -1
-
-/**
- * Prettify a string read as binary.
- * @param {string} str the string to prettify.
- * @return {string} a pretty string.
- */
-exports.pretty = function(str) {
-    var res = '',
-        code, i;
-    for (i = 0; i < (str || "").length; i++) {
-        code = str.charCodeAt(i);
-        res += '\\x' + (code < 16 ? "0" : "") + code.toString(16).toUpperCase();
-    }
-    return res;
-};
-
-/**
- * Find a compression registered in JSZip.
- * @param {string} compressionMethod the method magic to find.
- * @return {Object|null} the JSZip compression object, null if none found.
- */
-exports.findCompression = function(compressionMethod) {
-    for (var method in compressions) {
-        if (!compressions.hasOwnProperty(method)) {
-            continue;
-        }
-        if (compressions[method].magic === compressionMethod) {
-            return compressions[method];
-        }
-    }
-    return null;
-};
-/**
-* Cross-window, cross-Node-context regular expression detection
-* @param  {Object}  object Anything
-* @return {Boolean}        true if the object is a regular expression,
-* false otherwise
-*/
-exports.isRegExp = function (object) {
-    return Object.prototype.toString.call(object) === "[object RegExp]";
-};
-
-
-},{"./compressions":3,"./nodeBuffer":11,"./support":17}],22:[function(_dereq_,module,exports){
-'use strict';
-var StringReader = _dereq_('./stringReader');
-var NodeBufferReader = _dereq_('./nodeBufferReader');
-var Uint8ArrayReader = _dereq_('./uint8ArrayReader');
-var utils = _dereq_('./utils');
-var sig = _dereq_('./signature');
-var ZipEntry = _dereq_('./zipEntry');
-var support = _dereq_('./support');
-var jszipProto = _dereq_('./object');
-//  class ZipEntries {{{
-/**
- * All the entries in the zip file.
- * @constructor
- * @param {String|ArrayBuffer|Uint8Array} data the binary stream to load.
- * @param {Object} loadOptions Options for loading the stream.
- */
-function ZipEntries(data, loadOptions) {
-    this.files = [];
-    this.loadOptions = loadOptions;
-    if (data) {
-        this.load(data);
-    }
-}
-ZipEntries.prototype = {
-    /**
-     * Check that the reader is on the speficied signature.
-     * @param {string} expectedSignature the expected signature.
-     * @throws {Error} if it is an other signature.
-     */
-    checkSignature: function(expectedSignature) {
-        var signature = this.reader.readString(4);
-        if (signature !== expectedSignature) {
-            throw new Error("Corrupted zip or bug : unexpected signature " + "(" + utils.pretty(signature) + ", expected " + utils.pretty(expectedSignature) + ")");
-        }
-    },
-    /**
-     * Read the end of the central directory.
-     */
-    readBlockEndOfCentral: function() {
-        this.diskNumber = this.reader.readInt(2);
-        this.diskWithCentralDirStart = this.reader.readInt(2);
-        this.centralDirRecordsOnThisDisk = this.reader.readInt(2);
-        this.centralDirRecords = this.reader.readInt(2);
-        this.centralDirSize = this.reader.readInt(4);
-        this.centralDirOffset = this.reader.readInt(4);
-
-        this.zipCommentLength = this.reader.readInt(2);
-        // warning : the encoding depends of the system locale
-        // On a linux machine with LANG=en_US.utf8, this field is utf8 encoded.
-        // On a windows machine, this field is encoded with the localized windows code page.
-        this.zipComment = this.reader.readString(this.zipCommentLength);
-        // To get consistent behavior with the generation part, we will assume that
-        // this is utf8 encoded.
-        this.zipComment = jszipProto.utf8decode(this.zipComment);
-    },
-    /**
-     * Read the end of the Zip 64 central directory.
-     * Not merged with the method readEndOfCentral :
-     * The end of central can coexist with its Zip64 brother,
-     * I don't want to read the wrong number of bytes !
-     */
-    readBlockZip64EndOfCentral: function() {
-        this.zip64EndOfCentralSize = this.reader.readInt(8);
-        this.versionMadeBy = this.reader.readString(2);
-        this.versionNeeded = this.reader.readInt(2);
-        this.diskNumber = this.reader.readInt(4);
-        this.diskWithCentralDirStart = this.reader.readInt(4);
-        this.centralDirRecordsOnThisDisk = this.reader.readInt(8);
-        this.centralDirRecords = this.reader.readInt(8);
-        this.centralDirSize = this.reader.readInt(8);
-        this.centralDirOffset = this.reader.readInt(8);
-
-        this.zip64ExtensibleData = {};
-        var extraDataSize = this.zip64EndOfCentralSize - 44,
-            index = 0,
-            extraFieldId,
-            extraFieldLength,
-            extraFieldValue;
-        while (index < extraDataSize) {
-            extraFieldId = this.reader.readInt(2);
-            extraFieldLength = this.reader.readInt(4);
-            extraFieldValue = this.reader.readString(extraFieldLength);
-            this.zip64ExtensibleData[extraFieldId] = {
-                id: extraFieldId,
-                length: extraFieldLength,
-                value: extraFieldValue
-            };
-        }
-    },
-    /**
-     * Read the end of the Zip 64 central directory locator.
-     */
-    readBlockZip64EndOfCentralLocator: function() {
-        this.diskWithZip64CentralDirStart = this.reader.readInt(4);
-        this.relativeOffsetEndOfZip64CentralDir = this.reader.readInt(8);
-        this.disksCount = this.reader.readInt(4);
-        if (this.disksCount > 1) {
-            throw new Error("Multi-volumes zip are not supported");
-        }
-    },
-    /**
-     * Read the local files, based on the offset read in the central part.
-     */
-    readLocalFiles: function() {
-        var i, file;
-        for (i = 0; i < this.files.length; i++) {
-            file = this.files[i];
-            this.reader.setIndex(file.localHeaderOffset);
-            this.checkSignature(sig.LOCAL_FILE_HEADER);
-            file.readLocalPart(this.reader);
-            file.handleUTF8();
-            file.processAttributes();
-        }
-    },
-    /**
-     * Read the central directory.
-     */
-    readCentralDir: function() {
-        var file;
-
-        this.reader.setIndex(this.centralDirOffset);
-        while (this.reader.readString(4) === sig.CENTRAL_FILE_HEADER) {
-            file = new ZipEntry({
-                zip64: this.zip64
-            }, this.loadOptions);
-            file.readCentralPart(this.reader);
-            this.files.push(file);
-        }
-    },
-    /**
-     * Read the end of central directory.
-     */
-    readEndOfCentral: function() {
-        var offset = this.reader.lastIndexOfSignature(sig.CENTRAL_DIRECTORY_END);
-        if (offset === -1) {
-            // Check if the content is a truncated zip or complete garbage.
-            // A "LOCAL_FILE_HEADER" is not required at the beginning (auto
-            // extractible zip for example) but it can give a good hint.
-            // If an ajax request was used without responseType, we will also
-            // get unreadable data.
-            var isGarbage = true;
-            try {
-                this.reader.setIndex(0);
-                this.checkSignature(sig.LOCAL_FILE_HEADER);
-                isGarbage = false;
-            } catch (e) {}
-
-            if (isGarbage) {
-                throw new Error("Can't find end of central directory : is this a zip file ? " +
-                                "If it is, see http://stuk.github.io/jszip/documentation/howto/read_zip.html");
-            } else {
-                throw new Error("Corrupted zip : can't find end of central directory");
-            }
-        }
-        this.reader.setIndex(offset);
-        this.checkSignature(sig.CENTRAL_DIRECTORY_END);
-        this.readBlockEndOfCentral();
-
-
-        /* extract from the zip spec :
-            4)  If one of the fields in the end of central directory
-                record is too small to hold required data, the field
-                should be set to -1 (0xFFFF or 0xFFFFFFFF) and the
-                ZIP64 format record should be created.
-            5)  The end of central directory record and the
-                Zip64 end of central directory locator record must
-                reside on the same disk when splitting or spanning
-                an archive.
-         */
-        if (this.diskNumber === utils.MAX_VALUE_16BITS || this.diskWithCentralDirStart === utils.MAX_VALUE_16BITS || this.centralDirRecordsOnThisDisk === utils.MAX_VALUE_16BITS || this.centralDirRecords === utils.MAX_VALUE_16BITS || this.centralDirSize === utils.MAX_VALUE_32BITS || this.centralDirOffset === utils.MAX_VALUE_32BITS) {
-            this.zip64 = true;
-
-            /*
-            Warning : the zip64 extension is supported, but ONLY if the 64bits integer read from
-            the zip file can fit into a 32bits integer. This cannot be solved : Javascript represents
-            all numbers as 64-bit double precision IEEE 754 floating point numbers.
-            So, we have 53bits for integers and bitwise operations treat everything as 32bits.
-            see https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/Bitwise_Operators
-            and http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-262.pdf section 8.5
-            */
-
-            // should look for a zip64 EOCD locator
-            offset = this.reader.lastIndexOfSignature(sig.ZIP64_CENTRAL_DIRECTORY_LOCATOR);
-            if (offset === -1) {
-                throw new Error("Corrupted zip : can't find the ZIP64 end of central directory locator");
-            }
-            this.reader.setIndex(offset);
-            this.checkSignature(sig.ZIP64_CENTRAL_DIRECTORY_LOCATOR);
-            this.readBlockZip64EndOfCentralLocator();
-
-            // now the zip64 EOCD record
-            this.reader.setIndex(this.relativeOffsetEndOfZip64CentralDir);
-            this.checkSignature(sig.ZIP64_CENTRAL_DIRECTORY_END);
-            this.readBlockZip64EndOfCentral();
-        }
-    },
-    prepareReader: function(data) {
-        var type = utils.getTypeOf(data);
-        if (type === "string" && !support.uint8array) {
-            this.reader = new StringReader(data, this.loadOptions.optimizedBinaryString);
-        }
-        else if (type === "nodebuffer") {
-            this.reader = new NodeBufferReader(data);
-        }
-        else {
-            this.reader = new Uint8ArrayReader(utils.transformTo("uint8array", data));
-        }
-    },
-    /**
-     * Read a zip file and create ZipEntries.
-     * @param {String|ArrayBuffer|Uint8Array|Buffer} data the binary string representing a zip file.
-     */
-    load: function(data) {
-        this.prepareReader(data);
-        this.readEndOfCentral();
-        this.readCentralDir();
-        this.readLocalFiles();
-    }
-};
-// }}} end of ZipEntries
-module.exports = ZipEntries;
-
-},{"./nodeBufferReader":12,"./object":13,"./signature":14,"./stringReader":15,"./support":17,"./uint8ArrayReader":18,"./utils":21,"./zipEntry":23}],23:[function(_dereq_,module,exports){
-'use strict';
-var StringReader = _dereq_('./stringReader');
-var utils = _dereq_('./utils');
-var CompressedObject = _dereq_('./compressedObject');
-var jszipProto = _dereq_('./object');
-
-var MADE_BY_DOS = 0x00;
-var MADE_BY_UNIX = 0x03;
-
-// class ZipEntry {{{
-/**
- * An entry in the zip file.
- * @constructor
- * @param {Object} options Options of the current file.
- * @param {Object} loadOptions Options for loading the stream.
- */
-function ZipEntry(options, loadOptions) {
-    this.options = options;
-    this.loadOptions = loadOptions;
-}
-ZipEntry.prototype = {
-    /**
-     * say if the file is encrypted.
-     * @return {boolean} true if the file is encrypted, false otherwise.
-     */
-    isEncrypted: function() {
-        // bit 1 is set
-        return (this.bitFlag & 0x0001) === 0x0001;
-    },
-    /**
-     * say if the file has utf-8 filename/comment.
-     * @return {boolean} true if the filename/comment is in utf-8, false otherwise.
-     */
-    useUTF8: function() {
-        // bit 11 is set
-        return (this.bitFlag & 0x0800) === 0x0800;
-    },
-    /**
-     * Prepare the function used to generate the compressed content from this ZipFile.
-     * @param {DataReader} reader the reader to use.
-     * @param {number} from the offset from where we should read the data.
-     * @param {number} length the length of the data to read.
-     * @return {Function} the callback to get the compressed content (the type depends of the DataReader class).
-     */
-    prepareCompressedContent: function(reader, from, length) {
-        return function() {
-            var previousIndex = reader.index;
-            reader.setIndex(from);
-            var compressedFileData = reader.readData(length);
-            reader.setIndex(previousIndex);
-
-            return compressedFileData;
-        };
-    },
-    /**
-     * Prepare the function used to generate the uncompressed content from this ZipFile.
-     * @param {DataReader} reader the reader to use.
-     * @param {number} from the offset from where we should read the data.
-     * @param {number} length the length of the data to read.
-     * @param {JSZip.compression} compression the compression used on this file.
-     * @param {number} uncompressedSize the uncompressed size to expect.
-     * @return {Function} the callback to get the uncompressed content (the type depends of the DataReader class).
-     */
-    prepareContent: function(reader, from, length, compression, uncompressedSize) {
-        return function() {
-
-            var compressedFileData = utils.transformTo(compression.uncompressInputType, this.getCompressedContent());
-            var uncompressedFileData = compression.uncompress(compressedFileData);
-
-            if (uncompressedFileData.length !== uncompressedSize) {
-                throw new Error("Bug : uncompressed data size mismatch");
-            }
-
-            return uncompressedFileData;
-        };
-    },
-    /**
-     * Read the local part of a zip file and add the info in this object.
-     * @param {DataReader} reader the reader to use.
-     */
-    readLocalPart: function(reader) {
-        var compression, localExtraFieldsLength;
-
-        // we already know everything from the central dir !
-        // If the central dir data are false, we are doomed.
-        // On the bright side, the local part is scary  : zip64, data descriptors, both, etc.
-        // The less data we get here, the more reliable this should be.
-        // Let's skip the whole header and dash to the data !
-        reader.skip(22);
-        // in some zip created on windows, the filename stored in the central dir contains \ instead of /.
-        // Strangely, the filename here is OK.
-        // I would love to treat these zip files as corrupted (see http://www.info-zip.org/FAQ.html#backslashes
-        // or APPNOTE#4.4.17.1, "All slashes MUST be forward slashes '/'") but there are a lot of bad zip generators...
-        // Search "unzip mismatching "local" filename continuing with "central" filename version" on
-        // the internet.
-        //
-        // I think I see the logic here : the central directory is used to display
-        // content and the local directory is used to extract the files. Mixing / and \
-        // may be used to display \ to windows users and use / when extracting the files.
-        // Unfortunately, this lead also to some issues : http://seclists.org/fulldisclosure/2009/Sep/394
-        this.fileNameLength = reader.readInt(2);
-        localExtraFieldsLength = reader.readInt(2); // can't be sure this will be the same as the central dir
-        this.fileName = reader.readString(this.fileNameLength);
-        reader.skip(localExtraFieldsLength);
-
-        if (this.compressedSize == -1 || this.uncompressedSize == -1) {
-            throw new Error("Bug or corrupted zip : didn't get enough informations from the central directory " + "(compressedSize == -1 || uncompressedSize == -1)");
-        }
-
-        compression = utils.findCompression(this.compressionMethod);
-        if (compression === null) { // no compression found
-            throw new Error("Corrupted zip : compression " + utils.pretty(this.compressionMethod) + " unknown (inner file : " + this.fileName + ")");
-        }
-        this.decompressed = new CompressedObject();
-        this.decompressed.compressedSize = this.compressedSize;
-        this.decompressed.uncompressedSize = this.uncompressedSize;
-        this.decompressed.crc32 = this.crc32;
-        this.decompressed.compressionMethod = this.compressionMethod;
-        this.decompressed.getCompressedContent = this.prepareCompressedContent(reader, reader.index, this.compressedSize, compression);
-        this.decompressed.getContent = this.prepareContent(reader, reader.index, this.compressedSize, compression, this.uncompressedSize);
-
-        // we need to compute the crc32...
-        if (this.loadOptions.checkCRC32) {
-            this.decompressed = utils.transformTo("string", this.decompressed.getContent());
-            if (jszipProto.crc32(this.decompressed) !== this.crc32) {
-                throw new Error("Corrupted zip : CRC32 mismatch");
-            }
-        }
-    },
-
-    /**
-     * Read the central part of a zip file and add the info in this object.
-     * @param {DataReader} reader the reader to use.
-     */
-    readCentralPart: function(reader) {
-        this.versionMadeBy = reader.readInt(2);
-        this.versionNeeded = reader.readInt(2);
-        this.bitFlag = reader.readInt(2);
-        this.compressionMethod = reader.readString(2);
-        this.date = reader.readDate();
-        this.crc32 = reader.readInt(4);
-        this.compressedSize = reader.readInt(4);
-        this.uncompressedSize = reader.readInt(4);
-        this.fileNameLength = reader.readInt(2);
-        this.extraFieldsLength = reader.readInt(2);
-        this.fileCommentLength = reader.readInt(2);
-        this.diskNumberStart = reader.readInt(2);
-        this.internalFileAttributes = reader.readInt(2);
-        this.externalFileAttributes = reader.readInt(4);
-        this.localHeaderOffset = reader.readInt(4);
-
-        if (this.isEncrypted()) {
-            throw new Error("Encrypted zip are not supported");
-        }
-
-        this.fileName = reader.readString(this.fileNameLength);
-        this.readExtraFields(reader);
-        this.parseZIP64ExtraField(reader);
-        this.fileComment = reader.readString(this.fileCommentLength);
-    },
-
-    /**
-     * Parse the external file attributes and get the unix/dos permissions.
-     */
-    processAttributes: function () {
-        this.unixPermissions = null;
-        this.dosPermissions = null;
-        var madeBy = this.versionMadeBy >> 8;
-
-        // Check if we have the DOS directory flag set.
-        // We look for it in the DOS and UNIX permissions
-        // but some unknown platform could set it as a compatibility flag.
-        this.dir = this.externalFileAttributes & 0x0010 ? true : false;
-
-        if(madeBy === MADE_BY_DOS) {
-            // first 6 bits (0 to 5)
-            this.dosPermissions = this.externalFileAttributes & 0x3F;
-        }
-
-        if(madeBy === MADE_BY_UNIX) {
-            this.unixPermissions = (this.externalFileAttributes >> 16) & 0xFFFF;
-            // the octal permissions are in (this.unixPermissions & 0x01FF).toString(8);
-        }
-
-        // fail safe : if the name ends with a / it probably means a folder
-        if (!this.dir && this.fileName.slice(-1) === '/') {
-            this.dir = true;
-        }
-    },
-
-    /**
-     * Parse the ZIP64 extra field and merge the info in the current ZipEntry.
-     * @param {DataReader} reader the reader to use.
-     */
-    parseZIP64ExtraField: function(reader) {
-
-        if (!this.extraFields[0x0001]) {
-            return;
-        }
-
-        // should be something, preparing the extra reader
-        var extraReader = new StringReader(this.extraFields[0x0001].value);
-
-        // I really hope that these 64bits integer can fit in 32 bits integer, because js
-        // won't let us have more.
-        if (this.uncompressedSize === utils.MAX_VALUE_32BITS) {
-            this.uncompressedSize = extraReader.readInt(8);
-        }
-        if (this.compressedSize === utils.MAX_VALUE_32BITS) {
-            this.compressedSize = extraReader.readInt(8);
-        }
-        if (this.localHeaderOffset === utils.MAX_VALUE_32BITS) {
-            this.localHeaderOffset = extraReader.readInt(8);
-        }
-        if (this.diskNumberStart === utils.MAX_VALUE_32BITS) {
-            this.diskNumberStart = extraReader.readInt(4);
-        }
-    },
-    /**
-     * Read the central part of a zip file and add the info in this object.
-     * @param {DataReader} reader the reader to use.
-     */
-    readExtraFields: function(reader) {
-        var start = reader.index,
-            extraFieldId,
-            extraFieldLength,
-            extraFieldValue;
-
-        this.extraFields = this.extraFields || {};
-
-        while (reader.index < start + this.extraFieldsLength) {
-            extraFieldId = reader.readInt(2);
-            extraFieldLength = reader.readInt(2);
-            extraFieldValue = reader.readString(extraFieldLength);
-
-            this.extraFields[extraFieldId] = {
-                id: extraFieldId,
-                length: extraFieldLength,
-                value: extraFieldValue
-            };
-        }
-    },
-    /**
-     * Apply an UTF8 transformation if needed.
-     */
-    handleUTF8: function() {
-        if (this.useUTF8()) {
-            this.fileName = jszipProto.utf8decode(this.fileName);
-            this.fileComment = jszipProto.utf8decode(this.fileComment);
-        } else {
-            var upath = this.findExtraFieldUnicodePath();
-            if (upath !== null) {
-                this.fileName = upath;
-            }
-            var ucomment = this.findExtraFieldUnicodeComment();
-            if (ucomment !== null) {
-                this.fileComment = ucomment;
-            }
-        }
-    },
-
-    /**
-     * Find the unicode path declared in the extra field, if any.
-     * @return {String} the unicode path, null otherwise.
-     */
-    findExtraFieldUnicodePath: function() {
-        var upathField = this.extraFields[0x7075];
-        if (upathField) {
-            var extraReader = new StringReader(upathField.value);
-
-            // wrong version
-            if (extraReader.readInt(1) !== 1) {
-                return null;
-            }
-
-            // the crc of the filename changed, this field is out of date.
-            if (jszipProto.crc32(this.fileName) !== extraReader.readInt(4)) {
-                return null;
-            }
-
-            return jszipProto.utf8decode(extraReader.readString(upathField.length - 5));
-        }
-        return null;
-    },
-
-    /**
-     * Find the unicode comment declared in the extra field, if any.
-     * @return {String} the unicode comment, null otherwise.
-     */
-    findExtraFieldUnicodeComment: function() {
-        var ucommentField = this.extraFields[0x6375];
-        if (ucommentField) {
-            var extraReader = new StringReader(ucommentField.value);
-
-            // wrong version
-            if (extraReader.readInt(1) !== 1) {
-                return null;
-            }
-
-            // the crc of the comment changed, this field is out of date.
-            if (jszipProto.crc32(this.fileComment) !== extraReader.readInt(4)) {
-                return null;
-            }
-
-            return jszipProto.utf8decode(extraReader.readString(ucommentField.length - 5));
-        }
-        return null;
-    }
-};
-module.exports = ZipEntry;
-
-},{"./compressedObject":2,"./object":13,"./stringReader":15,"./utils":21}],24:[function(_dereq_,module,exports){
-// Top level file is just a mixin of submodules & constants
-'use strict';
-
-var assign    = _dereq_('./lib/utils/common').assign;
-
-var deflate   = _dereq_('./lib/deflate');
-var inflate   = _dereq_('./lib/inflate');
-var constants = _dereq_('./lib/zlib/constants');
-
-var pako = {};
-
-assign(pako, deflate, inflate, constants);
-
-module.exports = pako;
-},{"./lib/deflate":25,"./lib/inflate":26,"./lib/utils/common":27,"./lib/zlib/constants":30}],25:[function(_dereq_,module,exports){
-'use strict';
-
-
-var zlib_deflate = _dereq_('./zlib/deflate.js');
-var utils = _dereq_('./utils/common');
-var strings = _dereq_('./utils/strings');
-var msg = _dereq_('./zlib/messages');
-var zstream = _dereq_('./zlib/zstream');
-
-
-/* Public constants ==========================================================*/
-/* ===========================================================================*/
-
-var Z_NO_FLUSH      = 0;
-var Z_FINISH        = 4;
-
-var Z_OK            = 0;
-var Z_STREAM_END    = 1;
-
-var Z_DEFAULT_COMPRESSION = -1;
-
-var Z_DEFAULT_STRATEGY    = 0;
-
-var Z_DEFLATED  = 8;
-
-/* ===========================================================================*/
-
-
-/**
- * class Deflate
- *
- * Generic JS-style wrapper for zlib calls. If you don't need
- * streaming behaviour - use more simple functions: [[deflate]],
- * [[deflateRaw]] and [[gzip]].
- **/
-
-/* internal
- * Deflate.chunks -> Array
- *
- * Chunks of output data, if [[Deflate#onData]] not overriden.
- **/
-
-/**
- * Deflate.result -> Uint8Array|Array
- *
- * Compressed result, generated by default [[Deflate#onData]]
- * and [[Deflate#onEnd]] handlers. Filled after you push last chunk
- * (call [[Deflate#push]] with `Z_FINISH` / `true` param).
- **/
-
-/**
- * Deflate.err -> Number
- *
- * Error code after deflate finished. 0 (Z_OK) on success.
- * You will not need it in real life, because deflate errors
- * are possible only on wrong options or bad `onData` / `onEnd`
- * custom handlers.
- **/
-
-/**
- * Deflate.msg -> String
- *
- * Error message, if [[Deflate.err]] != 0
- **/
-
-
-/**
- * new Deflate(options)
- * - options (Object): zlib deflate options.
- *
- * Creates new deflator instance with specified params. Throws exception
- * on bad params. Supported options:
- *
- * - `level`
- * - `windowBits`
- * - `memLevel`
- * - `strategy`
- *
- * [http://zlib.net/manual.html#Advanced](http://zlib.net/manual.html#Advanced)
- * for more information on these.
- *
- * Additional options, for internal needs:
- *
- * - `chunkSize` - size of generated data chunks (16K by default)
- * - `raw` (Boolean) - do raw deflate
- * - `gzip` (Boolean) - create gzip wrapper
- * - `to` (String) - if equal to 'string', then result will be "binary string"
- *    (each char code [0..255])
- * - `header` (Object) - custom header for gzip
- *   - `text` (Boolean) - true if compressed data believed to be text
- *   - `time` (Number) - modification time, unix timestamp
- *   - `os` (Number) - operation system code
- *   - `extra` (Array) - array of bytes with extra data (max 65536)
- *   - `name` (String) - file name (binary string)
- *   - `comment` (String) - comment (binary string)
- *   - `hcrc` (Boolean) - true if header crc should be added
- *
- * ##### Example:
- *
- * ```javascript
- * var pako = require('pako')
- *   , chunk1 = Uint8Array([1,2,3,4,5,6,7,8,9])
- *   , chunk2 = Uint8Array([10,11,12,13,14,15,16,17,18,19]);
- *
- * var deflate = new pako.Deflate({ level: 3});
- *
- * deflate.push(chunk1, false);
- * deflate.push(chunk2, true);  // true -> last chunk
- *
- * if (deflate.err) { throw new Error(deflate.err); }
- *
- * console.log(deflate.result);
- * ```
- **/
-var Deflate = function(options) {
-
-  this.options = utils.assign({
-    level: Z_DEFAULT_COMPRESSION,
-    method: Z_DEFLATED,
-    chunkSize: 16384,
-    windowBits: 15,
-    memLevel: 8,
-    strategy: Z_DEFAULT_STRATEGY,
-    to: ''
-  }, options || {});
-
-  var opt = this.options;
-
-  if (opt.raw && (opt.windowBits > 0)) {
-    opt.windowBits = -opt.windowBits;
-  }
-
-  else if (opt.gzip && (opt.windowBits > 0) && (opt.windowBits < 16)) {
-    opt.windowBits += 16;
-  }
-
-  this.err    = 0;      // error code, if happens (0 = Z_OK)
-  this.msg    = '';     // error message
-  this.ended  = false;  // used to avoid multiple onEnd() calls
-  this.chunks = [];     // chunks of compressed data
-
-  this.strm = new zstream();
-  this.strm.avail_out = 0;
-
-  var status = zlib_deflate.deflateInit2(
-    this.strm,
-    opt.level,
-    opt.method,
-    opt.windowBits,
-    opt.memLevel,
-    opt.strategy
-  );
-
-  if (status !== Z_OK) {
-    throw new Error(msg[status]);
-  }
-
-  if (opt.header) {
-    zlib_deflate.deflateSetHeader(this.strm, opt.header);
-  }
-};
-
-/**
- * Deflate#push(data[, mode]) -> Boolean
- * - data (Uint8Array|Array|String): input data. Strings will be converted to
- *   utf8 byte sequence.
- * - mode (Number|Boolean): 0..6 for corresponding Z_NO_FLUSH..Z_TREE modes.
- *   See constants. Skipped or `false` means Z_NO_FLUSH, `true` meansh Z_FINISH.
- *
- * Sends input data to deflate pipe, generating [[Deflate#onData]] calls with
- * new compressed chunks. Returns `true` on success. The last data block must have
- * mode Z_FINISH (or `true`). That flush internal pending buffers and call
- * [[Deflate#onEnd]].
- *
- * On fail call [[Deflate#onEnd]] with error code and return false.
- *
- * We strongly recommend to use `Uint8Array` on input for best speed (output
- * array format is detected automatically). Also, don't skip last param and always
- * use the same type in your code (boolean or number). That will improve JS speed.
- *
- * For regular `Array`-s make sure all elements are [0..255].
- *
- * ##### Example
- *
- * ```javascript
- * push(chunk, false); // push one of data chunks
- * ...
- * push(chunk, true);  // push last chunk
- * ```
- **/
-Deflate.prototype.push = function(data, mode) {
-  var strm = this.strm;
-  var chunkSize = this.options.chunkSize;
-  var status, _mode;
-
-  if (this.ended) { return false; }
-
-  _mode = (mode === ~~mode) ? mode : ((mode === true) ? Z_FINISH : Z_NO_FLUSH);
-
-  // Convert data if needed
-  if (typeof data === 'string') {
-    // If we need to compress text, change encoding to utf8.
-    strm.input = strings.string2buf(data);
-  } else {
-    strm.input = data;
-  }
-
-  strm.next_in = 0;
-  strm.avail_in = strm.input.length;
-
-  do {
-    if (strm.avail_out === 0) {
-      strm.output = new utils.Buf8(chunkSize);
-      strm.next_out = 0;
-      strm.avail_out = chunkSize;
-    }
-    status = zlib_deflate.deflate(strm, _mode);    /* no bad return value */
-
-    if (status !== Z_STREAM_END && status !== Z_OK) {
-      this.onEnd(status);
-      this.ended = true;
-      return false;
-    }
-    if (strm.avail_out === 0 || (strm.avail_in === 0 && _mode === Z_FINISH)) {
-      if (this.options.to === 'string') {
-        this.onData(strings.buf2binstring(utils.shrinkBuf(strm.output, strm.next_out)));
-      } else {
-        this.onData(utils.shrinkBuf(strm.output, strm.next_out));
-      }
-    }
-  } while ((strm.avail_in > 0 || strm.avail_out === 0) && status !== Z_STREAM_END);
-
-  // Finalize on the last chunk.
-  if (_mode === Z_FINISH) {
-    status = zlib_deflate.deflateEnd(this.strm);
-    this.onEnd(status);
-    this.ended = true;
-    return status === Z_OK;
-  }
-
-  return true;
-};
-
-
-/**
- * Deflate#onData(chunk) -> Void
- * - chunk (Uint8Array|Array|String): ouput data. Type of array depends
- *   on js engine support. When string output requested, each chunk
- *   will be string.
- *
- * By default, stores data blocks in `chunks[]` property and glue
- * those in `onEnd`. Override this handler, if you need another behaviour.
- **/
-Deflate.prototype.onData = function(chunk) {
-  this.chunks.push(chunk);
-};
-
-
-/**
- * Deflate#onEnd(status) -> Void
- * - status (Number): deflate status. 0 (Z_OK) on success,
- *   other if not.
- *
- * Called once after you tell deflate that input stream complete
- * or error happenned. By default - join collected chunks,
- * free memory and fill `results` / `err` properties.
- **/
-Deflate.prototype.onEnd = function(status) {
-  // On success - join
-  if (status === Z_OK) {
-    if (this.options.to === 'string') {
-      this.result = this.chunks.join('');
-    } else {
-      this.result = utils.flattenChunks(this.chunks);
-    }
-  }
-  this.chunks = [];
-  this.err = status;
-  this.msg = this.strm.msg;
-};
-
-
-/**
- * deflate(data[, options]) -> Uint8Array|Array|String
- * - data (Uint8Array|Array|String): input data to compress.
- * - options (Object): zlib deflate options.
- *
- * Compress `data` with deflate alrorythm and `options`.
- *
- * Supported options are:
- *
- * - level
- * - windowBits
- * - memLevel
- * - strategy
- *
- * [http://zlib.net/manual.html#Advanced](http://zlib.net/manual.html#Advanced)
- * for more information on these.
- *
- * Sugar (options):
- *
- * - `raw` (Boolean) - say that we work with raw stream, if you don't wish to specify
- *   negative windowBits implicitly.
- * - `to` (String) - if equal to 'string', then result will be "binary string"
- *    (each char code [0..255])
- *
- * ##### Example:
- *
- * ```javascript
- * var pako = require('pako')
- *   , data = Uint8Array([1,2,3,4,5,6,7,8,9]);
- *
- * console.log(pako.deflate(data));
- * ```
- **/
-function deflate(input, options) {
-  var deflator = new Deflate(options);
-
-  deflator.push(input, true);
-
-  // That will never happens, if you don't cheat with options :)
-  if (deflator.err) { throw deflator.msg; }
-
-  return deflator.result;
-}
-
-
-/**
- * deflateRaw(data[, options]) -> Uint8Array|Array|String
- * - data (Uint8Array|Array|String): input data to compress.
- * - options (Object): zlib deflate options.
- *
- * The same as [[deflate]], but creates raw data, without wrapper
- * (header and adler32 crc).
- **/
-function deflateRaw(input, options) {
-  options = options || {};
-  options.raw = true;
-  return deflate(input, options);
-}
-
-
-/**
- * gzip(data[, options]) -> Uint8Array|Array|String
- * - data (Uint8Array|Array|String): input data to compress.
- * - options (Object): zlib deflate options.
- *
- * The same as [[deflate]], but create gzip wrapper instead of
- * deflate one.
- **/
-function gzip(input, options) {
-  options = options || {};
-  options.gzip = true;
-  return deflate(input, options);
-}
-
-
-exports.Deflate = Deflate;
-exports.deflate = deflate;
-exports.deflateRaw = deflateRaw;
-exports.gzip = gzip;
-},{"./utils/common":27,"./utils/strings":28,"./zlib/deflate.js":32,"./zlib/messages":37,"./zlib/zstream":39}],26:[function(_dereq_,module,exports){
-'use strict';
-
-
-var zlib_inflate = _dereq_('./zlib/inflate.js');
-var utils = _dereq_('./utils/common');
-var strings = _dereq_('./utils/strings');
-var c = _dereq_('./zlib/constants');
-var msg = _dereq_('./zlib/messages');
-var zstream = _dereq_('./zlib/zstream');
-var gzheader = _dereq_('./zlib/gzheader');
-
-
-/**
- * class Inflate
- *
- * Generic JS-style wrapper for zlib calls. If you don't need
- * streaming behaviour - use more simple functions: [[inflate]]
- * and [[inflateRaw]].
- **/
-
-/* internal
- * inflate.chunks -> Array
- *
- * Chunks of output data, if [[Inflate#onData]] not overriden.
- **/
-
-/**
- * Inflate.result -> Uint8Array|Array|String
- *
- * Uncompressed result, generated by default [[Inflate#onData]]
- * and [[Inflate#onEnd]] handlers. Filled after you push last chunk
- * (call [[Inflate#push]] with `Z_FINISH` / `true` param).
- **/
-
-/**
- * Inflate.err -> Number
- *
- * Error code after inflate finished. 0 (Z_OK) on success.
- * Should be checked if broken data possible.
- **/
-
-/**
- * Inflate.msg -> String
- *
- * Error message, if [[Inflate.err]] != 0
- **/
-
-
-/**
- * new Inflate(options)
- * - options (Object): zlib inflate options.
- *
- * Creates new inflator instance with specified params. Throws exception
- * on bad params. Supported options:
- *
- * - `windowBits`
- *
- * [http://zlib.net/manual.html#Advanced](http://zlib.net/manual.html#Advanced)
- * for more information on these.
- *
- * Additional options, for internal needs:
- *
- * - `chunkSize` - size of generated data chunks (16K by default)
- * - `raw` (Boolean) - do raw inflate
- * - `to` (String) - if equal to 'string', then result will be converted
- *   from utf8 to utf16 (javascript) string. When string output requested,
- *   chunk length can differ from `chunkSize`, depending on content.
- *
- * By default, when no options set, autodetect deflate/gzip data format via
- * wrapper header.
- *
- * ##### Example:
- *
- * ```javascript
- * var pako = require('pako')
- *   , chunk1 = Uint8Array([1,2,3,4,5,6,7,8,9])
- *   , chunk2 = Uint8Array([10,11,12,13,14,15,16,17,18,19]);
- *
- * var inflate = new pako.Inflate({ level: 3});
- *
- * inflate.push(chunk1, false);
- * inflate.push(chunk2, true);  // true -> last chunk
- *
- * if (inflate.err) { throw new Error(inflate.err); }
- *
- * console.log(inflate.result);
- * ```
- **/
-var Inflate = function(options) {
-
-  this.options = utils.assign({
-    chunkSize: 16384,
-    windowBits: 0,
-    to: ''
-  }, options || {});
-
-  var opt = this.options;
-
-  // Force window size for `raw` data, if not set directly,
-  // because we have no header for autodetect.
-  if (opt.raw && (opt.windowBits >= 0) && (opt.windowBits < 16)) {
-    opt.windowBits = -opt.windowBits;
-    if (opt.windowBits === 0) { opt.windowBits = -15; }
-  }
-
-  // If `windowBits` not defined (and mode not raw) - set autodetect flag for gzip/deflate
-  if ((opt.windowBits >= 0) && (opt.windowBits < 16) &&
-      !(options && options.windowBits)) {
-    opt.windowBits += 32;
-  }
-
-  // Gzip header has no info about windows size, we can do autodetect only
-  // for deflate. So, if window size not set, force it to max when gzip possible
-  if ((opt.windowBits > 15) && (opt.windowBits < 48)) {
-    // bit 3 (16) -> gzipped data
-    // bit 4 (32) -> autodetect gzip/deflate
-    if ((opt.windowBits & 15) === 0) {
-      opt.windowBits |= 15;
-    }
-  }
-
-  this.err    = 0;      // error code, if happens (0 = Z_OK)
-  this.msg    = '';     // error message
-  this.ended  = false;  // used to avoid multiple onEnd() calls
-  this.chunks = [];     // chunks of compressed data
-
-  this.strm   = new zstream();
-  this.strm.avail_out = 0;
-
-  var status  = zlib_inflate.inflateInit2(
-    this.strm,
-    opt.windowBits
-  );
-
-  if (status !== c.Z_OK) {
-    throw new Error(msg[status]);
-  }
-
-  this.header = new gzheader();
-
-  zlib_inflate.inflateGetHeader(this.strm, this.header);
-};
-
-/**
- * Inflate#push(data[, mode]) -> Boolean
- * - data (Uint8Array|Array|String): input data
- * - mode (Number|Boolean): 0..6 for corresponding Z_NO_FLUSH..Z_TREE modes.
- *   See constants. Skipped or `false` means Z_NO_FLUSH, `true` meansh Z_FINISH.
- *
- * Sends input data to inflate pipe, generating [[Inflate#onData]] calls with
- * new output chunks. Returns `true` on success. The last data block must have
- * mode Z_FINISH (or `true`). That flush internal pending buffers and call
- * [[Inflate#onEnd]].
- *
- * On fail call [[Inflate#onEnd]] with error code and return false.
- *
- * We strongly recommend to use `Uint8Array` on input for best speed (output
- * format is detected automatically). Also, don't skip last param and always
- * use the same type in your code (boolean or number). That will improve JS speed.
- *
- * For regular `Array`-s make sure all elements are [0..255].
- *
- * ##### Example
- *
- * ```javascript
- * push(chunk, false); // push one of data chunks
- * ...
- * push(chunk, true);  // push last chunk
- * ```
- **/
-Inflate.prototype.push = function(data, mode) {
-  var strm = this.strm;
-  var chunkSize = this.options.chunkSize;
-  var status, _mode;
-  var next_out_utf8, tail, utf8str;
-
-  if (this.ended) { return false; }
-  _mode = (mode === ~~mode) ? mode : ((mode === true) ? c.Z_FINISH : c.Z_NO_FLUSH);
-
-  // Convert data if needed
-  if (typeof data === 'string') {
-    // Only binary strings can be decompressed on practice
-    strm.input = strings.binstring2buf(data);
-  } else {
-    strm.input = data;
-  }
-
-  strm.next_in = 0;
-  strm.avail_in = strm.input.length;
-
-  do {
-    if (strm.avail_out === 0) {
-      strm.output = new utils.Buf8(chunkSize);
-      strm.next_out = 0;
-      strm.avail_out = chunkSize;
-    }
-
-    status = zlib_inflate.inflate(strm, c.Z_NO_FLUSH);    /* no bad return value */
-
-    if (status !== c.Z_STREAM_END && status !== c.Z_OK) {
-      this.onEnd(status);
-      this.ended = true;
-      return false;
-    }
-
-    if (strm.next_out) {
-      if (strm.avail_out === 0 || status === c.Z_STREAM_END || (strm.avail_in === 0 && _mode === c.Z_FINISH)) {
-
-        if (this.options.to === 'string') {
-
-          next_out_utf8 = strings.utf8border(strm.output, strm.next_out);
-
-          tail = strm.next_out - next_out_utf8;
-          utf8str = strings.buf2string(strm.output, next_out_utf8);
-
-          // move tail
-          strm.next_out = tail;
-          strm.avail_out = chunkSize - tail;
-          if (tail) { utils.arraySet(strm.output, strm.output, next_out_utf8, tail, 0); }
-
-          this.onData(utf8str);
-
-        } else {
-          this.onData(utils.shrinkBuf(strm.output, strm.next_out));
-        }
-      }
-    }
-  } while ((strm.avail_in > 0) && status !== c.Z_STREAM_END);
-
-  if (status === c.Z_STREAM_END) {
-    _mode = c.Z_FINISH;
-  }
-  // Finalize on the last chunk.
-  if (_mode === c.Z_FINISH) {
-    status = zlib_inflate.inflateEnd(this.strm);
-    this.onEnd(status);
-    this.ended = true;
-    return status === c.Z_OK;
-  }
-
-  return true;
-};
-
-
-/**
- * Inflate#onData(chunk) -> Void
- * - chunk (Uint8Array|Array|String): ouput data. Type of array depends
- *   on js engine support. When string output requested, each chunk
- *   will be string.
- *
- * By default, stores data blocks in `chunks[]` property and glue
- * those in `onEnd`. Override this handler, if you need another behaviour.
- **/
-Inflate.prototype.onData = function(chunk) {
-  this.chunks.push(chunk);
-};
-
-
-/**
- * Inflate#onEnd(status) -> Void
- * - status (Number): inflate status. 0 (Z_OK) on success,
- *   other if not.
- *
- * Called once after you tell inflate that input stream complete
- * or error happenned. By default - join collected chunks,
- * free memory and fill `results` / `err` properties.
- **/
-Inflate.prototype.onEnd = function(status) {
-  // On success - join
-  if (status === c.Z_OK) {
-    if (this.options.to === 'string') {
-      // Glue & convert here, until we teach pako to send
-      // utf8 alligned strings to onData
-      this.result = this.chunks.join('');
-    } else {
-      this.result = utils.flattenChunks(this.chunks);
-    }
-  }
-  this.chunks = [];
-  this.err = status;
-  this.msg = this.strm.msg;
-};
-
-
-/**
- * inflate(data[, options]) -> Uint8Array|Array|String
- * - data (Uint8Array|Array|String): input data to decompress.
- * - options (Object): zlib inflate options.
- *
- * Decompress `data` with inflate/ungzip and `options`. Autodetect
- * format via wrapper header by default. That's why we don't provide
- * separate `ungzip` method.
- *
- * Supported options are:
- *
- * - windowBits
- *
- * [http://zlib.net/manual.html#Advanced](http://zlib.net/manual.html#Advanced)
- * for more information.
- *
- * Sugar (options):
- *
- * - `raw` (Boolean) - say that we work with raw stream, if you don't wish to specify
- *   negative windowBits implicitly.
- * - `to` (String) - if equal to 'string', then result will be converted
- *   from utf8 to utf16 (javascript) string. When string output requested,
- *   chunk length can differ from `chunkSize`, depending on content.
- *
- *
- * ##### Example:
- *
- * ```javascript
- * var pako = require('pako')
- *   , input = pako.deflate([1,2,3,4,5,6,7,8,9])
- *   , output;
- *
- * try {
- *   output = pako.inflate(input);
- * } catch (err)
- *   console.log(err);
- * }
- * ```
- **/
-function inflate(input, options) {
-  var inflator = new Inflate(options);
-
-  inflator.push(input, true);
-
-  // That will never happens, if you don't cheat with options :)
-  if (inflator.err) { throw inflator.msg; }
-
-  return inflator.result;
-}
-
-
-/**
- * inflateRaw(data[, options]) -> Uint8Array|Array|String
- * - data (Uint8Array|Array|String): input data to decompress.
- * - options (Object): zlib inflate options.
- *
- * The same as [[inflate]], but creates raw data, without wrapper
- * (header and adler32 crc).
- **/
-function inflateRaw(input, options) {
-  options = options || {};
-  options.raw = true;
-  return inflate(input, options);
-}
-
-
-/**
- * ungzip(data[, options]) -> Uint8Array|Array|String
- * - data (Uint8Array|Array|String): input data to decompress.
- * - options (Object): zlib inflate options.
- *
- * Just shortcut to [[inflate]], because it autodetects format
- * by header.content. Done for convenience.
- **/
-
-
-exports.Inflate = Inflate;
-exports.inflate = inflate;
-exports.inflateRaw = inflateRaw;
-exports.ungzip  = inflate;
-
-},{"./utils/common":27,"./utils/strings":28,"./zlib/constants":30,"./zlib/gzheader":33,"./zlib/inflate.js":35,"./zlib/messages":37,"./zlib/zstream":39}],27:[function(_dereq_,module,exports){
-'use strict';
-
-
-var TYPED_OK =  (typeof Uint8Array !== 'undefined') &&
-                (typeof Uint16Array !== 'undefined') &&
-                (typeof Int32Array !== 'undefined');
-
-
-exports.assign = function (obj /*from1, from2, from3, ...*/) {
-  var sources = Array.prototype.slice.call(arguments, 1);
-  while (sources.length) {
-    var source = sources.shift();
-    if (!source) { continue; }
-
-    if (typeof(source) !== 'object') {
-      throw new TypeError(source + 'must be non-object');
-    }
-
-    for (var p in source) {
-      if (source.hasOwnProperty(p)) {
-        obj[p] = source[p];
-      }
-    }
-  }
-
-  return obj;
-};
-
-
-// reduce buffer size, avoiding mem copy
-exports.shrinkBuf = function (buf, size) {
-  if (buf.length === size) { return buf; }
-  if (buf.subarray) { return buf.subarray(0, size); }
-  buf.length = size;
-  return buf;
-};
-
-
-var fnTyped = {
-  arraySet: function (dest, src, src_offs, len, dest_offs) {
-    if (src.subarray && dest.subarray) {
-      dest.set(src.subarray(src_offs, src_offs+len), dest_offs);
-      return;
-    }
-    // Fallback to ordinary array
-    for(var i=0; i<len; i++) {
-      dest[dest_offs + i] = src[src_offs + i];
-    }
-  },
-  // Join array of chunks to single array.
-  flattenChunks: function(chunks) {
-    var i, l, len, pos, chunk, result;
-
-    // calculate data length
-    len = 0;
-    for (i=0, l=chunks.length; i<l; i++) {
-      len += chunks[i].length;
-    }
-
-    // join chunks
-    result = new Uint8Array(len);
-    pos = 0;
-    for (i=0, l=chunks.length; i<l; i++) {
-      chunk = chunks[i];
-      result.set(chunk, pos);
-      pos += chunk.length;
-    }
-
-    return result;
-  }
-};
-
-var fnUntyped = {
-  arraySet: function (dest, src, src_offs, len, dest_offs) {
-    for(var i=0; i<len; i++) {
-      dest[dest_offs + i] = src[src_offs + i];
-    }
-  },
-  // Join array of chunks to single array.
-  flattenChunks: function(chunks) {
-    return [].concat.apply([], chunks);
-  }
-};
-
-
-// Enable/Disable typed arrays use, for testing
-//
-exports.setTyped = function (on) {
-  if (on) {
-    exports.Buf8  = Uint8Array;
-    exports.Buf16 = Uint16Array;
-    exports.Buf32 = Int32Array;
-    exports.assign(exports, fnTyped);
-  } else {
-    exports.Buf8  = Array;
-    exports.Buf16 = Array;
-    exports.Buf32 = Array;
-    exports.assign(exports, fnUntyped);
-  }
-};
-
-exports.setTyped(TYPED_OK);
-},{}],28:[function(_dereq_,module,exports){
-// String encode/decode helpers
-'use strict';
-
-
-var utils = _dereq_('./common');
-
-
-// Quick check if we can use fast array to bin string conversion
-//
-// - apply(Array) can fail on Android 2.2
-// - apply(Uint8Array) can fail on iOS 5.1 Safary
-//
-var STR_APPLY_OK = true;
-var STR_APPLY_UIA_OK = true;
-
-try { String.fromCharCode.apply(null, [0]); } catch(__) { STR_APPLY_OK = false; }
-try { String.fromCharCode.apply(null, new Uint8Array(1)); } catch(__) { STR_APPLY_UIA_OK = false; }
-
-
-// Table with utf8 lengths (calculated by first byte of sequence)
-// Note, that 5 & 6-byte values and some 4-byte values can not be represented in JS,
-// because max possible codepoint is 0x10ffff
-var _utf8len = new utils.Buf8(256);
-for (var i=0; i<256; i++) {
-  _utf8len[i] = (i >= 252 ? 6 : i >= 248 ? 5 : i >= 240 ? 4 : i >= 224 ? 3 : i >= 192 ? 2 : 1);
-}
-_utf8len[254]=_utf8len[254]=1; // Invalid sequence start
-
-
-// convert string to array (typed, when possible)
-exports.string2buf = function (str) {
-  var buf, c, c2, m_pos, i, str_len = str.length, buf_len = 0;
-
-  // count binary size
-  for (m_pos = 0; m_pos < str_len; m_pos++) {
-    c = str.charCodeAt(m_pos);
-    if ((c & 0xfc00) === 0xd800 && (m_pos+1 < str_len)) {
-      c2 = str.charCodeAt(m_pos+1);
-      if ((c2 & 0xfc00) === 0xdc00) {
-        c = 0x10000 + ((c - 0xd800) << 10) + (c2 - 0xdc00);
-        m_pos++;
-      }
-    }
-    buf_len += c < 0x80 ? 1 : c < 0x800 ? 2 : c < 0x10000 ? 3 : 4;
-  }
-
-  // allocate buffer
-  buf = new utils.Buf8(buf_len);
-
-  // convert
-  for (i=0, m_pos = 0; i < buf_len; m_pos++) {
-    c = str.charCodeAt(m_pos);
-    if ((c & 0xfc00) === 0xd800 && (m_pos+1 < str_len)) {
-      c2 = str.charCodeAt(m_pos+1);
-      if ((c2 & 0xfc00) === 0xdc00) {
-        c = 0x10000 + ((c - 0xd800) << 10) + (c2 - 0xdc00);
-        m_pos++;
-      }
-    }
-    if (c < 0x80) {
-      /* one byte */
-      buf[i++] = c;
-    } else if (c < 0x800) {
-      /* two bytes */
-      buf[i++] = 0xC0 | (c >>> 6);
-      buf[i++] = 0x80 | (c & 0x3f);
-    } else if (c < 0x10000) {
-      /* three bytes */
-      buf[i++] = 0xE0 | (c >>> 12);
-      buf[i++] = 0x80 | (c >>> 6 & 0x3f);
-      buf[i++] = 0x80 | (c & 0x3f);
-    } else {
-      /* four bytes */
-      buf[i++] = 0xf0 | (c >>> 18);
-      buf[i++] = 0x80 | (c >>> 12 & 0x3f);
-      buf[i++] = 0x80 | (c >>> 6 & 0x3f);
-      buf[i++] = 0x80 | (c & 0x3f);
-    }
-  }
-
-  return buf;
-};
-
-// Helper (used in 2 places)
-function buf2binstring(buf, len) {
-  // use fallback for big arrays to avoid stack overflow
-  if (len < 65537) {
-    if ((buf.subarray && STR_APPLY_UIA_OK) || (!buf.subarray && STR_APPLY_OK)) {
-      return String.fromCharCode.apply(null, utils.shrinkBuf(buf, len));
-    }
-  }
-
-  var result = '';
-  for(var i=0; i < len; i++) {
-    result += String.fromCharCode(buf[i]);
-  }
-  return result;
-}
-
-
-// Convert byte array to binary string
-exports.buf2binstring = function(buf) {
-  return buf2binstring(buf, buf.length);
-};
-
-
-// Convert binary string (typed, when possible)
-exports.binstring2buf = function(str) {
-  var buf = new utils.Buf8(str.length);
-  for(var i=0, len=buf.length; i < len; i++) {
-    buf[i] = str.charCodeAt(i);
-  }
-  return buf;
-};
-
-
-// convert array to string
-exports.buf2string = function (buf, max) {
-  var i, out, c, c_len;
-  var len = max || buf.length;
-
-  // Reserve max possible length (2 words per char)
-  // NB: by unknown reasons, Array is significantly faster for
-  //     String.fromCharCode.apply than Uint16Array.
-  var utf16buf = new Array(len*2);
-
-  for (out=0, i=0; i<len;) {
-    c = buf[i++];
-    // quick process ascii
-    if (c < 0x80) { utf16buf[out++] = c; continue; }
-
-    c_len = _utf8len[c];
-    // skip 5 & 6 byte codes
-    if (c_len > 4) { utf16buf[out++] = 0xfffd; i += c_len-1; continue; }
-
-    // apply mask on first byte
-    c &= c_len === 2 ? 0x1f : c_len === 3 ? 0x0f : 0x07;
-    // join the rest
-    while (c_len > 1 && i < len) {
-      c = (c << 6) | (buf[i++] & 0x3f);
-      c_len--;
-    }
-
-    // terminated by end of string?
-    if (c_len > 1) { utf16buf[out++] = 0xfffd; continue; }
-
-    if (c < 0x10000) {
-      utf16buf[out++] = c;
-    } else {
-      c -= 0x10000;
-      utf16buf[out++] = 0xd800 | ((c >> 10) & 0x3ff);
-      utf16buf[out++] = 0xdc00 | (c & 0x3ff);
-    }
-  }
-
-  return buf2binstring(utf16buf, out);
-};
-
-
-// Calculate max possible position in utf8 buffer,
-// that will not break sequence. If that's not possible
-// - (very small limits) return max size as is.
-//
-// buf[] - utf8 bytes array
-// max   - length limit (mandatory);
-exports.utf8border = function(buf, max) {
-  var pos;
-
-  max = max || buf.length;
-  if (max > buf.length) { max = buf.length; }
-
-  // go back from last position, until start of sequence found
-  pos = max-1;
-  while (pos >= 0 && (buf[pos] & 0xC0) === 0x80) { pos--; }
-
-  // Fuckup - very small and broken sequence,
-  // return max, because we should return something anyway.
-  if (pos < 0) { return max; }
-
-  // If we came to start of buffer - that means vuffer is too small,
-  // return max too.
-  if (pos === 0) { return max; }
-
-  return (pos + _utf8len[buf[pos]] > max) ? pos : max;
-};
-
-},{"./common":27}],29:[function(_dereq_,module,exports){
-'use strict';
-
-// Note: adler32 takes 12% for level 0 and 2% for level 6.
-// It doesn't worth to make additional optimizationa as in original.
-// Small size is preferable.
-
-function adler32(adler, buf, len, pos) {
-  var s1 = (adler & 0xffff) |0
-    , s2 = ((adler >>> 16) & 0xffff) |0
-    , n = 0;
-
-  while (len !== 0) {
-    // Set limit ~ twice less than 5552, to keep
-    // s2 in 31-bits, because we force signed ints.
-    // in other case %= will fail.
-    n = len > 2000 ? 2000 : len;
-    len -= n;
-
-    do {
-      s1 = (s1 + buf[pos++]) |0;
-      s2 = (s2 + s1) |0;
-    } while (--n);
-
-    s1 %= 65521;
-    s2 %= 65521;
-  }
-
-  return (s1 | (s2 << 16)) |0;
-}
-
-
-module.exports = adler32;
-},{}],30:[function(_dereq_,module,exports){
-module.exports = {
-
-  /* Allowed flush values; see deflate() and inflate() below for details */
-  Z_NO_FLUSH:         0,
-  Z_PARTIAL_FLUSH:    1,
-  Z_SYNC_FLUSH:       2,
-  Z_FULL_FLUSH:       3,
-  Z_FINISH:           4,
-  Z_BLOCK:            5,
-  Z_TREES:            6,
-
-  /* Return codes for the compression/decompression functions. Negative values
-  * are errors, positive values are used for special but normal events.
-  */
-  Z_OK:               0,
-  Z_STREAM_END:       1,
-  Z_NEED_DICT:        2,
-  Z_ERRNO:           -1,
-  Z_STREAM_ERROR:    -2,
-  Z_DATA_ERROR:      -3,
-  //Z_MEM_ERROR:     -4,
-  Z_BUF_ERROR:       -5,
-  //Z_VERSION_ERROR: -6,
-
-  /* compression levels */
-  Z_NO_COMPRESSION:         0,
-  Z_BEST_SPEED:             1,
-  Z_BEST_COMPRESSION:       9,
-  Z_DEFAULT_COMPRESSION:   -1,
-
-
-  Z_FILTERED:               1,
-  Z_HUFFMAN_ONLY:           2,
-  Z_RLE:                    3,
-  Z_FIXED:                  4,
-  Z_DEFAULT_STRATEGY:       0,
-
-  /* Possible values of the data_type field (though see inflate()) */
-  Z_BINARY:                 0,
-  Z_TEXT:                   1,
-  //Z_ASCII:                1, // = Z_TEXT (deprecated)
-  Z_UNKNOWN:                2,
-
-  /* The deflate compression method */
-  Z_DEFLATED:               8
-  //Z_NULL:                 null // Use -1 or null inline, depending on var type
-};
-},{}],31:[function(_dereq_,module,exports){
-'use strict';
-
-// Note: we can't get significant speed boost here.
-// So write code to minimize size - no pregenerated tables
-// and array tools dependencies.
-
-
-// Use ordinary array, since untyped makes no boost here
-function makeTable() {
-  var c, table = [];
-
-  for(var n =0; n < 256; n++){
-    c = n;
-    for(var k =0; k < 8; k++){
-      c = ((c&1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
-    }
-    table[n] = c;
-  }
-
-  return table;
-}
-
-// Create table on load. Just 255 signed longs. Not a problem.
-var crcTable = makeTable();
-
-
-function crc32(crc, buf, len, pos) {
-  var t = crcTable
-    , end = pos + len;
-
-  crc = crc ^ (-1);
-
-  for (var i = pos; i < end; i++ ) {
-    crc = (crc >>> 8) ^ t[(crc ^ buf[i]) & 0xFF];
-  }
-
-  return (crc ^ (-1)); // >>> 0;
-}
-
-
-module.exports = crc32;
-},{}],32:[function(_dereq_,module,exports){
-'use strict';
-
-var utils   = _dereq_('../utils/common');
-var trees   = _dereq_('./trees');
-var adler32 = _dereq_('./adler32');
-var crc32   = _dereq_('./crc32');
-var msg   = _dereq_('./messages');
-
-/* Public constants ==========================================================*/
-/* ===========================================================================*/
-
-
-/* Allowed flush values; see deflate() and inflate() below for details */
-var Z_NO_FLUSH      = 0;
-var Z_PARTIAL_FLUSH = 1;
-//var Z_SYNC_FLUSH    = 2;
-var Z_FULL_FLUSH    = 3;
-var Z_FINISH        = 4;
-var Z_BLOCK         = 5;
-//var Z_TREES         = 6;
-
-
-/* Return codes for the compression/decompression functions. Negative values
- * are errors, positive values are used for special but normal events.
- */
-var Z_OK            = 0;
-var Z_STREAM_END    = 1;
-//var Z_NEED_DICT     = 2;
-//var Z_ERRNO         = -1;
-var Z_STREAM_ERROR  = -2;
-var Z_DATA_ERROR    = -3;
-//var Z_MEM_ERROR     = -4;
-var Z_BUF_ERROR     = -5;
-//var Z_VERSION_ERROR = -6;
-
-
-/* compression levels */
-//var Z_NO_COMPRESSION      = 0;
-//var Z_BEST_SPEED          = 1;
-//var Z_BEST_COMPRESSION    = 9;
-var Z_DEFAULT_COMPRESSION = -1;
-
-
-var Z_FILTERED            = 1;
-var Z_HUFFMAN_ONLY        = 2;
-var Z_RLE                 = 3;
-var Z_FIXED               = 4;
-var Z_DEFAULT_STRATEGY    = 0;
-
-/* Possible values of the data_type field (though see inflate()) */
-//var Z_BINARY              = 0;
-//var Z_TEXT                = 1;
-//var Z_ASCII               = 1; // = Z_TEXT
-var Z_UNKNOWN             = 2;
-
-
-/* The deflate compression method */
-var Z_DEFLATED  = 8;
-
-/*============================================================================*/
-
-
-var MAX_MEM_LEVEL = 9;
-/* Maximum value for memLevel in deflateInit2 */
-var MAX_WBITS = 15;
-/* 32K LZ77 window */
-var DEF_MEM_LEVEL = 8;
-
-
-var LENGTH_CODES  = 29;
-/* number of length codes, not counting the special END_BLOCK code */
-var LITERALS      = 256;
-/* number of literal bytes 0..255 */
-var L_CODES       = LITERALS + 1 + LENGTH_CODES;
-/* number of Literal or Length codes, including the END_BLOCK code */
-var D_CODES       = 30;
-/* number of distance codes */
-var BL_CODES      = 19;
-/* number of codes used to transfer the bit lengths */
-var HEAP_SIZE     = 2*L_CODES + 1;
-/* maximum heap size */
-var MAX_BITS  = 15;
-/* All codes must not exceed MAX_BITS bits */
-
-var MIN_MATCH = 3;
-var MAX_MATCH = 258;
-var MIN_LOOKAHEAD = (MAX_MATCH + MIN_MATCH + 1);
-
-var PRESET_DICT = 0x20;
-
-var INIT_STATE = 42;
-var EXTRA_STATE = 69;
-var NAME_STATE = 73;
-var COMMENT_STATE = 91;
-var HCRC_STATE = 103;
-var BUSY_STATE = 113;
-var FINISH_STATE = 666;
-
-var BS_NEED_MORE      = 1; /* block not completed, need more input or more output */
-var BS_BLOCK_DONE     = 2; /* block flush performed */
-var BS_FINISH_STARTED = 3; /* finish started, need only more output at next deflate */
-var BS_FINISH_DONE    = 4; /* finish done, accept no more input or output */
-
-var OS_CODE = 0x03; // Unix :) . Don't detect, use this default.
-
-function err(strm, errorCode) {
-  strm.msg = msg[errorCode];
-  return errorCode;
-}
-
-function rank(f) {
-  return ((f) << 1) - ((f) > 4 ? 9 : 0);
-}
-
-function zero(buf) { var len = buf.length; while (--len >= 0) { buf[len] = 0; } }
-
-
-/* =========================================================================
- * Flush as much pending output as possible. All deflate() output goes
- * through this function so some applications may wish to modify it
- * to avoid allocating a large strm->output buffer and copying into it.
- * (See also read_buf()).
- */
-function flush_pending(strm) {
-  var s = strm.state;
-
-  //_tr_flush_bits(s);
-  var len = s.pending;
-  if (len > strm.avail_out) {
-    len = strm.avail_out;
-  }
-  if (len === 0) { return; }
-
-  utils.arraySet(strm.output, s.pending_buf, s.pending_out, len, strm.next_out);
-  strm.next_out += len;
-  s.pending_out += len;
-  strm.total_out += len;
-  strm.avail_out -= len;
-  s.pending -= len;
-  if (s.pending === 0) {
-    s.pending_out = 0;
-  }
-}
-
-
-function flush_block_only (s, last) {
-  trees._tr_flush_block(s, (s.block_start >= 0 ? s.block_start : -1), s.strstart - s.block_start, last);
-  s.block_start = s.strstart;
-  flush_pending(s.strm);
-}
-
-
-function put_byte(s, b) {
-  s.pending_buf[s.pending++] = b;
-}
-
-
-/* =========================================================================
- * Put a short in the pending buffer. The 16-bit value is put in MSB order.
- * IN assertion: the stream state is correct and there is enough room in
- * pending_buf.
- */
-function putShortMSB(s, b) {
-//  put_byte(s, (Byte)(b >> 8));
-//  put_byte(s, (Byte)(b & 0xff));
-  s.pending_buf[s.pending++] = (b >>> 8) & 0xff;
-  s.pending_buf[s.pending++] = b & 0xff;
-}
-
-
-/* ===========================================================================
- * Read a new buffer from the current input stream, update the adler32
- * and total number of bytes read.  All deflate() input goes through
- * this function so some applications may wish to modify it to avoid
- * allocating a large strm->input buffer and copying from it.
- * (See also flush_pending()).
- */
-function read_buf(strm, buf, start, size) {
-  var len = strm.avail_in;
-
-  if (len > size) { len = size; }
-  if (len === 0) { return 0; }
-
-  strm.avail_in -= len;
-
-  utils.arraySet(buf, strm.input, strm.next_in, len, start);
-  if (strm.state.wrap === 1) {
-    strm.adler = adler32(strm.adler, buf, len, start);
-  }
-
-  else if (strm.state.wrap === 2) {
-    strm.adler = crc32(strm.adler, buf, len, start);
-  }
-
-  strm.next_in += len;
-  strm.total_in += len;
-
-  return len;
-}
-
-
-/* ===========================================================================
- * Set match_start to the longest match starting at the given string and
- * return its length. Matches shorter or equal to prev_length are discarded,
- * in which case the result is equal to prev_length and match_start is
- * garbage.
- * IN assertions: cur_match is the head of the hash chain for the current
- *   string (strstart) and its distance is <= MAX_DIST, and prev_length >= 1
- * OUT assertion: the match length is not greater than s->lookahead.
- */
-function longest_match(s, cur_match) {
-  var chain_length = s.max_chain_length;      /* max hash chain length */
-  var scan = s.strstart; /* current string */
-  var match;                       /* matched string */
-  var len;                           /* length of current match */
-  var best_len = s.prev_length;              /* best match length so far */
-  var nice_match = s.nice_match;             /* stop if match long enough */
-  var limit = (s.strstart > (s.w_size - MIN_LOOKAHEAD)) ?
-      s.strstart - (s.w_size - MIN_LOOKAHEAD) : 0/*NIL*/;
-
-  var _win = s.window; // shortcut
-
-  var wmask = s.w_mask;
-  var prev  = s.prev;
-
-  /* Stop when cur_match becomes <= limit. To simplify the code,
-   * we prevent matches with the string of window index 0.
-   */
-
-  var strend = s.strstart + MAX_MATCH;
-  var scan_end1  = _win[scan + best_len - 1];
-  var scan_end   = _win[scan + best_len];
-
-  /* The code is optimized for HASH_BITS >= 8 and MAX_MATCH-2 multiple of 16.
-   * It is easy to get rid of this optimization if necessary.
-   */
-  // Assert(s->hash_bits >= 8 && MAX_MATCH == 258, "Code too clever");
-
-  /* Do not waste too much time if we already have a good match: */
-  if (s.prev_length >= s.good_match) {
-    chain_length >>= 2;
-  }
-  /* Do not look for matches beyond the end of the input. This is necessary
-   * to make deflate deterministic.
-   */
-  if (nice_match > s.lookahead) { nice_match = s.lookahead; }
-
-  // Assert((ulg)s->strstart <= s->window_size-MIN_LOOKAHEAD, "need lookahead");
-
-  do {
-    // Assert(cur_match < s->strstart, "no future");
-    match = cur_match;
-
-    /* Skip to next match if the match length cannot increase
-     * or if the match length is less than 2.  Note that the checks below
-     * for insufficient lookahead only occur occasionally for performance
-     * reasons.  Therefore uninitialized memory will be accessed, and
-     * conditional jumps will be made that depend on those values.
-     * However the length of the match is limited to the lookahead, so
-     * the output of deflate is not affected by the uninitialized values.
-     */
-
-    if (_win[match + best_len]     !== scan_end  ||
-        _win[match + best_len - 1] !== scan_end1 ||
-        _win[match]                !== _win[scan] ||
-        _win[++match]              !== _win[scan + 1]) {
-      continue;
-    }
-
-    /* The check at best_len-1 can be removed because it will be made
-     * again later. (This heuristic is not always a win.)
-     * It is not necessary to compare scan[2] and match[2] since they
-     * are always equal when the other bytes match, given that
-     * the hash keys are equal and that HASH_BITS >= 8.
-     */
-    scan += 2;
-    match++;
-    // Assert(*scan == *match, "match[2]?");
-
-    /* We check for insufficient lookahead only every 8th comparison;
-     * the 256th check will be made at strstart+258.
-     */
-    do {
-      /*jshint noempty:false*/
-    } while (_win[++scan] === _win[++match] && _win[++scan] === _win[++match] &&
-             _win[++scan] === _win[++match] && _win[++scan] === _win[++match] &&
-             _win[++scan] === _win[++match] && _win[++scan] === _win[++match] &&
-             _win[++scan] === _win[++match] && _win[++scan] === _win[++match] &&
-             scan < strend);
-
-    // Assert(scan <= s->window+(unsigned)(s->window_size-1), "wild scan");
-
-    len = MAX_MATCH - (strend - scan);
-    scan = strend - MAX_MATCH;
-
-    if (len > best_len) {
-      s.match_start = cur_match;
-      best_len = len;
-      if (len >= nice_match) {
-        break;
-      }
-      scan_end1  = _win[scan + best_len - 1];
-      scan_end   = _win[scan + best_len];
-    }
-  } while ((cur_match = prev[cur_match & wmask]) > limit && --chain_length !== 0);
-
-  if (best_len <= s.lookahead) {
-    return best_len;
-  }
-  return s.lookahead;
-}
-
-
-/* ===========================================================================
- * Fill the window when the lookahead becomes insufficient.
- * Updates strstart and lookahead.
- *
- * IN assertion: lookahead < MIN_LOOKAHEAD
- * OUT assertions: strstart <= window_size-MIN_LOOKAHEAD
- *    At least one byte has been read, or avail_in == 0; reads are
- *    performed for at least two bytes (required for the zip translate_eol
- *    option -- not supported here).
- */
-function fill_window(s) {
-  var _w_size = s.w_size;
-  var p, n, m, more, str;
-
-  //Assert(s->lookahead < MIN_LOOKAHEAD, "already enough lookahead");
-
-  do {
-    more = s.window_size - s.lookahead - s.strstart;
-
-    // JS ints have 32 bit, block below not needed
-    /* Deal with !@#$% 64K limit: */
-    //if (sizeof(int) <= 2) {
-    //    if (more == 0 && s->strstart == 0 && s->lookahead == 0) {
-    //        more = wsize;
-    //
-    //  } else if (more == (unsigned)(-1)) {
-    //        /* Very unlikely, but possible on 16 bit machine if
-    //         * strstart == 0 && lookahead == 1 (input done a byte at time)
-    //         */
-    //        more--;
-    //    }
-    //}
-
-
-    /* If the window is almost full and there is insufficient lookahead,
-     * move the upper half to the lower one to make room in the upper half.
-     */
-    if (s.strstart >= _w_size + (_w_size - MIN_LOOKAHEAD)) {
-
-      utils.arraySet(s.window, s.window, _w_size, _w_size, 0);
-      s.match_start -= _w_size;
-      s.strstart -= _w_size;
-      /* we now have strstart >= MAX_DIST */
-      s.block_start -= _w_size;
-
-      /* Slide the hash table (could be avoided with 32 bit values
-       at the expense of memory usage). We slide even when level == 0
-       to keep the hash table consistent if we switch back to level > 0
-       later. (Using level 0 permanently is not an optimal usage of
-       zlib, so we don't care about this pathological case.)
-       */
-
-      n = s.hash_size;
-      p = n;
-      do {
-        m = s.head[--p];
-        s.head[p] = (m >= _w_size ? m - _w_size : 0);
-      } while (--n);
-
-      n = _w_size;
-      p = n;
-      do {
-        m = s.prev[--p];
-        s.prev[p] = (m >= _w_size ? m - _w_size : 0);
-        /* If n is not on any hash chain, prev[n] is garbage but
-         * its value will never be used.
-         */
-      } while (--n);
-
-      more += _w_size;
-    }
-    if (s.strm.avail_in === 0) {
-      break;
-    }
-
-    /* If there was no sliding:
-     *    strstart <= WSIZE+MAX_DIST-1 && lookahead <= MIN_LOOKAHEAD - 1 &&
-     *    more == window_size - lookahead - strstart
-     * => more >= window_size - (MIN_LOOKAHEAD-1 + WSIZE + MAX_DIST-1)
-     * => more >= window_size - 2*WSIZE + 2
-     * In the BIG_MEM or MMAP case (not yet supported),
-     *   window_size == input_size + MIN_LOOKAHEAD  &&
-     *   strstart + s->lookahead <= input_size => more >= MIN_LOOKAHEAD.
-     * Otherwise, window_size == 2*WSIZE so more >= 2.
-     * If there was sliding, more >= WSIZE. So in all cases, more >= 2.
-     */
-    //Assert(more >= 2, "more < 2");
-    n = read_buf(s.strm, s.window, s.strstart + s.lookahead, more);
-    s.lookahead += n;
-
-    /* Initialize the hash value now that we have some input: */
-    if (s.lookahead + s.insert >= MIN_MATCH) {
-      str = s.strstart - s.insert;
-      s.ins_h = s.window[str];
-
-      /* UPDATE_HASH(s, s->ins_h, s->window[str + 1]); */
-      s.ins_h = ((s.ins_h << s.hash_shift) ^ s.window[str + 1]) & s.hash_mask;
-//#if MIN_MATCH != 3
-//        Call update_hash() MIN_MATCH-3 more times
-//#endif
-      while (s.insert) {
-        /* UPDATE_HASH(s, s->ins_h, s->window[str + MIN_MATCH-1]); */
-        s.ins_h = ((s.ins_h << s.hash_shift) ^ s.window[str + MIN_MATCH-1]) & s.hash_mask;
-
-        s.prev[str & s.w_mask] = s.head[s.ins_h];
-        s.head[s.ins_h] = str;
-        str++;
-        s.insert--;
-        if (s.lookahead + s.insert < MIN_MATCH) {
-          break;
-        }
-      }
-    }
-    /* If the whole input has less than MIN_MATCH bytes, ins_h is garbage,
-     * but this is not important since only literal bytes will be emitted.
-     */
-
-  } while (s.lookahead < MIN_LOOKAHEAD && s.strm.avail_in !== 0);
-
-  /* If the WIN_INIT bytes after the end of the current data have never been
-   * written, then zero those bytes in order to avoid memory check reports of
-   * the use of uninitialized (or uninitialised as Julian writes) bytes by
-   * the longest match routines.  Update the high water mark for the next
-   * time through here.  WIN_INIT is set to MAX_MATCH since the longest match
-   * routines allow scanning to strstart + MAX_MATCH, ignoring lookahead.
-   */
-//  if (s.high_water < s.window_size) {
-//    var curr = s.strstart + s.lookahead;
-//    var init = 0;
-//
-//    if (s.high_water < curr) {
-//      /* Previous high water mark below current data -- zero WIN_INIT
-//       * bytes or up to end of window, whichever is less.
-//       */
-//      init = s.window_size - curr;
-//      if (init > WIN_INIT)
-//        init = WIN_INIT;
-//      zmemzero(s->window + curr, (unsigned)init);
-//      s->high_water = curr + init;
-//    }
-//    else if (s->high_water < (ulg)curr + WIN_INIT) {
-//      /* High water mark at or above current data, but below current data
-//       * plus WIN_INIT -- zero out to current data plus WIN_INIT, or up
-//       * to end of window, whichever is less.
-//       */
-//      init = (ulg)curr + WIN_INIT - s->high_water;
-//      if (init > s->window_size - s->high_water)
-//        init = s->window_size - s->high_water;
-//      zmemzero(s->window + s->high_water, (unsigned)init);
-//      s->high_water += init;
-//    }
-//  }
-//
-//  Assert((ulg)s->strstart <= s->window_size - MIN_LOOKAHEAD,
-//    "not enough room for search");
-}
-
-/* ===========================================================================
- * Copy without compression as much as possible from the input stream, return
- * the current block state.
- * This function does not insert new strings in the dictionary since
- * uncompressible data is probably not useful. This function is used
- * only for the level=0 compression option.
- * NOTE: this function should be optimized to avoid extra copying from
- * window to pending_buf.
- */
-function deflate_stored(s, flush) {
-  /* Stored blocks are limited to 0xffff bytes, pending_buf is limited
-   * to pending_buf_size, and each stored block has a 5 byte header:
-   */
-  var max_block_size = 0xffff;
-
-  if (max_block_size > s.pending_buf_size - 5) {
-    max_block_size = s.pending_buf_size - 5;
-  }
-
-  /* Copy as much as possible from input to output: */
-  for (;;) {
-    /* Fill the window as much as possible: */
-    if (s.lookahead <= 1) {
-
-      //Assert(s->strstart < s->w_size+MAX_DIST(s) ||
-      //  s->block_start >= (long)s->w_size, "slide too late");
-//      if (!(s.strstart < s.w_size + (s.w_size - MIN_LOOKAHEAD) ||
-//        s.block_start >= s.w_size)) {
-//        throw  new Error("slide too late");
-//      }
-
-      fill_window(s);
-      if (s.lookahead === 0 && flush === Z_NO_FLUSH) {
-        return BS_NEED_MORE;
-      }
-
-      if (s.lookahead === 0) {
-        break;
-      }
-      /* flush the current block */
-    }
-    //Assert(s->block_start >= 0L, "block gone");
-//    if (s.block_start < 0) throw new Error("block gone");
-
-    s.strstart += s.lookahead;
-    s.lookahead = 0;
-
-    /* Emit a stored block if pending_buf will be full: */
-    var max_start = s.block_start + max_block_size;
-
-    if (s.strstart === 0 || s.strstart >= max_start) {
-      /* strstart == 0 is possible when wraparound on 16-bit machine */
-      s.lookahead = s.strstart - max_start;
-      s.strstart = max_start;
-      /*** FLUSH_BLOCK(s, 0); ***/
-      flush_block_only(s, false);
-      if (s.strm.avail_out === 0) {
-        return BS_NEED_MORE;
-      }
-      /***/
-
-
-    }
-    /* Flush if we may have to slide, otherwise block_start may become
-     * negative and the data will be gone:
-     */
-    if (s.strstart - s.block_start >= (s.w_size - MIN_LOOKAHEAD)) {
-      /*** FLUSH_BLOCK(s, 0); ***/
-      flush_block_only(s, false);
-      if (s.strm.avail_out === 0) {
-        return BS_NEED_MORE;
-      }
-      /***/
-    }
-  }
-
-  s.insert = 0;
-
-  if (flush === Z_FINISH) {
-    /*** FLUSH_BLOCK(s, 1); ***/
-    flush_block_only(s, true);
-    if (s.strm.avail_out === 0) {
-      return BS_FINISH_STARTED;
-    }
-    /***/
-    return BS_FINISH_DONE;
-  }
-
-  if (s.strstart > s.block_start) {
-    /*** FLUSH_BLOCK(s, 0); ***/
-    flush_block_only(s, false);
-    if (s.strm.avail_out === 0) {
-      return BS_NEED_MORE;
-    }
-    /***/
-  }
-
-  return BS_NEED_MORE;
-}
-
-/* ===========================================================================
- * Compress as much as possible from the input stream, return the current
- * block state.
- * This function does not perform lazy evaluation of matches and inserts
- * new strings in the dictionary only for unmatched strings or for short
- * matches. It is used only for the fast compression options.
- */
-function deflate_fast(s, flush) {
-  var hash_head;        /* head of the hash chain */
-  var bflush;           /* set if current block must be flushed */
-
-  for (;;) {
-    /* Make sure that we always have enough lookahead, except
-     * at the end of the input file. We need MAX_MATCH bytes
-     * for the next match, plus MIN_MATCH bytes to insert the
-     * string following the next match.
-     */
-    if (s.lookahead < MIN_LOOKAHEAD) {
-      fill_window(s);
-      if (s.lookahead < MIN_LOOKAHEAD && flush === Z_NO_FLUSH) {
-        return BS_NEED_MORE;
-      }
-      if (s.lookahead === 0) {
-        break; /* flush the current block */
-      }
-    }
-
-    /* Insert the string window[strstart .. strstart+2] in the
-     * dictionary, and set hash_head to the head of the hash chain:
-     */
-    hash_head = 0/*NIL*/;
-    if (s.lookahead >= MIN_MATCH) {
-      /*** INSERT_STRING(s, s.strstart, hash_head); ***/
-      s.ins_h = ((s.ins_h << s.hash_shift) ^ s.window[s.strstart + MIN_MATCH - 1]) & s.hash_mask;
-      hash_head = s.prev[s.strstart & s.w_mask] = s.head[s.ins_h];
-      s.head[s.ins_h] = s.strstart;
-      /***/
-    }
-
-    /* Find the longest match, discarding those <= prev_length.
-     * At this point we have always match_length < MIN_MATCH
-     */
-    if (hash_head !== 0/*NIL*/ && ((s.strstart - hash_head) <= (s.w_size - MIN_LOOKAHEAD))) {
-      /* To simplify the code, we prevent matches with the string
-       * of window index 0 (in particular we have to avoid a match
-       * of the string with itself at the start of the input file).
-       */
-      s.match_length = longest_match(s, hash_head);
-      /* longest_match() sets match_start */
-    }
-    if (s.match_length >= MIN_MATCH) {
-      // check_match(s, s.strstart, s.match_start, s.match_length); // for debug only
-
-      /*** _tr_tally_dist(s, s.strstart - s.match_start,
-                     s.match_length - MIN_MATCH, bflush); ***/
-      bflush = trees._tr_tally(s, s.strstart - s.match_start, s.match_length - MIN_MATCH);
-
-      s.lookahead -= s.match_length;
-
-      /* Insert new strings in the hash table only if the match length
-       * is not too large. This saves time but degrades compression.
-       */
-      if (s.match_length <= s.max_lazy_match/*max_insert_length*/ && s.lookahead >= MIN_MATCH) {
-        s.match_length--; /* string at strstart already in table */
-        do {
-          s.strstart++;
-          /*** INSERT_STRING(s, s.strstart, hash_head); ***/
-          s.ins_h = ((s.ins_h << s.hash_shift) ^ s.window[s.strstart + MIN_MATCH - 1]) & s.hash_mask;
-          hash_head = s.prev[s.strstart & s.w_mask] = s.head[s.ins_h];
-          s.head[s.ins_h] = s.strstart;
-          /***/
-          /* strstart never exceeds WSIZE-MAX_MATCH, so there are
-           * always MIN_MATCH bytes ahead.
-           */
-        } while (--s.match_length !== 0);
-        s.strstart++;
-      } else
-      {
-        s.strstart += s.match_length;
-        s.match_length = 0;
-        s.ins_h = s.window[s.strstart];
-        /* UPDATE_HASH(s, s.ins_h, s.window[s.strstart+1]); */
-        s.ins_h = ((s.ins_h << s.hash_shift) ^ s.window[s.strstart + 1]) & s.hash_mask;
-
-//#if MIN_MATCH != 3
-//                Call UPDATE_HASH() MIN_MATCH-3 more times
-//#endif
-        /* If lookahead < MIN_MATCH, ins_h is garbage, but it does not
-         * matter since it will be recomputed at next deflate call.
-         */
-      }
-    } else {
-      /* No match, output a literal byte */
-      //Tracevv((stderr,"%c", s.window[s.strstart]));
-      /*** _tr_tally_lit(s, s.window[s.strstart], bflush); ***/
-      bflush = trees._tr_tally(s, 0, s.window[s.strstart]);
-
-      s.lookahead--;
-      s.strstart++;
-    }
-    if (bflush) {
-      /*** FLUSH_BLOCK(s, 0); ***/
-      flush_block_only(s, false);
-      if (s.strm.avail_out === 0) {
-        return BS_NEED_MORE;
-      }
-      /***/
-    }
-  }
-  s.insert = ((s.strstart < (MIN_MATCH-1)) ? s.strstart : MIN_MATCH-1);
-  if (flush === Z_FINISH) {
-    /*** FLUSH_BLOCK(s, 1); ***/
-    flush_block_only(s, true);
-    if (s.strm.avail_out === 0) {
-      return BS_FINISH_STARTED;
-    }
-    /***/
-    return BS_FINISH_DONE;
-  }
-  if (s.last_lit) {
-    /*** FLUSH_BLOCK(s, 0); ***/
-    flush_block_only(s, false);
-    if (s.strm.avail_out === 0) {
-      return BS_NEED_MORE;
-    }
-    /***/
-  }
-  return BS_BLOCK_DONE;
-}
-
-/* ===========================================================================
- * Same as above, but achieves better compression. We use a lazy
- * evaluation for matches: a match is finally adopted only if there is
- * no better match at the next window position.
- */
-function deflate_slow(s, flush) {
-  var hash_head;          /* head of hash chain */
-  var bflush;              /* set if current block must be flushed */
-
-  var max_insert;
-
-  /* Process the input block. */
-  for (;;) {
-    /* Make sure that we always have enough lookahead, except
-     * at the end of the input file. We need MAX_MATCH bytes
-     * for the next match, plus MIN_MATCH bytes to insert the
-     * string following the next match.
-     */
-    if (s.lookahead < MIN_LOOKAHEAD) {
-      fill_window(s);
-      if (s.lookahead < MIN_LOOKAHEAD && flush === Z_NO_FLUSH) {
-        return BS_NEED_MORE;
-      }
-      if (s.lookahead === 0) { break; } /* flush the current block */
-    }
-
-    /* Insert the string window[strstart .. strstart+2] in the
-     * dictionary, and set hash_head to the head of the hash chain:
-     */
-    hash_head = 0/*NIL*/;
-    if (s.lookahead >= MIN_MATCH) {
-      /*** INSERT_STRING(s, s.strstart, hash_head); ***/
-      s.ins_h = ((s.ins_h << s.hash_shift) ^ s.window[s.strstart + MIN_MATCH - 1]) & s.hash_mask;
-      hash_head = s.prev[s.strstart & s.w_mask] = s.head[s.ins_h];
-      s.head[s.ins_h] = s.strstart;
-      /***/
-    }
-
-    /* Find the longest match, discarding those <= prev_length.
-     */
-    s.prev_length = s.match_length;
-    s.prev_match = s.match_start;
-    s.match_length = MIN_MATCH-1;
-
-    if (hash_head !== 0/*NIL*/ && s.prev_length < s.max_lazy_match &&
-        s.strstart - hash_head <= (s.w_size-MIN_LOOKAHEAD)/*MAX_DIST(s)*/) {
-      /* To simplify the code, we prevent matches with the string
-       * of window index 0 (in particular we have to avoid a match
-       * of the string with itself at the start of the input file).
-       */
-      s.match_length = longest_match(s, hash_head);
-      /* longest_match() sets match_start */
-
-      if (s.match_length <= 5 &&
-         (s.strategy === Z_FILTERED || (s.match_length === MIN_MATCH && s.strstart - s.match_start > 4096/*TOO_FAR*/))) {
-
-        /* If prev_match is also MIN_MATCH, match_start is garbage
-         * but we will ignore the current match anyway.
-         */
-        s.match_length = MIN_MATCH-1;
-      }
-    }
-    /* If there was a match at the previous step and the current
-     * match is not better, output the previous match:
-     */
-    if (s.prev_length >= MIN_MATCH && s.match_length <= s.prev_length) {
-      max_insert = s.strstart + s.lookahead - MIN_MATCH;
-      /* Do not insert strings in hash table beyond this. */
-
-      //check_match(s, s.strstart-1, s.prev_match, s.prev_length);
-
-      /***_tr_tally_dist(s, s.strstart - 1 - s.prev_match,
-                     s.prev_length - MIN_MATCH, bflush);***/
-      bflush = trees._tr_tally(s, s.strstart - 1- s.prev_match, s.prev_length - MIN_MATCH);
-      /* Insert in hash table all strings up to the end of the match.
-       * strstart-1 and strstart are already inserted. If there is not
-       * enough lookahead, the last two strings are not inserted in
-       * the hash table.
-       */
-      s.lookahead -= s.prev_length-1;
-      s.prev_length -= 2;
-      do {
-        if (++s.strstart <= max_insert) {
-          /*** INSERT_STRING(s, s.strstart, hash_head); ***/
-          s.ins_h = ((s.ins_h << s.hash_shift) ^ s.window[s.strstart + MIN_MATCH - 1]) & s.hash_mask;
-          hash_head = s.prev[s.strstart & s.w_mask] = s.head[s.ins_h];
-          s.head[s.ins_h] = s.strstart;
-          /***/
-        }
-      } while (--s.prev_length !== 0);
-      s.match_available = 0;
-      s.match_length = MIN_MATCH-1;
-      s.strstart++;
-
-      if (bflush) {
-        /*** FLUSH_BLOCK(s, 0); ***/
-        flush_block_only(s, false);
-        if (s.strm.avail_out === 0) {
-          return BS_NEED_MORE;
-        }
-        /***/
-      }
-
-    } else if (s.match_available) {
-      /* If there was no match at the previous position, output a
-       * single literal. If there was a match but the current match
-       * is longer, truncate the previous match to a single literal.
-       */
-      //Tracevv((stderr,"%c", s->window[s->strstart-1]));
-      /*** _tr_tally_lit(s, s.window[s.strstart-1], bflush); ***/
-      bflush = trees._tr_tally(s, 0, s.window[s.strstart-1]);
-
-      if (bflush) {
-        /*** FLUSH_BLOCK_ONLY(s, 0) ***/
-        flush_block_only(s, false);
-        /***/
-      }
-      s.strstart++;
-      s.lookahead--;
-      if (s.strm.avail_out === 0) {
-        return BS_NEED_MORE;
-      }
-    } else {
-      /* There is no previous match to compare with, wait for
-       * the next step to decide.
-       */
-      s.match_available = 1;
-      s.strstart++;
-      s.lookahead--;
-    }
-  }
-  //Assert (flush != Z_NO_FLUSH, "no flush?");
-  if (s.match_available) {
-    //Tracevv((stderr,"%c", s->window[s->strstart-1]));
-    /*** _tr_tally_lit(s, s.window[s.strstart-1], bflush); ***/
-    bflush = trees._tr_tally(s, 0, s.window[s.strstart-1]);
-
-    s.match_available = 0;
-  }
-  s.insert = s.strstart < MIN_MATCH-1 ? s.strstart : MIN_MATCH-1;
-  if (flush === Z_FINISH) {
-    /*** FLUSH_BLOCK(s, 1); ***/
-    flush_block_only(s, true);
-    if (s.strm.avail_out === 0) {
-      return BS_FINISH_STARTED;
-    }
-    /***/
-    return BS_FINISH_DONE;
-  }
-  if (s.last_lit) {
-    /*** FLUSH_BLOCK(s, 0); ***/
-    flush_block_only(s, false);
-    if (s.strm.avail_out === 0) {
-      return BS_NEED_MORE;
-    }
-    /***/
-  }
-
-  return BS_BLOCK_DONE;
-}
-
-
-/* ===========================================================================
- * For Z_RLE, simply look for runs of bytes, generate matches only of distance
- * one.  Do not maintain a hash table.  (It will be regenerated if this run of
- * deflate switches away from Z_RLE.)
- */
-function deflate_rle(s, flush) {
-  var bflush;            /* set if current block must be flushed */
-  var prev;              /* byte at distance one to match */
-  var scan, strend;      /* scan goes up to strend for length of run */
-
-  var _win = s.window;
-
-  for (;;) {
-    /* Make sure that we always have enough lookahead, except
-     * at the end of the input file. We need MAX_MATCH bytes
-     * for the longest run, plus one for the unrolled loop.
-     */
-    if (s.lookahead <= MAX_MATCH) {
-      fill_window(s);
-      if (s.lookahead <= MAX_MATCH && flush === Z_NO_FLUSH) {
-        return BS_NEED_MORE;
-      }
-      if (s.lookahead === 0) { break; } /* flush the current block */
-    }
-
-    /* See how many times the previous byte repeats */
-    s.match_length = 0;
-    if (s.lookahead >= MIN_MATCH && s.strstart > 0) {
-      scan = s.strstart - 1;
-      prev = _win[scan];
-      if (prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan]) {
-        strend = s.strstart + MAX_MATCH;
-        do {
-          /*jshint noempty:false*/
-        } while (prev === _win[++scan] && prev === _win[++scan] &&
-                 prev === _win[++scan] && prev === _win[++scan] &&
-                 prev === _win[++scan] && prev === _win[++scan] &&
-                 prev === _win[++scan] && prev === _win[++scan] &&
-                 scan < strend);
-        s.match_length = MAX_MATCH - (strend - scan);
-        if (s.match_length > s.lookahead) {
-          s.match_length = s.lookahead;
-        }
-      }
-      //Assert(scan <= s->window+(uInt)(s->window_size-1), "wild scan");
-    }
-
-    /* Emit match if have run of MIN_MATCH or longer, else emit literal */
-    if (s.match_length >= MIN_MATCH) {
-      //check_match(s, s.strstart, s.strstart - 1, s.match_length);
-
-      /*** _tr_tally_dist(s, 1, s.match_length - MIN_MATCH, bflush); ***/
-      bflush = trees._tr_tally(s, 1, s.match_length - MIN_MATCH);
-
-      s.lookahead -= s.match_length;
-      s.strstart += s.match_length;
-      s.match_length = 0;
-    } else {
-      /* No match, output a literal byte */
-      //Tracevv((stderr,"%c", s->window[s->strstart]));
-      /*** _tr_tally_lit(s, s.window[s.strstart], bflush); ***/
-      bflush = trees._tr_tally(s, 0, s.window[s.strstart]);
-
-      s.lookahead--;
-      s.strstart++;
-    }
-    if (bflush) {
-      /*** FLUSH_BLOCK(s, 0); ***/
-      flush_block_only(s, false);
-      if (s.strm.avail_out === 0) {
-        return BS_NEED_MORE;
-      }
-      /***/
-    }
-  }
-  s.insert = 0;
-  if (flush === Z_FINISH) {
-    /*** FLUSH_BLOCK(s, 1); ***/
-    flush_block_only(s, true);
-    if (s.strm.avail_out === 0) {
-      return BS_FINISH_STARTED;
-    }
-    /***/
-    return BS_FINISH_DONE;
-  }
-  if (s.last_lit) {
-    /*** FLUSH_BLOCK(s, 0); ***/
-    flush_block_only(s, false);
-    if (s.strm.avail_out === 0) {
-      return BS_NEED_MORE;
-    }
-    /***/
-  }
-  return BS_BLOCK_DONE;
-}
-
-/* ===========================================================================
- * For Z_HUFFMAN_ONLY, do not look for matches.  Do not maintain a hash table.
- * (It will be regenerated if this run of deflate switches away from Huffman.)
- */
-function deflate_huff(s, flush) {
-  var bflush;             /* set if current block must be flushed */
-
-  for (;;) {
-    /* Make sure that we have a literal to write. */
-    if (s.lookahead === 0) {
-      fill_window(s);
-      if (s.lookahead === 0) {
-        if (flush === Z_NO_FLUSH) {
-          return BS_NEED_MORE;
-        }
-        break;      /* flush the current block */
-      }
-    }
-
-    /* Output a literal byte */
-    s.match_length = 0;
-    //Tracevv((stderr,"%c", s->window[s->strstart]));
-    /*** _tr_tally_lit(s, s.window[s.strstart], bflush); ***/
-    bflush = trees._tr_tally(s, 0, s.window[s.strstart]);
-    s.lookahead--;
-    s.strstart++;
-    if (bflush) {
-      /*** FLUSH_BLOCK(s, 0); ***/
-      flush_block_only(s, false);
-      if (s.strm.avail_out === 0) {
-        return BS_NEED_MORE;
-      }
-      /***/
-    }
-  }
-  s.insert = 0;
-  if (flush === Z_FINISH) {
-    /*** FLUSH_BLOCK(s, 1); ***/
-    flush_block_only(s, true);
-    if (s.strm.avail_out === 0) {
-      return BS_FINISH_STARTED;
-    }
-    /***/
-    return BS_FINISH_DONE;
-  }
-  if (s.last_lit) {
-    /*** FLUSH_BLOCK(s, 0); ***/
-    flush_block_only(s, false);
-    if (s.strm.avail_out === 0) {
-      return BS_NEED_MORE;
-    }
-    /***/
-  }
-  return BS_BLOCK_DONE;
-}
-
-/* Values for max_lazy_match, good_match and max_chain_length, depending on
- * the desired pack level (0..9). The values given below have been tuned to
- * exclude worst case performance for pathological files. Better values may be
- * found for specific files.
- */
-var Config = function (good_length, max_lazy, nice_length, max_chain, func) {
-  this.good_length = good_length;
-  this.max_lazy = max_lazy;
-  this.nice_length = nice_length;
-  this.max_chain = max_chain;
-  this.func = func;
-};
-
-var configuration_table;
-
-configuration_table = [
-  /*      good lazy nice chain */
-  new Config(0, 0, 0, 0, deflate_stored),          /* 0 store only */
-  new Config(4, 4, 8, 4, deflate_fast),            /* 1 max speed, no lazy matches */
-  new Config(4, 5, 16, 8, deflate_fast),           /* 2 */
-  new Config(4, 6, 32, 32, deflate_fast),          /* 3 */
-
-  new Config(4, 4, 16, 16, deflate_slow),          /* 4 lazy matches */
-  new Config(8, 16, 32, 32, deflate_slow),         /* 5 */
-  new Config(8, 16, 128, 128, deflate_slow),       /* 6 */
-  new Config(8, 32, 128, 256, deflate_slow),       /* 7 */
-  new Config(32, 128, 258, 1024, deflate_slow),    /* 8 */
-  new Config(32, 258, 258, 4096, deflate_slow)     /* 9 max compression */
-];
-
-
-/* ===========================================================================
- * Initialize the "longest match" routines for a new zlib stream
- */
-function lm_init(s) {
-  s.window_size = 2 * s.w_size;
-
-  /*** CLEAR_HASH(s); ***/
-  zero(s.head); // Fill with NIL (= 0);
-
-  /* Set the default configuration parameters:
-   */
-  s.max_lazy_match = configuration_table[s.level].max_lazy;
-  s.good_match = configuration_table[s.level].good_length;
-  s.nice_match = configuration_table[s.level].nice_length;
-  s.max_chain_length = configuration_table[s.level].max_chain;
-
-  s.strstart = 0;
-  s.block_start = 0;
-  s.lookahead = 0;
-  s.insert = 0;
-  s.match_length = s.prev_length = MIN_MATCH - 1;
-  s.match_available = 0;
-  s.ins_h = 0;
-}
-
-
-function DeflateState() {
-  this.strm = null;            /* pointer back to this zlib stream */
-  this.status = 0;            /* as the name implies */
-  this.pending_buf = null;      /* output still pending */
-  this.pending_buf_size = 0;  /* size of pending_buf */
-  this.pending_out = 0;       /* next pending byte to output to the stream */
-  this.pending = 0;           /* nb of bytes in the pending buffer */
-  this.wrap = 0;              /* bit 0 true for zlib, bit 1 true for gzip */
-  this.gzhead = null;         /* gzip header information to write */
-  this.gzindex = 0;           /* where in extra, name, or comment */
-  this.method = Z_DEFLATED; /* can only be DEFLATED */
-  this.last_flush = -1;   /* value of flush param for previous deflate call */
-
-  this.w_size = 0;  /* LZ77 window size (32K by default) */
-  this.w_bits = 0;  /* log2(w_size)  (8..16) */
-  this.w_mask = 0;  /* w_size - 1 */
-
-  this.window = null;
-  /* Sliding window. Input bytes are read into the second half of the window,
-   * and move to the first half later to keep a dictionary of at least wSize
-   * bytes. With this organization, matches are limited to a distance of
-   * wSize-MAX_MATCH bytes, but this ensures that IO is always
-   * performed with a length multiple of the block size.
-   */
-
-  this.window_size = 0;
-  /* Actual size of window: 2*wSize, except when the user input buffer
-   * is directly used as sliding window.
-   */
-
-  this.prev = null;
-  /* Link to older string with same hash index. To limit the size of this
-   * array to 64K, this link is maintained only for the last 32K strings.
-   * An index in this array is thus a window index modulo 32K.
-   */
-
-  this.head = null;   /* Heads of the hash chains or NIL. */
-
-  this.ins_h = 0;       /* hash index of string to be inserted */
-  this.hash_size = 0;   /* number of elements in hash table */
-  this.hash_bits = 0;   /* log2(hash_size) */
-  this.hash_mask = 0;   /* hash_size-1 */
-
-  this.hash_shift = 0;
-  /* Number of bits by which ins_h must be shifted at each input
-   * step. It must be such that after MIN_MATCH steps, the oldest
-   * byte no longer takes part in the hash key, that is:
-   *   hash_shift * MIN_MATCH >= hash_bits
-   */
-
-  this.block_start = 0;
-  /* Window position at the beginning of the current output block. Gets
-   * negative when the window is moved backwards.
-   */
-
-  this.match_length = 0;      /* length of best match */
-  this.prev_match = 0;        /* previous match */
-  this.match_available = 0;   /* set if previous match exists */
-  this.strstart = 0;          /* start of string to insert */
-  this.match_start = 0;       /* start of matching string */
-  this.lookahead = 0;         /* number of valid bytes ahead in window */
-
-  this.prev_length = 0;
-  /* Length of the best match at previous step. Matches not greater than this
-   * are discarded. This is used in the lazy match evaluation.
-   */
-
-  this.max_chain_length = 0;
-  /* To speed up deflation, hash chains are never searched beyond this
-   * length.  A higher limit improves compression ratio but degrades the
-   * speed.
-   */
-
-  this.max_lazy_match = 0;
-  /* Attempt to find a better match only when the current match is strictly
-   * smaller than this value. This mechanism is used only for compression
-   * levels >= 4.
-   */
-  // That's alias to max_lazy_match, don't use directly
-  //this.max_insert_length = 0;
-  /* Insert new strings in the hash table only if the match length is not
-   * greater than this length. This saves time but degrades compression.
-   * max_insert_length is used only for compression levels <= 3.
-   */
-
-  this.level = 0;     /* compression level (1..9) */
-  this.strategy = 0;  /* favor or force Huffman coding*/
-
-  this.good_match = 0;
-  /* Use a faster search when the previous match is longer than this */
-
-  this.nice_match = 0; /* Stop searching when current match exceeds this */
-
-              /* used by trees.c: */
-
-  /* Didn't use ct_data typedef below to suppress compiler warning */
-
-  // struct ct_data_s dyn_ltree[HEAP_SIZE];   /* literal and length tree */
-  // struct ct_data_s dyn_dtree[2*D_CODES+1]; /* distance tree */
-  // struct ct_data_s bl_tree[2*BL_CODES+1];  /* Huffman tree for bit lengths */
-
-  // Use flat array of DOUBLE size, with interleaved fata,
-  // because JS does not support effective
-  this.dyn_ltree  = new utils.Buf16(HEAP_SIZE * 2);
-  this.dyn_dtree  = new utils.Buf16((2*D_CODES+1) * 2);
-  this.bl_tree    = new utils.Buf16((2*BL_CODES+1) * 2);
-  zero(this.dyn_ltree);
-  zero(this.dyn_dtree);
-  zero(this.bl_tree);
-
-  this.l_desc   = null;         /* desc. for literal tree */
-  this.d_desc   = null;         /* desc. for distance tree */
-  this.bl_desc  = null;         /* desc. for bit length tree */
-
-  //ush bl_count[MAX_BITS+1];
-  this.bl_count = new utils.Buf16(MAX_BITS+1);
-  /* number of codes at each bit length for an optimal tree */
-
-  //int heap[2*L_CODES+1];      /* heap used to build the Huffman trees */
-  this.heap = new utils.Buf16(2*L_CODES+1);  /* heap used to build the Huffman trees */
-  zero(this.heap);
-
-  this.heap_len = 0;               /* number of elements in the heap */
-  this.heap_max = 0;               /* element of largest frequency */
-  /* The sons of heap[n] are heap[2*n] and heap[2*n+1]. heap[0] is not used.
-   * The same heap array is used to build all trees.
-   */
-
-  this.depth = new utils.Buf16(2*L_CODES+1); //uch depth[2*L_CODES+1];
-  zero(this.depth);
-  /* Depth of each subtree used as tie breaker for trees of equal frequency
-   */
-
-  this.l_buf = 0;          /* buffer index for literals or lengths */
-
-  this.lit_bufsize = 0;
-  /* Size of match buffer for literals/lengths.  There are 4 reasons for
-   * limiting lit_bufsize to 64K:
-   *   - frequencies can be kept in 16 bit counters
-   *   - if compression is not successful for the first block, all input
-   *     data is still in the window so we can still emit a stored block even
-   *     when input comes from standard input.  (This can also be done for
-   *     all blocks if lit_bufsize is not greater than 32K.)
-   *   - if compression is not successful for a file smaller than 64K, we can
-   *     even emit a stored file instead of a stored block (saving 5 bytes).
-   *     This is applicable only for zip (not gzip or zlib).
-   *   - creating new Huffman trees less frequently may not provide fast
-   *     adaptation to changes in the input data statistics. (Take for
-   *     example a binary file with poorly compressible code followed by
-   *     a highly compressible string table.) Smaller buffer sizes give
-   *     fast adaptation but have of course the overhead of transmitting
-   *     trees more frequently.
-   *   - I can't count above 4
-   */
-
-  this.last_lit = 0;      /* running index in l_buf */
-
-  this.d_buf = 0;
-  /* Buffer index for distances. To simplify the code, d_buf and l_buf have
-   * the same number of elements. To use different lengths, an extra flag
-   * array would be necessary.
-   */
-
-  this.opt_len = 0;       /* bit length of current block with optimal trees */
-  this.static_len = 0;    /* bit length of current block with static trees */
-  this.matches = 0;       /* number of string matches in current block */
-  this.insert = 0;        /* bytes at end of window left to insert */
-
-
-  this.bi_buf = 0;
-  /* Output buffer. bits are inserted starting at the bottom (least
-   * significant bits).
-   */
-  this.bi_valid = 0;
-  /* Number of valid bits in bi_buf.  All bits above the last valid bit
-   * are always zero.
-   */
-
-  // Used for window memory init. We safely ignore it for JS. That makes
-  // sense only for pointers and memory check tools.
-  //this.high_water = 0;
-  /* High water mark offset in window for initialized bytes -- bytes above
-   * this are set to zero in order to avoid memory check warnings when
-   * longest match routines access bytes past the input.  This is then
-   * updated to the new high water mark.
-   */
-}
-
-
-function deflateResetKeep(strm) {
-  var s;
-
-  if (!strm || !strm.state) {
-    return err(strm, Z_STREAM_ERROR);
-  }
-
-  strm.total_in = strm.total_out = 0;
-  strm.data_type = Z_UNKNOWN;
-
-  s = strm.state;
-  s.pending = 0;
-  s.pending_out = 0;
-
-  if (s.wrap < 0) {
-    s.wrap = -s.wrap;
-    /* was made negative by deflate(..., Z_FINISH); */
-  }
-  s.status = (s.wrap ? INIT_STATE : BUSY_STATE);
-  strm.adler = (s.wrap === 2) ?
-    0  // crc32(0, Z_NULL, 0)
-  :
-    1; // adler32(0, Z_NULL, 0)
-  s.last_flush = Z_NO_FLUSH;
-  trees._tr_init(s);
-  return Z_OK;
-}
-
-
-function deflateReset(strm) {
-  var ret = deflateResetKeep(strm);
-  if (ret === Z_OK) {
-    lm_init(strm.state);
-  }
-  return ret;
-}
-
-
-function deflateSetHeader(strm, head) {
-  if (!strm || !strm.state) { return Z_STREAM_ERROR; }
-  if (strm.state.wrap !== 2) { return Z_STREAM_ERROR; }
-  strm.state.gzhead = head;
-  return Z_OK;
-}
-
-
-function deflateInit2(strm, level, method, windowBits, memLevel, strategy) {
-  if (!strm) { // === Z_NULL
-    return Z_STREAM_ERROR;
-  }
-  var wrap = 1;
-
-  if (level === Z_DEFAULT_COMPRESSION) {
-    level = 6;
-  }
-
-  if (windowBits < 0) { /* suppress zlib wrapper */
-    wrap = 0;
-    windowBits = -windowBits;
-  }
-
-  else if (windowBits > 15) {
-    wrap = 2;           /* write gzip wrapper instead */
-    windowBits -= 16;
-  }
-
-
-  if (memLevel < 1 || memLevel > MAX_MEM_LEVEL || method !== Z_DEFLATED ||
-    windowBits < 8 || windowBits > 15 || level < 0 || level > 9 ||
-    strategy < 0 || strategy > Z_FIXED) {
-    return err(strm, Z_STREAM_ERROR);
-  }
-
-
-  if (windowBits === 8) {
-    windowBits = 9;
-  }
-  /* until 256-byte window bug fixed */
-
-  var s = new DeflateState();
-
-  strm.state = s;
-  s.strm = strm;
-
-  s.wrap = wrap;
-  s.gzhead = null;
-  s.w_bits = windowBits;
-  s.w_size = 1 << s.w_bits;
-  s.w_mask = s.w_size - 1;
-
-  s.hash_bits = memLevel + 7;
-  s.hash_size = 1 << s.hash_bits;
-  s.hash_mask = s.hash_size - 1;
-  s.hash_shift = ~~((s.hash_bits + MIN_MATCH - 1) / MIN_MATCH);
-
-  s.window = new utils.Buf8(s.w_size * 2);
-  s.head = new utils.Buf16(s.hash_size);
-  s.prev = new utils.Buf16(s.w_size);
-
-  // Don't need mem init magic for JS.
-  //s.high_water = 0;  /* nothing written to s->window yet */
-
-  s.lit_bufsize = 1 << (memLevel + 6); /* 16K elements by default */
-
-  s.pending_buf_size = s.lit_bufsize * 4;
-  s.pending_buf = new utils.Buf8(s.pending_buf_size);
-
-  s.d_buf = s.lit_bufsize >> 1;
-  s.l_buf = (1 + 2) * s.lit_bufsize;
-
-  s.level = level;
-  s.strategy = strategy;
-  s.method = method;
-
-  return deflateReset(strm);
-}
-
-function deflateInit(strm, level) {
-  return deflateInit2(strm, level, Z_DEFLATED, MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY);
-}
-
-
-function deflate(strm, flush) {
-  var old_flush, s;
-  var beg, val; // for gzip header write only
-
-  if (!strm || !strm.state ||
-    flush > Z_BLOCK || flush < 0) {
-    return strm ? err(strm, Z_STREAM_ERROR) : Z_STREAM_ERROR;
-  }
-
-  s = strm.state;
-
-  if (!strm.output ||
-      (!strm.input && strm.avail_in !== 0) ||
-      (s.status === FINISH_STATE && flush !== Z_FINISH)) {
-    return err(strm, (strm.avail_out === 0) ? Z_BUF_ERROR : Z_STREAM_ERROR);
-  }
-
-  s.strm = strm; /* just in case */
-  old_flush = s.last_flush;
-  s.last_flush = flush;
-
-  /* Write the header */
-  if (s.status === INIT_STATE) {
-
-    if (s.wrap === 2) { // GZIP header
-      strm.adler = 0;  //crc32(0L, Z_NULL, 0);
-      put_byte(s, 31);
-      put_byte(s, 139);
-      put_byte(s, 8);
-      if (!s.gzhead) { // s->gzhead == Z_NULL
-        put_byte(s, 0);
-        put_byte(s, 0);
-        put_byte(s, 0);
-        put_byte(s, 0);
-        put_byte(s, 0);
-        put_byte(s, s.level === 9 ? 2 :
-                    (s.strategy >= Z_HUFFMAN_ONLY || s.level < 2 ?
-                     4 : 0));
-        put_byte(s, OS_CODE);
-        s.status = BUSY_STATE;
-      }
-      else {
-        put_byte(s, (s.gzhead.text ? 1 : 0) +
-                    (s.gzhead.hcrc ? 2 : 0) +
-                    (!s.gzhead.extra ? 0 : 4) +
-                    (!s.gzhead.name ? 0 : 8) +
-                    (!s.gzhead.comment ? 0 : 16)
-                );
-        put_byte(s, s.gzhead.time & 0xff);
-        put_byte(s, (s.gzhead.time >> 8) & 0xff);
-        put_byte(s, (s.gzhead.time >> 16) & 0xff);
-        put_byte(s, (s.gzhead.time >> 24) & 0xff);
-        put_byte(s, s.level === 9 ? 2 :
-                    (s.strategy >= Z_HUFFMAN_ONLY || s.level < 2 ?
-                     4 : 0));
-        put_byte(s, s.gzhead.os & 0xff);
-        if (s.gzhead.extra && s.gzhead.extra.length) {
-          put_byte(s, s.gzhead.extra.length & 0xff);
-          put_byte(s, (s.gzhead.extra.length >> 8) & 0xff);
-        }
-        if (s.gzhead.hcrc) {
-          strm.adler = crc32(strm.adler, s.pending_buf, s.pending, 0);
-        }
-        s.gzindex = 0;
-        s.status = EXTRA_STATE;
-      }
-    }
-    else // DEFLATE header
-    {
-      var header = (Z_DEFLATED + ((s.w_bits - 8) << 4)) << 8;
-      var level_flags = -1;
-
-      if (s.strategy >= Z_HUFFMAN_ONLY || s.level < 2) {
-        level_flags = 0;
-      } else if (s.level < 6) {
-        level_flags = 1;
-      } else if (s.level === 6) {
-        level_flags = 2;
-      } else {
-        level_flags = 3;
-      }
-      header |= (level_flags << 6);
-      if (s.strstart !== 0) { header |= PRESET_DICT; }
-      header += 31 - (header % 31);
-
-      s.status = BUSY_STATE;
-      putShortMSB(s, header);
-
-      /* Save the adler32 of the preset dictionary: */
-      if (s.strstart !== 0) {
-        putShortMSB(s, strm.adler >>> 16);
-        putShortMSB(s, strm.adler & 0xffff);
-      }
-      strm.adler = 1; // adler32(0L, Z_NULL, 0);
-    }
-  }
-
-//#ifdef GZIP
-  if (s.status === EXTRA_STATE) {
-    if (s.gzhead.extra/* != Z_NULL*/) {
-      beg = s.pending;  /* start of bytes to update crc */
-
-      while (s.gzindex < (s.gzhead.extra.length & 0xffff)) {
-        if (s.pending === s.pending_buf_size) {
-          if (s.gzhead.hcrc && s.pending > beg) {
-            strm.adler = crc32(strm.adler, s.pending_buf, s.pending - beg, beg);
-          }
-          flush_pending(strm);
-          beg = s.pending;
-          if (s.pending === s.pending_buf_size) {
-            break;
-          }
-        }
-        put_byte(s, s.gzhead.extra[s.gzindex] & 0xff);
-        s.gzindex++;
-      }
-      if (s.gzhead.hcrc && s.pending > beg) {
-        strm.adler = crc32(strm.adler, s.pending_buf, s.pending - beg, beg);
-      }
-      if (s.gzindex === s.gzhead.extra.length) {
-        s.gzindex = 0;
-        s.status = NAME_STATE;
-      }
-    }
-    else {
-      s.status = NAME_STATE;
-    }
-  }
-  if (s.status === NAME_STATE) {
-    if (s.gzhead.name/* != Z_NULL*/) {
-      beg = s.pending;  /* start of bytes to update crc */
-      //int val;
-
-      do {
-        if (s.pending === s.pending_buf_size) {
-          if (s.gzhead.hcrc && s.pending > beg) {
-            strm.adler = crc32(strm.adler, s.pending_buf, s.pending - beg, beg);
-          }
-          flush_pending(strm);
-          beg = s.pending;
-          if (s.pending === s.pending_buf_size) {
-            val = 1;
-            break;
-          }
-        }
-        // JS specific: little magic to add zero terminator to end of string
-        if (s.gzindex < s.gzhead.name.length) {
-          val = s.gzhead.name.charCodeAt(s.gzindex++) & 0xff;
-        } else {
-          val = 0;
-        }
-        put_byte(s, val);
-      } while (val !== 0);
-
-      if (s.gzhead.hcrc && s.pending > beg){
-        strm.adler = crc32(strm.adler, s.pending_buf, s.pending - beg, beg);
-      }
-      if (val === 0) {
-        s.gzindex = 0;
-        s.status = COMMENT_STATE;
-      }
-    }
-    else {
-      s.status = COMMENT_STATE;
-    }
-  }
-  if (s.status === COMMENT_STATE) {
-    if (s.gzhead.comment/* != Z_NULL*/) {
-      beg = s.pending;  /* start of bytes to update crc */
-      //int val;
-
-      do {
-        if (s.pending === s.pending_buf_size) {
-          if (s.gzhead.hcrc && s.pending > beg) {
-            strm.adler = crc32(strm.adler, s.pending_buf, s.pending - beg, beg);
-          }
-          flush_pending(strm);
-          beg = s.pending;
-          if (s.pending === s.pending_buf_size) {
-            val = 1;
-            break;
-          }
-        }
-        // JS specific: little magic to add zero terminator to end of string
-        if (s.gzindex < s.gzhead.comment.length) {
-          val = s.gzhead.comment.charCodeAt(s.gzindex++) & 0xff;
-        } else {
-          val = 0;
-        }
-        put_byte(s, val);
-      } while (val !== 0);
-
-      if (s.gzhead.hcrc && s.pending > beg) {
-        strm.adler = crc32(strm.adler, s.pending_buf, s.pending - beg, beg);
-      }
-      if (val === 0) {
-        s.status = HCRC_STATE;
-      }
-    }
-    else {
-      s.status = HCRC_STATE;
-    }
-  }
-  if (s.status === HCRC_STATE) {
-    if (s.gzhead.hcrc) {
-      if (s.pending + 2 > s.pending_buf_size) {
-        flush_pending(strm);
-      }
-      if (s.pending + 2 <= s.pending_buf_size) {
-        put_byte(s, strm.adler & 0xff);
-        put_byte(s, (strm.adler >> 8) & 0xff);
-        strm.adler = 0; //crc32(0L, Z_NULL, 0);
-        s.status = BUSY_STATE;
-      }
-    }
-    else {
-      s.status = BUSY_STATE;
-    }
-  }
-//#endif
-
-  /* Flush as much pending output as possible */
-  if (s.pending !== 0) {
-    flush_pending(strm);
-    if (strm.avail_out === 0) {
-      /* Since avail_out is 0, deflate will be called again with
-       * more output space, but possibly with both pending and
-       * avail_in equal to zero. There won't be anything to do,
-       * but this is not an error situation so make sure we
-       * return OK instead of BUF_ERROR at next call of deflate:
-       */
-      s.last_flush = -1;
-      return Z_OK;
-    }
-
-    /* Make sure there is something to do and avoid duplicate consecutive
-     * flushes. For repeated and useless calls with Z_FINISH, we keep
-     * returning Z_STREAM_END instead of Z_BUF_ERROR.
-     */
-  } else if (strm.avail_in === 0 && rank(flush) <= rank(old_flush) &&
-    flush !== Z_FINISH) {
-    return err(strm, Z_BUF_ERROR);
-  }
-
-  /* User must not provide more input after the first FINISH: */
-  if (s.status === FINISH_STATE && strm.avail_in !== 0) {
-    return err(strm, Z_BUF_ERROR);
-  }
-
-  /* Start a new block or continue the current one.
-   */
-  if (strm.avail_in !== 0 || s.lookahead !== 0 ||
-    (flush !== Z_NO_FLUSH && s.status !== FINISH_STATE)) {
-    var bstate = (s.strategy === Z_HUFFMAN_ONLY) ? deflate_huff(s, flush) :
-      (s.strategy === Z_RLE ? deflate_rle(s, flush) :
-        configuration_table[s.level].func(s, flush));
-
-    if (bstate === BS_FINISH_STARTED || bstate === BS_FINISH_DONE) {
-      s.status = FINISH_STATE;
-    }
-    if (bstate === BS_NEED_MORE || bstate === BS_FINISH_STARTED) {
-      if (strm.avail_out === 0) {
-        s.last_flush = -1;
-        /* avoid BUF_ERROR next call, see above */
-      }
-      return Z_OK;
-      /* If flush != Z_NO_FLUSH && avail_out == 0, the next call
-       * of deflate should use the same flush parameter to make sure
-       * that the flush is complete. So we don't have to output an
-       * empty block here, this will be done at next call. This also
-       * ensures that for a very small output buffer, we emit at most
-       * one empty block.
-       */
-    }
-    if (bstate === BS_BLOCK_DONE) {
-      if (flush === Z_PARTIAL_FLUSH) {
-        trees._tr_align(s);
-      }
-      else if (flush !== Z_BLOCK) { /* FULL_FLUSH or SYNC_FLUSH */
-
-        trees._tr_stored_block(s, 0, 0, false);
-        /* For a full flush, this empty block will be recognized
-         * as a special marker by inflate_sync().
-         */
-        if (flush === Z_FULL_FLUSH) {
-          /*** CLEAR_HASH(s); ***/             /* forget history */
-          zero(s.head); // Fill with NIL (= 0);
-
-          if (s.lookahead === 0) {
-            s.strstart = 0;
-            s.block_start = 0;
-            s.insert = 0;
-          }
-        }
-      }
-      flush_pending(strm);
-      if (strm.avail_out === 0) {
-        s.last_flush = -1; /* avoid BUF_ERROR at next call, see above */
-        return Z_OK;
-      }
-    }
-  }
-  //Assert(strm->avail_out > 0, "bug2");
-  //if (strm.avail_out <= 0) { throw new Error("bug2");}
-
-  if (flush !== Z_FINISH) { return Z_OK; }
-  if (s.wrap <= 0) { return Z_STREAM_END; }
-
-  /* Write the trailer */
-  if (s.wrap === 2) {
-    put_byte(s, strm.adler & 0xff);
-    put_byte(s, (strm.adler >> 8) & 0xff);
-    put_byte(s, (strm.adler >> 16) & 0xff);
-    put_byte(s, (strm.adler >> 24) & 0xff);
-    put_byte(s, strm.total_in & 0xff);
-    put_byte(s, (strm.total_in >> 8) & 0xff);
-    put_byte(s, (strm.total_in >> 16) & 0xff);
-    put_byte(s, (strm.total_in >> 24) & 0xff);
-  }
-  else
-  {
-    putShortMSB(s, strm.adler >>> 16);
-    putShortMSB(s, strm.adler & 0xffff);
-  }
-
-  flush_pending(strm);
-  /* If avail_out is zero, the application will call deflate again
-   * to flush the rest.
-   */
-  if (s.wrap > 0) { s.wrap = -s.wrap; }
-  /* write the trailer only once! */
-  return s.pending !== 0 ? Z_OK : Z_STREAM_END;
-}
-
-function deflateEnd(strm) {
-  var status;
-
-  if (!strm/*== Z_NULL*/ || !strm.state/*== Z_NULL*/) {
-    return Z_STREAM_ERROR;
-  }
-
-  status = strm.state.status;
-  if (status !== INIT_STATE &&
-    status !== EXTRA_STATE &&
-    status !== NAME_STATE &&
-    status !== COMMENT_STATE &&
-    status !== HCRC_STATE &&
-    status !== BUSY_STATE &&
-    status !== FINISH_STATE
-  ) {
-    return err(strm, Z_STREAM_ERROR);
-  }
-
-  strm.state = null;
-
-  return status === BUSY_STATE ? err(strm, Z_DATA_ERROR) : Z_OK;
-}
-
-/* =========================================================================
- * Copy the source state to the destination state
- */
-//function deflateCopy(dest, source) {
-//
-//}
-
-exports.deflateInit = deflateInit;
-exports.deflateInit2 = deflateInit2;
-exports.deflateReset = deflateReset;
-exports.deflateResetKeep = deflateResetKeep;
-exports.deflateSetHeader = deflateSetHeader;
-exports.deflate = deflate;
-exports.deflateEnd = deflateEnd;
-exports.deflateInfo = 'pako deflate (from Nodeca project)';
-
-/* Not implemented
-exports.deflateBound = deflateBound;
-exports.deflateCopy = deflateCopy;
-exports.deflateSetDictionary = deflateSetDictionary;
-exports.deflateParams = deflateParams;
-exports.deflatePending = deflatePending;
-exports.deflatePrime = deflatePrime;
-exports.deflateTune = deflateTune;
-*/
-},{"../utils/common":27,"./adler32":29,"./crc32":31,"./messages":37,"./trees":38}],33:[function(_dereq_,module,exports){
-'use strict';
-
-
-function GZheader() {
-  /* true if compressed data believed to be text */
-  this.text       = 0;
-  /* modification time */
-  this.time       = 0;
-  /* extra flags (not used when writing a gzip file) */
-  this.xflags     = 0;
-  /* operating system */
-  this.os         = 0;
-  /* pointer to extra field or Z_NULL if none */
-  this.extra      = null;
-  /* extra field length (valid if extra != Z_NULL) */
-  this.extra_len  = 0; // Actually, we don't need it in JS,
-                       // but leave for few code modifications
-
-  //
-  // Setup limits is not necessary because in js we should not preallocate memory 
-  // for inflate use constant limit in 65536 bytes
-  //
-
-  /* space at extra (only when reading header) */
-  // this.extra_max  = 0;
-  /* pointer to zero-terminated file name or Z_NULL */
-  this.name       = '';
-  /* space at name (only when reading header) */
-  // this.name_max   = 0;
-  /* pointer to zero-terminated comment or Z_NULL */
-  this.comment    = '';
-  /* space at comment (only when reading header) */
-  // this.comm_max   = 0;
-  /* true if there was or will be a header crc */
-  this.hcrc       = 0;
-  /* true when done reading gzip header (not used when writing a gzip file) */
-  this.done       = false;
-}
-
-module.exports = GZheader;
-},{}],34:[function(_dereq_,module,exports){
-'use strict';
-
-// See state defs from inflate.js
-var BAD = 30;       /* got a data error -- remain here until reset */
-var TYPE = 12;      /* i: waiting for type bits, including last-flag bit */
-
-/*
-   Decode literal, length, and distance codes and write out the resulting
-   literal and match bytes until either not enough input or output is
-   available, an end-of-block is encountered, or a data error is encountered.
-   When large enough input and output buffers are supplied to inflate(), for
-   example, a 16K input buffer and a 64K output buffer, more than 95% of the
-   inflate execution time is spent in this routine.
-
-   Entry assumptions:
-
-        state.mode === LEN
-        strm.avail_in >= 6
-        strm.avail_out >= 258
-        start >= strm.avail_out
-        state.bits < 8
-
-   On return, state.mode is one of:
-
-        LEN -- ran out of enough output space or enough available input
-        TYPE -- reached end of block code, inflate() to interpret next block
-        BAD -- error in block data
-
-   Notes:
-
-    - The maximum input bits used by a length/distance pair is 15 bits for the
-      length code, 5 bits for the length extra, 15 bits for the distance code,
-      and 13 bits for the distance extra.  This totals 48 bits, or six bytes.
-      Therefore if strm.avail_in >= 6, then there is enough input to avoid
-      checking for available input while decoding.
-
-    - The maximum bytes that a single length/distance pair can output is 258
-      bytes, which is the maximum length that can be coded.  inflate_fast()
-      requires strm.avail_out >= 258 for each loop to avoid checking for
-      output space.
- */
-module.exports = function inflate_fast(strm, start) {
-  var state;
-  var _in;                    /* local strm.input */
-  var last;                   /* have enough input while in < last */
-  var _out;                   /* local strm.output */
-  var beg;                    /* inflate()'s initial strm.output */
-  var end;                    /* while out < end, enough space available */
-//#ifdef INFLATE_STRICT
-  var dmax;                   /* maximum distance from zlib header */
-//#endif
-  var wsize;                  /* window size or zero if not using window */
-  var whave;                  /* valid bytes in the window */
-  var wnext;                  /* window write index */
-  var window;                 /* allocated sliding window, if wsize != 0 */
-  var hold;                   /* local strm.hold */
-  var bits;                   /* local strm.bits */
-  var lcode;                  /* local strm.lencode */
-  var dcode;                  /* local strm.distcode */
-  var lmask;                  /* mask for first level of length codes */
-  var dmask;                  /* mask for first level of distance codes */
-  var here;                   /* retrieved table entry */
-  var op;                     /* code bits, operation, extra bits, or */
-                              /*  window position, window bytes to copy */
-  var len;                    /* match length, unused bytes */
-  var dist;                   /* match distance */
-  var from;                   /* where to copy match from */
-  var from_source;
-
-
-  var input, output; // JS specific, because we have no pointers
-
-  /* copy state to local variables */
-  state = strm.state;
-  //here = state.here;
-  _in = strm.next_in;
-  input = strm.input;
-  last = _in + (strm.avail_in - 5);
-  _out = strm.next_out;
-  output = strm.output;
-  beg = _out - (start - strm.avail_out);
-  end = _out + (strm.avail_out - 257);
-//#ifdef INFLATE_STRICT
-  dmax = state.dmax;
-//#endif
-  wsize = state.wsize;
-  whave = state.whave;
-  wnext = state.wnext;
-  window = state.window;
-  hold = state.hold;
-  bits = state.bits;
-  lcode = state.lencode;
-  dcode = state.distcode;
-  lmask = (1 << state.lenbits) - 1;
-  dmask = (1 << state.distbits) - 1;
-
-
-  /* decode literals and length/distances until end-of-block or not enough
-     input data or output space */
-
-  top:
-  do {
-    if (bits < 15) {
-      hold += input[_in++] << bits;
-      bits += 8;
-      hold += input[_in++] << bits;
-      bits += 8;
-    }
-
-    here = lcode[hold & lmask];
-
-    dolen:
-    for (;;) { // Goto emulation
-      op = here >>> 24/*here.bits*/;
-      hold >>>= op;
-      bits -= op;
-      op = (here >>> 16) & 0xff/*here.op*/;
-      if (op === 0) {                          /* literal */
-        //Tracevv((stderr, here.val >= 0x20 && here.val < 0x7f ?
-        //        "inflate:         literal '%c'\n" :
-        //        "inflate:         literal 0x%02x\n", here.val));
-        output[_out++] = here & 0xffff/*here.val*/;
-      }
-      else if (op & 16) {                     /* length base */
-        len = here & 0xffff/*here.val*/;
-        op &= 15;                           /* number of extra bits */
-        if (op) {
-          if (bits < op) {
-            hold += input[_in++] << bits;
-            bits += 8;
-          }
-          len += hold & ((1 << op) - 1);
-          hold >>>= op;
-          bits -= op;
-        }
-        //Tracevv((stderr, "inflate:         length %u\n", len));
-        if (bits < 15) {
-          hold += input[_in++] << bits;
-          bits += 8;
-          hold += input[_in++] << bits;
-          bits += 8;
-        }
-        here = dcode[hold & dmask];
-
-        dodist:
-        for (;;) { // goto emulation
-          op = here >>> 24/*here.bits*/;
-          hold >>>= op;
-          bits -= op;
-          op = (here >>> 16) & 0xff/*here.op*/;
-
-          if (op & 16) {                      /* distance base */
-            dist = here & 0xffff/*here.val*/;
-            op &= 15;                       /* number of extra bits */
-            if (bits < op) {
-              hold += input[_in++] << bits;
-              bits += 8;
-              if (bits < op) {
-                hold += input[_in++] << bits;
-                bits += 8;
-              }
-            }
-            dist += hold & ((1 << op) - 1);
-//#ifdef INFLATE_STRICT
-            if (dist > dmax) {
-              strm.msg = 'invalid distance too far back';
-              state.mode = BAD;
-              break top;
-            }
-//#endif
-            hold >>>= op;
-            bits -= op;
-            //Tracevv((stderr, "inflate:         distance %u\n", dist));
-            op = _out - beg;                /* max distance in output */
-            if (dist > op) {                /* see if copy from window */
-              op = dist - op;               /* distance back in window */
-              if (op > whave) {
-                if (state.sane) {
-                  strm.msg = 'invalid distance too far back';
-                  state.mode = BAD;
-                  break top;
-                }
-
-// (!) This block is disabled in zlib defailts,
-// don't enable it for binary compatibility
-//#ifdef INFLATE_ALLOW_INVALID_DISTANCE_TOOFAR_ARRR
-//                if (len <= op - whave) {
-//                  do {
-//                    output[_out++] = 0;
-//                  } while (--len);
-//                  continue top;
-//                }
-//                len -= op - whave;
-//                do {
-//                  output[_out++] = 0;
-//                } while (--op > whave);
-//                if (op === 0) {
-//                  from = _out - dist;
-//                  do {
-//                    output[_out++] = output[from++];
-//                  } while (--len);
-//                  continue top;
-//                }
-//#endif
-              }
-              from = 0; // window index
-              from_source = window;
-              if (wnext === 0) {           /* very common case */
-                from += wsize - op;
-                if (op < len) {         /* some from window */
-                  len -= op;
-                  do {
-                    output[_out++] = window[from++];
-                  } while (--op);
-                  from = _out - dist;  /* rest from output */
-                  from_source = output;
-                }
-              }
-              else if (wnext < op) {      /* wrap around window */
-                from += wsize + wnext - op;
-                op -= wnext;
-                if (op < len) {         /* some from end of window */
-                  len -= op;
-                  do {
-                    output[_out++] = window[from++];
-                  } while (--op);
-                  from = 0;
-                  if (wnext < len) {  /* some from start of window */
-                    op = wnext;
-                    len -= op;
-                    do {
-                      output[_out++] = window[from++];
-                    } while (--op);
-                    from = _out - dist;      /* rest from output */
-                    from_source = output;
-                  }
-                }
-              }
-              else {                      /* contiguous in window */
-                from += wnext - op;
-                if (op < len) {         /* some from window */
-                  len -= op;
-                  do {
-                    output[_out++] = window[from++];
-                  } while (--op);
-                  from = _out - dist;  /* rest from output */
-                  from_source = output;
-                }
-              }
-              while (len > 2) {
-                output[_out++] = from_source[from++];
-                output[_out++] = from_source[from++];
-                output[_out++] = from_source[from++];
-                len -= 3;
-              }
-              if (len) {
-                output[_out++] = from_source[from++];
-                if (len > 1) {
-                  output[_out++] = from_source[from++];
-                }
-              }
-            }
-            else {
-              from = _out - dist;          /* copy direct from output */
-              do {                        /* minimum length is three */
-                output[_out++] = output[from++];
-                output[_out++] = output[from++];
-                output[_out++] = output[from++];
-                len -= 3;
-              } while (len > 2);
-              if (len) {
-                output[_out++] = output[from++];
-                if (len > 1) {
-                  output[_out++] = output[from++];
-                }
-              }
-            }
-          }
-          else if ((op & 64) === 0) {          /* 2nd level distance code */
-            here = dcode[(here & 0xffff)/*here.val*/ + (hold & ((1 << op) - 1))];
-            continue dodist;
-          }
-          else {
-            strm.msg = 'invalid distance code';
-            state.mode = BAD;
-            break top;
-          }
-
-          break; // need to emulate goto via "continue"
-        }
-      }
-      else if ((op & 64) === 0) {              /* 2nd level length code */
-        here = lcode[(here & 0xffff)/*here.val*/ + (hold & ((1 << op) - 1))];
-        continue dolen;
-      }
-      else if (op & 32) {                     /* end-of-block */
-        //Tracevv((stderr, "inflate:         end of block\n"));
-        state.mode = TYPE;
-        break top;
-      }
-      else {
-        strm.msg = 'invalid literal/length code';
-        state.mode = BAD;
-        break top;
-      }
-
-      break; // need to emulate goto via "continue"
-    }
-  } while (_in < last && _out < end);
-
-  /* return unused bytes (on entry, bits < 8, so in won't go too far back) */
-  len = bits >> 3;
-  _in -= len;
-  bits -= len << 3;
-  hold &= (1 << bits) - 1;
-
-  /* update state and return */
-  strm.next_in = _in;
-  strm.next_out = _out;
-  strm.avail_in = (_in < last ? 5 + (last - _in) : 5 - (_in - last));
-  strm.avail_out = (_out < end ? 257 + (end - _out) : 257 - (_out - end));
-  state.hold = hold;
-  state.bits = bits;
-  return;
-};
-
-},{}],35:[function(_dereq_,module,exports){
-'use strict';
-
-
-var utils = _dereq_('../utils/common');
-var adler32 = _dereq_('./adler32');
-var crc32   = _dereq_('./crc32');
-var inflate_fast = _dereq_('./inffast');
-var inflate_table = _dereq_('./inftrees');
-
-var CODES = 0;
-var LENS = 1;
-var DISTS = 2;
-
-/* Public constants ==========================================================*/
-/* ===========================================================================*/
-
-
-/* Allowed flush values; see deflate() and inflate() below for details */
-//var Z_NO_FLUSH      = 0;
-//var Z_PARTIAL_FLUSH = 1;
-//var Z_SYNC_FLUSH    = 2;
-//var Z_FULL_FLUSH    = 3;
-var Z_FINISH        = 4;
-var Z_BLOCK         = 5;
-var Z_TREES         = 6;
-
-
-/* Return codes for the compression/decompression functions. Negative values
- * are errors, positive values are used for special but normal events.
- */
-var Z_OK            = 0;
-var Z_STREAM_END    = 1;
-var Z_NEED_DICT     = 2;
-//var Z_ERRNO         = -1;
-var Z_STREAM_ERROR  = -2;
-var Z_DATA_ERROR    = -3;
-var Z_MEM_ERROR     = -4;
-var Z_BUF_ERROR     = -5;
-//var Z_VERSION_ERROR = -6;
-
-/* The deflate compression method */
-var Z_DEFLATED  = 8;
-
-
-/* STATES ====================================================================*/
-/* ===========================================================================*/
-
-
-var    HEAD = 1;       /* i: waiting for magic header */
-var    FLAGS = 2;      /* i: waiting for method and flags (gzip) */
-var    TIME = 3;       /* i: waiting for modification time (gzip) */
-var    OS = 4;         /* i: waiting for extra flags and operating system (gzip) */
-var    EXLEN = 5;      /* i: waiting for extra length (gzip) */
-var    EXTRA = 6;      /* i: waiting for extra bytes (gzip) */
-var    NAME = 7;       /* i: waiting for end of file name (gzip) */
-var    COMMENT = 8;    /* i: waiting for end of comment (gzip) */
-var    HCRC = 9;       /* i: waiting for header crc (gzip) */
-var    DICTID = 10;    /* i: waiting for dictionary check value */
-var    DICT = 11;      /* waiting for inflateSetDictionary() call */
-var        TYPE = 12;      /* i: waiting for type bits, including last-flag bit */
-var        TYPEDO = 13;    /* i: same, but skip check to exit inflate on new block */
-var        STORED = 14;    /* i: waiting for stored size (length and complement) */
-var        COPY_ = 15;     /* i/o: same as COPY below, but only first time in */
-var        COPY = 16;      /* i/o: waiting for input or output to copy stored block */
-var        TABLE = 17;     /* i: waiting for dynamic block table lengths */
-var        LENLENS = 18;   /* i: waiting for code length code lengths */
-var        CODELENS = 19;  /* i: waiting for length/lit and distance code lengths */
-var            LEN_ = 20;      /* i: same as LEN below, but only first time in */
-var            LEN = 21;       /* i: waiting for length/lit/eob code */
-var            LENEXT = 22;    /* i: waiting for length extra bits */
-var            DIST = 23;      /* i: waiting for distance code */
-var            DISTEXT = 24;   /* i: waiting for distance extra bits */
-var            MATCH = 25;     /* o: waiting for output space to copy string */
-var            LIT = 26;       /* o: waiting for output space to write literal */
-var    CHECK = 27;     /* i: waiting for 32-bit check value */
-var    LENGTH = 28;    /* i: waiting for 32-bit length (gzip) */
-var    DONE = 29;      /* finished check, done -- remain here until reset */
-var    BAD = 30;       /* got a data error -- remain here until reset */
-var    MEM = 31;       /* got an inflate() memory error -- remain here until reset */
-var    SYNC = 32;      /* looking for synchronization bytes to restart inflate() */
-
-/* ===========================================================================*/
-
-
-
-var ENOUGH_LENS = 852;
-var ENOUGH_DISTS = 592;
-//var ENOUGH =  (ENOUGH_LENS+ENOUGH_DISTS);
-
-var MAX_WBITS = 15;
-/* 32K LZ77 window */
-var DEF_WBITS = MAX_WBITS;
-
-
-function ZSWAP32(q) {
-  return  (((q >>> 24) & 0xff) +
-          ((q >>> 8) & 0xff00) +
-          ((q & 0xff00) << 8) +
-          ((q & 0xff) << 24));
-}
-
-
-function InflateState() {
-  this.mode = 0;             /* current inflate mode */
-  this.last = false;          /* true if processing last block */
-  this.wrap = 0;              /* bit 0 true for zlib, bit 1 true for gzip */
-  this.havedict = false;      /* true if dictionary provided */
-  this.flags = 0;             /* gzip header method and flags (0 if zlib) */
-  this.dmax = 0;              /* zlib header max distance (INFLATE_STRICT) */
-  this.check = 0;             /* protected copy of check value */
-  this.total = 0;             /* protected copy of output count */
-  // TODO: may be {}
-  this.head = null;           /* where to save gzip header information */
-
-  /* sliding window */
-  this.wbits = 0;             /* log base 2 of requested window size */
-  this.wsize = 0;             /* window size or zero if not using window */
-  this.whave = 0;             /* valid bytes in the window */
-  this.wnext = 0;             /* window write index */
-  this.window = null;         /* allocated sliding window, if needed */
-
-  /* bit accumulator */
-  this.hold = 0;              /* input bit accumulator */
-  this.bits = 0;              /* number of bits in "in" */
-
-  /* for string and stored block copying */
-  this.length = 0;            /* literal or length of data to copy */
-  this.offset = 0;            /* distance back to copy string from */
-
-  /* for table and code decoding */
-  this.extra = 0;             /* extra bits needed */
-
-  /* fixed and dynamic code tables */
-  this.lencode = null;          /* starting table for length/literal codes */
-  this.distcode = null;         /* starting table for distance codes */
-  this.lenbits = 0;           /* index bits for lencode */
-  this.distbits = 0;          /* index bits for distcode */
-
-  /* dynamic table building */
-  this.ncode = 0;             /* number of code length code lengths */
-  this.nlen = 0;              /* number of length code lengths */
-  this.ndist = 0;             /* number of distance code lengths */
-  this.have = 0;              /* number of code lengths in lens[] */
-  this.next = null;              /* next available space in codes[] */
-
-  this.lens = new utils.Buf16(320); /* temporary storage for code lengths */
-  this.work = new utils.Buf16(288); /* work area for code table building */
-
-  /*
-   because we don't have pointers in js, we use lencode and distcode directly
-   as buffers so we don't need codes
-  */
-  //this.codes = new utils.Buf32(ENOUGH);       /* space for code tables */
-  this.lendyn = null;              /* dynamic table for length/literal codes (JS specific) */
-  this.distdyn = null;             /* dynamic table for distance codes (JS specific) */
-  this.sane = 0;                   /* if false, allow invalid distance too far */
-  this.back = 0;                   /* bits back of last unprocessed length/lit */
-  this.was = 0;                    /* initial length of match */
-}
-
-function inflateResetKeep(strm) {
-  var state;
-
-  if (!strm || !strm.state) { return Z_STREAM_ERROR; }
-  state = strm.state;
-  strm.total_in = strm.total_out = state.total = 0;
-  strm.msg = ''; /*Z_NULL*/
-  if (state.wrap) {       /* to support ill-conceived Java test suite */
-    strm.adler = state.wrap & 1;
-  }
-  state.mode = HEAD;
-  state.last = 0;
-  state.havedict = 0;
-  state.dmax = 32768;
-  state.head = null/*Z_NULL*/;
-  state.hold = 0;
-  state.bits = 0;
-  //state.lencode = state.distcode = state.next = state.codes;
-  state.lencode = state.lendyn = new utils.Buf32(ENOUGH_LENS);
-  state.distcode = state.distdyn = new utils.Buf32(ENOUGH_DISTS);
-
-  state.sane = 1;
-  state.back = -1;
-  //Tracev((stderr, "inflate: reset\n"));
-  return Z_OK;
-}
-
-function inflateReset(strm) {
-  var state;
-
-  if (!strm || !strm.state) { return Z_STREAM_ERROR; }
-  state = strm.state;
-  state.wsize = 0;
-  state.whave = 0;
-  state.wnext = 0;
-  return inflateResetKeep(strm);
-
-}
-
-function inflateReset2(strm, windowBits) {
-  var wrap;
-  var state;
-
-  /* get the state */
-  if (!strm || !strm.state) { return Z_STREAM_ERROR; }
-  state = strm.state;
-
-  /* extract wrap request from windowBits parameter */
-  if (windowBits < 0) {
-    wrap = 0;
-    windowBits = -windowBits;
-  }
-  else {
-    wrap = (windowBits >> 4) + 1;
-    if (windowBits < 48) {
-      windowBits &= 15;
-    }
-  }
-
-  /* set number of window bits, free window if different */
-  if (windowBits && (windowBits < 8 || windowBits > 15)) {
-    return Z_STREAM_ERROR;
-  }
-  if (state.window !== null && state.wbits !== windowBits) {
-    state.window = null;
-  }
-
-  /* update state and reset the rest of it */
-  state.wrap = wrap;
-  state.wbits = windowBits;
-  return inflateReset(strm);
-}
-
-function inflateInit2(strm, windowBits) {
-  var ret;
-  var state;
-
-  if (!strm) { return Z_STREAM_ERROR; }
-  //strm.msg = Z_NULL;                 /* in case we return an error */
-
-  state = new InflateState();
-
-  //if (state === Z_NULL) return Z_MEM_ERROR;
-  //Tracev((stderr, "inflate: allocated\n"));
-  strm.state = state;
-  state.window = null/*Z_NULL*/;
-  ret = inflateReset2(strm, windowBits);
-  if (ret !== Z_OK) {
-    strm.state = null/*Z_NULL*/;
-  }
-  return ret;
-}
-
-function inflateInit(strm) {
-  return inflateInit2(strm, DEF_WBITS);
-}
-
-
-/*
- Return state with length and distance decoding tables and index sizes set to
- fixed code decoding.  Normally this returns fixed tables from inffixed.h.
- If BUILDFIXED is defined, then instead this routine builds the tables the
- first time it's called, and returns those tables the first time and
- thereafter.  This reduces the size of the code by about 2K bytes, in
- exchange for a little execution time.  However, BUILDFIXED should not be
- used for threaded applications, since the rewriting of the tables and virgin
- may not be thread-safe.
- */
-var virgin = true;
-
-var lenfix, distfix; // We have no pointers in JS, so keep tables separate
-
-function fixedtables(state) {
-  /* build fixed huffman tables if first call (may not be thread safe) */
-  if (virgin) {
-    var sym;
-
-    lenfix = new utils.Buf32(512);
-    distfix = new utils.Buf32(32);
-
-    /* literal/length table */
-    sym = 0;
-    while (sym < 144) { state.lens[sym++] = 8; }
-    while (sym < 256) { state.lens[sym++] = 9; }
-    while (sym < 280) { state.lens[sym++] = 7; }
-    while (sym < 288) { state.lens[sym++] = 8; }
-
-    inflate_table(LENS,  state.lens, 0, 288, lenfix,   0, state.work, {bits: 9});
-
-    /* distance table */
-    sym = 0;
-    while (sym < 32) { state.lens[sym++] = 5; }
-
-    inflate_table(DISTS, state.lens, 0, 32,   distfix, 0, state.work, {bits: 5});
-
-    /* do this just once */
-    virgin = false;
-  }
-
-  state.lencode = lenfix;
-  state.lenbits = 9;
-  state.distcode = distfix;
-  state.distbits = 5;
-}
-
-
-/*
- Update the window with the last wsize (normally 32K) bytes written before
- returning.  If window does not exist yet, create it.  This is only called
- when a window is already in use, or when output has been written during this
- inflate call, but the end of the deflate stream has not been reached yet.
- It is also called to create a window for dictionary data when a dictionary
- is loaded.
-
- Providing output buffers larger than 32K to inflate() should provide a speed
- advantage, since only the last 32K of output is copied to the sliding window
- upon return from inflate(), and since all distances after the first 32K of
- output will fall in the output data, making match copies simpler and faster.
- The advantage may be dependent on the size of the processor's data caches.
- */
-function updatewindow(strm, src, end, copy) {
-  var dist;
-  var state = strm.state;
-
-  /* if it hasn't been done already, allocate space for the window */
-  if (state.window === null) {
-    state.wsize = 1 << state.wbits;
-    state.wnext = 0;
-    state.whave = 0;
-
-    state.window = new utils.Buf8(state.wsize);
-  }
-
-  /* copy state->wsize or less output bytes into the circular window */
-  if (copy >= state.wsize) {
-    utils.arraySet(state.window,src, end - state.wsize, state.wsize, 0);
-    state.wnext = 0;
-    state.whave = state.wsize;
-  }
-  else {
-    dist = state.wsize - state.wnext;
-    if (dist > copy) {
-      dist = copy;
-    }
-    //zmemcpy(state->window + state->wnext, end - copy, dist);
-    utils.arraySet(state.window,src, end - copy, dist, state.wnext);
-    copy -= dist;
-    if (copy) {
-      //zmemcpy(state->window, end - copy, copy);
-      utils.arraySet(state.window,src, end - copy, copy, 0);
-      state.wnext = copy;
-      state.whave = state.wsize;
-    }
-    else {
-      state.wnext += dist;
-      if (state.wnext === state.wsize) { state.wnext = 0; }
-      if (state.whave < state.wsize) { state.whave += dist; }
-    }
-  }
-  return 0;
-}
-
-function inflate(strm, flush) {
-  var state;
-  var input, output;          // input/output buffers
-  var next;                   /* next input INDEX */
-  var put;                    /* next output INDEX */
-  var have, left;             /* available input and output */
-  var hold;                   /* bit buffer */
-  var bits;                   /* bits in bit buffer */
-  var _in, _out;              /* save starting available input and output */
-  var copy;                   /* number of stored or match bytes to copy */
-  var from;                   /* where to copy match bytes from */
-  var from_source;
-  var here = 0;               /* current decoding table entry */
-  var here_bits, here_op, here_val; // paked "here" denormalized (JS specific)
-  //var last;                   /* parent table entry */
-  var last_bits, last_op, last_val; // paked "last" denormalized (JS specific)
-  var len;                    /* length to copy for repeats, bits to drop */
-  var ret;                    /* return code */
-  var hbuf = new utils.Buf8(4);    /* buffer for gzip header crc calculation */
-  var opts;
-
-  var n; // temporary var for NEED_BITS
-
-  var order = /* permutation of code lengths */
-    [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
-
-
-  if (!strm || !strm.state || !strm.output ||
-      (!strm.input && strm.avail_in !== 0)) {
-    return Z_STREAM_ERROR;
-  }
-
-  state = strm.state;
-  if (state.mode === TYPE) { state.mode = TYPEDO; }    /* skip check */
-
-
-  //--- LOAD() ---
-  put = strm.next_out;
-  output = strm.output;
-  left = strm.avail_out;
-  next = strm.next_in;
-  input = strm.input;
-  have = strm.avail_in;
-  hold = state.hold;
-  bits = state.bits;
-  //---
-
-  _in = have;
-  _out = left;
-  ret = Z_OK;
-
-  inf_leave: // goto emulation
-  for (;;) {
-    switch (state.mode) {
-    case HEAD:
-      if (state.wrap === 0) {
-        state.mode = TYPEDO;
-        break;
-      }
-      //=== NEEDBITS(16);
-      while (bits < 16) {
-        if (have === 0) { break inf_leave; }
-        have--;
-        hold += input[next++] << bits;
-        bits += 8;
-      }
-      //===//
-      if ((state.wrap & 2) && hold === 0x8b1f) {  /* gzip header */
-        state.check = 0/*crc32(0L, Z_NULL, 0)*/;
-        //=== CRC2(state.check, hold);
-        hbuf[0] = hold & 0xff;
-        hbuf[1] = (hold >>> 8) & 0xff;
-        state.check = crc32(state.check, hbuf, 2, 0);
-        //===//
-
-        //=== INITBITS();
-        hold = 0;
-        bits = 0;
-        //===//
-        state.mode = FLAGS;
-        break;
-      }
-      state.flags = 0;           /* expect zlib header */
-      if (state.head) {
-        state.head.done = false;
-      }
-      if (!(state.wrap & 1) ||   /* check if zlib header allowed */
-        (((hold & 0xff)/*BITS(8)*/ << 8) + (hold >> 8)) % 31) {
-        strm.msg = 'incorrect header check';
-        state.mode = BAD;
-        break;
-      }
-      if ((hold & 0x0f)/*BITS(4)*/ !== Z_DEFLATED) {
-        strm.msg = 'unknown compression method';
-        state.mode = BAD;
-        break;
-      }
-      //--- DROPBITS(4) ---//
-      hold >>>= 4;
-      bits -= 4;
-      //---//
-      len = (hold & 0x0f)/*BITS(4)*/ + 8;
-      if (state.wbits === 0) {
-        state.wbits = len;
-      }
-      else if (len > state.wbits) {
-        strm.msg = 'invalid window size';
-        state.mode = BAD;
-        break;
-      }
-      state.dmax = 1 << len;
-      //Tracev((stderr, "inflate:   zlib header ok\n"));
-      strm.adler = state.check = 1/*adler32(0L, Z_NULL, 0)*/;
-      state.mode = hold & 0x200 ? DICTID : TYPE;
-      //=== INITBITS();
-      hold = 0;
-      bits = 0;
-      //===//
-      break;
-    case FLAGS:
-      //=== NEEDBITS(16); */
-      while (bits < 16) {
-        if (have === 0) { break inf_leave; }
-        have--;
-        hold += input[next++] << bits;
-        bits += 8;
-      }
-      //===//
-      state.flags = hold;
-      if ((state.flags & 0xff) !== Z_DEFLATED) {
-        strm.msg = 'unknown compression method';
-        state.mode = BAD;
-        break;
-      }
-      if (state.flags & 0xe000) {
-        strm.msg = 'unknown header flags set';
-        state.mode = BAD;
-        break;
-      }
-      if (state.head) {
-        state.head.text = ((hold >> 8) & 1);
-      }
-      if (state.flags & 0x0200) {
-        //=== CRC2(state.check, hold);
-        hbuf[0] = hold & 0xff;
-        hbuf[1] = (hold >>> 8) & 0xff;
-        state.check = crc32(state.check, hbuf, 2, 0);
-        //===//
-      }
-      //=== INITBITS();
-      hold = 0;
-      bits = 0;
-      //===//
-      state.mode = TIME;
-      /* falls through */
-    case TIME:
-      //=== NEEDBITS(32); */
-      while (bits < 32) {
-        if (have === 0) { break inf_leave; }
-        have--;
-        hold += input[next++] << bits;
-        bits += 8;
-      }
-      //===//
-      if (state.head) {
-        state.head.time = hold;
-      }
-      if (state.flags & 0x0200) {
-        //=== CRC4(state.check, hold)
-        hbuf[0] = hold & 0xff;
-        hbuf[1] = (hold >>> 8) & 0xff;
-        hbuf[2] = (hold >>> 16) & 0xff;
-        hbuf[3] = (hold >>> 24) & 0xff;
-        state.check = crc32(state.check, hbuf, 4, 0);
-        //===
-      }
-      //=== INITBITS();
-      hold = 0;
-      bits = 0;
-      //===//
-      state.mode = OS;
-      /* falls through */
-    case OS:
-      //=== NEEDBITS(16); */
-      while (bits < 16) {
-        if (have === 0) { break inf_leave; }
-        have--;
-        hold += input[next++] << bits;
-        bits += 8;
-      }
-      //===//
-      if (state.head) {
-        state.head.xflags = (hold & 0xff);
-        state.head.os = (hold >> 8);
-      }
-      if (state.flags & 0x0200) {
-        //=== CRC2(state.check, hold);
-        hbuf[0] = hold & 0xff;
-        hbuf[1] = (hold >>> 8) & 0xff;
-        state.check = crc32(state.check, hbuf, 2, 0);
-        //===//
-      }
-      //=== INITBITS();
-      hold = 0;
-      bits = 0;
-      //===//
-      state.mode = EXLEN;
-      /* falls through */
-    case EXLEN:
-      if (state.flags & 0x0400) {
-        //=== NEEDBITS(16); */
-        while (bits < 16) {
-          if (have === 0) { break inf_leave; }
-          have--;
-          hold += input[next++] << bits;
-          bits += 8;
-        }
-        //===//
-        state.length = hold;
-        if (state.head) {
-          state.head.extra_len = hold;
-        }
-        if (state.flags & 0x0200) {
-          //=== CRC2(state.check, hold);
-          hbuf[0] = hold & 0xff;
-          hbuf[1] = (hold >>> 8) & 0xff;
-          state.check = crc32(state.check, hbuf, 2, 0);
-          //===//
-        }
-        //=== INITBITS();
-        hold = 0;
-        bits = 0;
-        //===//
-      }
-      else if (state.head) {
-        state.head.extra = null/*Z_NULL*/;
-      }
-      state.mode = EXTRA;
-      /* falls through */
-    case EXTRA:
-      if (state.flags & 0x0400) {
-        copy = state.length;
-        if (copy > have) { copy = have; }
-        if (copy) {
-          if (state.head) {
-            len = state.head.extra_len - state.length;
-            if (!state.head.extra) {
-              // Use untyped array for more conveniend processing later
-              state.head.extra = new Array(state.head.extra_len);
-            }
-            utils.arraySet(
-              state.head.extra,
-              input,
-              next,
-              // extra field is limited to 65536 bytes
-              // - no need for additional size check
-              copy,
-              /*len + copy > state.head.extra_max - len ? state.head.extra_max : copy,*/
-              len
-            );
-            //zmemcpy(state.head.extra + len, next,
-            //        len + copy > state.head.extra_max ?
-            //        state.head.extra_max - len : copy);
-          }
-          if (state.flags & 0x0200) {
-            state.check = crc32(state.check, input, copy, next);
-          }
-          have -= copy;
-          next += copy;
-          state.length -= copy;
-        }
-        if (state.length) { break inf_leave; }
-      }
-      state.length = 0;
-      state.mode = NAME;
-      /* falls through */
-    case NAME:
-      if (state.flags & 0x0800) {
-        if (have === 0) { break inf_leave; }
-        copy = 0;
-        do {
-          // TODO: 2 or 1 bytes?
-          len = input[next + copy++];
-          /* use constant limit because in js we should not preallocate memory */
-          if (state.head && len &&
-              (state.length < 65536 /*state.head.name_max*/)) {
-            state.head.name += String.fromCharCode(len);
-          }
-        } while (len && copy < have);
-
-        if (state.flags & 0x0200) {
-          state.check = crc32(state.check, input, copy, next);
-        }
-        have -= copy;
-        next += copy;
-        if (len) { break inf_leave; }
-      }
-      else if (state.head) {
-        state.head.name = null;
-      }
-      state.length = 0;
-      state.mode = COMMENT;
-      /* falls through */
-    case COMMENT:
-      if (state.flags & 0x1000) {
-        if (have === 0) { break inf_leave; }
-        copy = 0;
-        do {
-          len = input[next + copy++];
-          /* use constant limit because in js we should not preallocate memory */
-          if (state.head && len &&
-              (state.length < 65536 /*state.head.comm_max*/)) {
-            state.head.comment += String.fromCharCode(len);
-          }
-        } while (len && copy < have);
-        if (state.flags & 0x0200) {
-          state.check = crc32(state.check, input, copy, next);
-        }
-        have -= copy;
-        next += copy;
-        if (len) { break inf_leave; }
-      }
-      else if (state.head) {
-        state.head.comment = null;
-      }
-      state.mode = HCRC;
-      /* falls through */
-    case HCRC:
-      if (state.flags & 0x0200) {
-        //=== NEEDBITS(16); */
-        while (bits < 16) {
-          if (have === 0) { break inf_leave; }
-          have--;
-          hold += input[next++] << bits;
-          bits += 8;
-        }
-        //===//
-        if (hold !== (state.check & 0xffff)) {
-          strm.msg = 'header crc mismatch';
-          state.mode = BAD;
-          break;
-        }
-        //=== INITBITS();
-        hold = 0;
-        bits = 0;
-        //===//
-      }
-      if (state.head) {
-        state.head.hcrc = ((state.flags >> 9) & 1);
-        state.head.done = true;
-      }
-      strm.adler = state.check = 0 /*crc32(0L, Z_NULL, 0)*/;
-      state.mode = TYPE;
-      break;
-    case DICTID:
-      //=== NEEDBITS(32); */
-      while (bits < 32) {
-        if (have === 0) { break inf_leave; }
-        have--;
-        hold += input[next++] << bits;
-        bits += 8;
-      }
-      //===//
-      strm.adler = state.check = ZSWAP32(hold);
-      //=== INITBITS();
-      hold = 0;
-      bits = 0;
-      //===//
-      state.mode = DICT;
-      /* falls through */
-    case DICT:
-      if (state.havedict === 0) {
-        //--- RESTORE() ---
-        strm.next_out = put;
-        strm.avail_out = left;
-        strm.next_in = next;
-        strm.avail_in = have;
-        state.hold = hold;
-        state.bits = bits;
-        //---
-        return Z_NEED_DICT;
-      }
-      strm.adler = state.check = 1/*adler32(0L, Z_NULL, 0)*/;
-      state.mode = TYPE;
-      /* falls through */
-    case TYPE:
-      if (flush === Z_BLOCK || flush === Z_TREES) { break inf_leave; }
-      /* falls through */
-    case TYPEDO:
-      if (state.last) {
-        //--- BYTEBITS() ---//
-        hold >>>= bits & 7;
-        bits -= bits & 7;
-        //---//
-        state.mode = CHECK;
-        break;
-      }
-      //=== NEEDBITS(3); */
-      while (bits < 3) {
-        if (have === 0) { break inf_leave; }
-        have--;
-        hold += input[next++] << bits;
-        bits += 8;
-      }
-      //===//
-      state.last = (hold & 0x01)/*BITS(1)*/;
-      //--- DROPBITS(1) ---//
-      hold >>>= 1;
-      bits -= 1;
-      //---//
-
-      switch ((hold & 0x03)/*BITS(2)*/) {
-      case 0:                             /* stored block */
-        //Tracev((stderr, "inflate:     stored block%s\n",
-        //        state.last ? " (last)" : ""));
-        state.mode = STORED;
-        break;
-      case 1:                             /* fixed block */
-        fixedtables(state);
-        //Tracev((stderr, "inflate:     fixed codes block%s\n",
-        //        state.last ? " (last)" : ""));
-        state.mode = LEN_;             /* decode codes */
-        if (flush === Z_TREES) {
-          //--- DROPBITS(2) ---//
-          hold >>>= 2;
-          bits -= 2;
-          //---//
-          break inf_leave;
-        }
-        break;
-      case 2:                             /* dynamic block */
-        //Tracev((stderr, "inflate:     dynamic codes block%s\n",
-        //        state.last ? " (last)" : ""));
-        state.mode = TABLE;
-        break;
-      case 3:
-        strm.msg = 'invalid block type';
-        state.mode = BAD;
-      }
-      //--- DROPBITS(2) ---//
-      hold >>>= 2;
-      bits -= 2;
-      //---//
-      break;
-    case STORED:
-      //--- BYTEBITS() ---// /* go to byte boundary */
-      hold >>>= bits & 7;
-      bits -= bits & 7;
-      //---//
-      //=== NEEDBITS(32); */
-      while (bits < 32) {
-        if (have === 0) { break inf_leave; }
-        have--;
-        hold += input[next++] << bits;
-        bits += 8;
-      }
-      //===//
-      if ((hold & 0xffff) !== ((hold >>> 16) ^ 0xffff)) {
-        strm.msg = 'invalid stored block lengths';
-        state.mode = BAD;
-        break;
-      }
-      state.length = hold & 0xffff;
-      //Tracev((stderr, "inflate:       stored length %u\n",
-      //        state.length));
-      //=== INITBITS();
-      hold = 0;
-      bits = 0;
-      //===//
-      state.mode = COPY_;
-      if (flush === Z_TREES) { break inf_leave; }
-      /* falls through */
-    case COPY_:
-      state.mode = COPY;
-      /* falls through */
-    case COPY:
-      copy = state.length;
-      if (copy) {
-        if (copy > have) { copy = have; }
-        if (copy > left) { copy = left; }
-        if (copy === 0) { break inf_leave; }
-        //--- zmemcpy(put, next, copy); ---
-        utils.arraySet(output, input, next, copy, put);
-        //---//
-        have -= copy;
-        next += copy;
-        left -= copy;
-        put += copy;
-        state.length -= copy;
-        break;
-      }
-      //Tracev((stderr, "inflate:       stored end\n"));
-      state.mode = TYPE;
-      break;
-    case TABLE:
-      //=== NEEDBITS(14); */
-      while (bits < 14) {
-        if (have === 0) { break inf_leave; }
-        have--;
-        hold += input[next++] << bits;
-        bits += 8;
-      }
-      //===//
-      state.nlen = (hold & 0x1f)/*BITS(5)*/ + 257;
-      //--- DROPBITS(5) ---//
-      hold >>>= 5;
-      bits -= 5;
-      //---//
-      state.ndist = (hold & 0x1f)/*BITS(5)*/ + 1;
-      //--- DROPBITS(5) ---//
-      hold >>>= 5;
-      bits -= 5;
-      //---//
-      state.ncode = (hold & 0x0f)/*BITS(4)*/ + 4;
-      //--- DROPBITS(4) ---//
-      hold >>>= 4;
-      bits -= 4;
-      //---//
-//#ifndef PKZIP_BUG_WORKAROUND
-      if (state.nlen > 286 || state.ndist > 30) {
-        strm.msg = 'too many length or distance symbols';
-        state.mode = BAD;
-        break;
-      }
-//#endif
-      //Tracev((stderr, "inflate:       table sizes ok\n"));
-      state.have = 0;
-      state.mode = LENLENS;
-      /* falls through */
-    case LENLENS:
-      while (state.have < state.ncode) {
-        //=== NEEDBITS(3);
-        while (bits < 3) {
-          if (have === 0) { break inf_leave; }
-          have--;
-          hold += input[next++] << bits;
-          bits += 8;
-        }
-        //===//
-        state.lens[order[state.have++]] = (hold & 0x07);//BITS(3);
-        //--- DROPBITS(3) ---//
-        hold >>>= 3;
-        bits -= 3;
-        //---//
-      }
-      while (state.have < 19) {
-        state.lens[order[state.have++]] = 0;
-      }
-      // We have separate tables & no pointers. 2 commented lines below not needed.
-      //state.next = state.codes;
-      //state.lencode = state.next;
-      // Switch to use dynamic table
-      state.lencode = state.lendyn;
-      state.lenbits = 7;
-
-      opts = {bits: state.lenbits};
-      ret = inflate_table(CODES, state.lens, 0, 19, state.lencode, 0, state.work, opts);
-      state.lenbits = opts.bits;
-
-      if (ret) {
-        strm.msg = 'invalid code lengths set';
-        state.mode = BAD;
-        break;
-      }
-      //Tracev((stderr, "inflate:       code lengths ok\n"));
-      state.have = 0;
-      state.mode = CODELENS;
-      /* falls through */
-    case CODELENS:
-      while (state.have < state.nlen + state.ndist) {
-        for (;;) {
-          here = state.lencode[hold & ((1 << state.lenbits) - 1)];/*BITS(state.lenbits)*/
-          here_bits = here >>> 24;
-          here_op = (here >>> 16) & 0xff;
-          here_val = here & 0xffff;
-
-          if ((here_bits) <= bits) { break; }
-          //--- PULLBYTE() ---//
-          if (have === 0) { break inf_leave; }
-          have--;
-          hold += input[next++] << bits;
-          bits += 8;
-          //---//
-        }
-        if (here_val < 16) {
-          //--- DROPBITS(here.bits) ---//
-          hold >>>= here_bits;
-          bits -= here_bits;
-          //---//
-          state.lens[state.have++] = here_val;
-        }
-        else {
-          if (here_val === 16) {
-            //=== NEEDBITS(here.bits + 2);
-            n = here_bits + 2;
-            while (bits < n) {
-              if (have === 0) { break inf_leave; }
-              have--;
-              hold += input[next++] << bits;
-              bits += 8;
-            }
-            //===//
-            //--- DROPBITS(here.bits) ---//
-            hold >>>= here_bits;
-            bits -= here_bits;
-            //---//
-            if (state.have === 0) {
-              strm.msg = 'invalid bit length repeat';
-              state.mode = BAD;
-              break;
-            }
-            len = state.lens[state.have - 1];
-            copy = 3 + (hold & 0x03);//BITS(2);
-            //--- DROPBITS(2) ---//
-            hold >>>= 2;
-            bits -= 2;
-            //---//
-          }
-          else if (here_val === 17) {
-            //=== NEEDBITS(here.bits + 3);
-            n = here_bits + 3;
-            while (bits < n) {
-              if (have === 0) { break inf_leave; }
-              have--;
-              hold += input[next++] << bits;
-              bits += 8;
-            }
-            //===//
-            //--- DROPBITS(here.bits) ---//
-            hold >>>= here_bits;
-            bits -= here_bits;
-            //---//
-            len = 0;
-            copy = 3 + (hold & 0x07);//BITS(3);
-            //--- DROPBITS(3) ---//
-            hold >>>= 3;
-            bits -= 3;
-            //---//
-          }
-          else {
-            //=== NEEDBITS(here.bits + 7);
-            n = here_bits + 7;
-            while (bits < n) {
-              if (have === 0) { break inf_leave; }
-              have--;
-              hold += input[next++] << bits;
-              bits += 8;
-            }
-            //===//
-            //--- DROPBITS(here.bits) ---//
-            hold >>>= here_bits;
-            bits -= here_bits;
-            //---//
-            len = 0;
-            copy = 11 + (hold & 0x7f);//BITS(7);
-            //--- DROPBITS(7) ---//
-            hold >>>= 7;
-            bits -= 7;
-            //---//
-          }
-          if (state.have + copy > state.nlen + state.ndist) {
-            strm.msg = 'invalid bit length repeat';
-            state.mode = BAD;
-            break;
-          }
-          while (copy--) {
-            state.lens[state.have++] = len;
-          }
-        }
-      }
-
-      /* handle error breaks in while */
-      if (state.mode === BAD) { break; }
-
-      /* check for end-of-block code (better have one) */
-      if (state.lens[256] === 0) {
-        strm.msg = 'invalid code -- missing end-of-block';
-        state.mode = BAD;
-        break;
-      }
-
-      /* build code tables -- note: do not change the lenbits or distbits
-         values here (9 and 6) without reading the comments in inftrees.h
-         concerning the ENOUGH constants, which depend on those values */
-      state.lenbits = 9;
-
-      opts = {bits: state.lenbits};
-      ret = inflate_table(LENS, state.lens, 0, state.nlen, state.lencode, 0, state.work, opts);
-      // We have separate tables & no pointers. 2 commented lines below not needed.
-      // state.next_index = opts.table_index;
-      state.lenbits = opts.bits;
-      // state.lencode = state.next;
-
-      if (ret) {
-        strm.msg = 'invalid literal/lengths set';
-        state.mode = BAD;
-        break;
-      }
-
-      state.distbits = 6;
-      //state.distcode.copy(state.codes);
-      // Switch to use dynamic table
-      state.distcode = state.distdyn;
-      opts = {bits: state.distbits};
-      ret = inflate_table(DISTS, state.lens, state.nlen, state.ndist, state.distcode, 0, state.work, opts);
-      // We have separate tables & no pointers. 2 commented lines below not needed.
-      // state.next_index = opts.table_index;
-      state.distbits = opts.bits;
-      // state.distcode = state.next;
-
-      if (ret) {
-        strm.msg = 'invalid distances set';
-        state.mode = BAD;
-        break;
-      }
-      //Tracev((stderr, 'inflate:       codes ok\n'));
-      state.mode = LEN_;
-      if (flush === Z_TREES) { break inf_leave; }
-      /* falls through */
-    case LEN_:
-      state.mode = LEN;
-      /* falls through */
-    case LEN:
-      if (have >= 6 && left >= 258) {
-        //--- RESTORE() ---
-        strm.next_out = put;
-        strm.avail_out = left;
-        strm.next_in = next;
-        strm.avail_in = have;
-        state.hold = hold;
-        state.bits = bits;
-        //---
-        inflate_fast(strm, _out);
-        //--- LOAD() ---
-        put = strm.next_out;
-        output = strm.output;
-        left = strm.avail_out;
-        next = strm.next_in;
-        input = strm.input;
-        have = strm.avail_in;
-        hold = state.hold;
-        bits = state.bits;
-        //---
-
-        if (state.mode === TYPE) {
-          state.back = -1;
-        }
-        break;
-      }
-      state.back = 0;
-      for (;;) {
-        here = state.lencode[hold & ((1 << state.lenbits) -1)];  /*BITS(state.lenbits)*/
-        here_bits = here >>> 24;
-        here_op = (here >>> 16) & 0xff;
-        here_val = here & 0xffff;
-
-        if (here_bits <= bits) { break; }
-        //--- PULLBYTE() ---//
-        if (have === 0) { break inf_leave; }
-        have--;
-        hold += input[next++] << bits;
-        bits += 8;
-        //---//
-      }
-      if (here_op && (here_op & 0xf0) === 0) {
-        last_bits = here_bits;
-        last_op = here_op;
-        last_val = here_val;
-        for (;;) {
-          here = state.lencode[last_val +
-                  ((hold & ((1 << (last_bits + last_op)) -1))/*BITS(last.bits + last.op)*/ >> last_bits)];
-          here_bits = here >>> 24;
-          here_op = (here >>> 16) & 0xff;
-          here_val = here & 0xffff;
-
-          if ((last_bits + here_bits) <= bits) { break; }
-          //--- PULLBYTE() ---//
-          if (have === 0) { break inf_leave; }
-          have--;
-          hold += input[next++] << bits;
-          bits += 8;
-          //---//
-        }
-        //--- DROPBITS(last.bits) ---//
-        hold >>>= last_bits;
-        bits -= last_bits;
-        //---//
-        state.back += last_bits;
-      }
-      //--- DROPBITS(here.bits) ---//
-      hold >>>= here_bits;
-      bits -= here_bits;
-      //---//
-      state.back += here_bits;
-      state.length = here_val;
-      if (here_op === 0) {
-        //Tracevv((stderr, here.val >= 0x20 && here.val < 0x7f ?
-        //        "inflate:         literal '%c'\n" :
-        //        "inflate:         literal 0x%02x\n", here.val));
-        state.mode = LIT;
-        break;
-      }
-      if (here_op & 32) {
-        //Tracevv((stderr, "inflate:         end of block\n"));
-        state.back = -1;
-        state.mode = TYPE;
-        break;
-      }
-      if (here_op & 64) {
-        strm.msg = 'invalid literal/length code';
-        state.mode = BAD;
-        break;
-      }
-      state.extra = here_op & 15;
-      state.mode = LENEXT;
-      /* falls through */
-    case LENEXT:
-      if (state.extra) {
-        //=== NEEDBITS(state.extra);
-        n = state.extra;
-        while (bits < n) {
-          if (have === 0) { break inf_leave; }
-          have--;
-          hold += input[next++] << bits;
-          bits += 8;
-        }
-        //===//
-        state.length += hold & ((1 << state.extra) -1)/*BITS(state.extra)*/;
-        //--- DROPBITS(state.extra) ---//
-        hold >>>= state.extra;
-        bits -= state.extra;
-        //---//
-        state.back += state.extra;
-      }
-      //Tracevv((stderr, "inflate:         length %u\n", state.length));
-      state.was = state.length;
-      state.mode = DIST;
-      /* falls through */
-    case DIST:
-      for (;;) {
-        here = state.distcode[hold & ((1 << state.distbits) -1)];/*BITS(state.distbits)*/
-        here_bits = here >>> 24;
-        here_op = (here >>> 16) & 0xff;
-        here_val = here & 0xffff;
-
-        if ((here_bits) <= bits) { break; }
-        //--- PULLBYTE() ---//
-        if (have === 0) { break inf_leave; }
-        have--;
-        hold += input[next++] << bits;
-        bits += 8;
-        //---//
-      }
-      if ((here_op & 0xf0) === 0) {
-        last_bits = here_bits;
-        last_op = here_op;
-        last_val = here_val;
-        for (;;) {
-          here = state.distcode[last_val +
-                  ((hold & ((1 << (last_bits + last_op)) -1))/*BITS(last.bits + last.op)*/ >> last_bits)];
-          here_bits = here >>> 24;
-          here_op = (here >>> 16) & 0xff;
-          here_val = here & 0xffff;
-
-          if ((last_bits + here_bits) <= bits) { break; }
-          //--- PULLBYTE() ---//
-          if (have === 0) { break inf_leave; }
-          have--;
-          hold += input[next++] << bits;
-          bits += 8;
-          //---//
-        }
-        //--- DROPBITS(last.bits) ---//
-        hold >>>= last_bits;
-        bits -= last_bits;
-        //---//
-        state.back += last_bits;
-      }
-      //--- DROPBITS(here.bits) ---//
-      hold >>>= here_bits;
-      bits -= here_bits;
-      //---//
-      state.back += here_bits;
-      if (here_op & 64) {
-        strm.msg = 'invalid distance code';
-        state.mode = BAD;
-        break;
-      }
-      state.offset = here_val;
-      state.extra = (here_op) & 15;
-      state.mode = DISTEXT;
-      /* falls through */
-    case DISTEXT:
-      if (state.extra) {
-        //=== NEEDBITS(state.extra);
-        n = state.extra;
-        while (bits < n) {
-          if (have === 0) { break inf_leave; }
-          have--;
-          hold += input[next++] << bits;
-          bits += 8;
-        }
-        //===//
-        state.offset += hold & ((1 << state.extra) -1)/*BITS(state.extra)*/;
-        //--- DROPBITS(state.extra) ---//
-        hold >>>= state.extra;
-        bits -= state.extra;
-        //---//
-        state.back += state.extra;
-      }
-//#ifdef INFLATE_STRICT
-      if (state.offset > state.dmax) {
-        strm.msg = 'invalid distance too far back';
-        state.mode = BAD;
-        break;
-      }
-//#endif
-      //Tracevv((stderr, "inflate:         distance %u\n", state.offset));
-      state.mode = MATCH;
-      /* falls through */
-    case MATCH:
-      if (left === 0) { break inf_leave; }
-      copy = _out - left;
-      if (state.offset > copy) {         /* copy from window */
-        copy = state.offset - copy;
-        if (copy > state.whave) {
-          if (state.sane) {
-            strm.msg = 'invalid distance too far back';
-            state.mode = BAD;
-            break;
-          }
-// (!) This block is disabled in zlib defailts,
-// don't enable it for binary compatibility
-//#ifdef INFLATE_ALLOW_INVALID_DISTANCE_TOOFAR_ARRR
-//          Trace((stderr, "inflate.c too far\n"));
-//          copy -= state.whave;
-//          if (copy > state.length) { copy = state.length; }
-//          if (copy > left) { copy = left; }
-//          left -= copy;
-//          state.length -= copy;
-//          do {
-//            output[put++] = 0;
-//          } while (--copy);
-//          if (state.length === 0) { state.mode = LEN; }
-//          break;
-//#endif
-        }
-        if (copy > state.wnext) {
-          copy -= state.wnext;
-          from = state.wsize - copy;
-        }
-        else {
-          from = state.wnext - copy;
-        }
-        if (copy > state.length) { copy = state.length; }
-        from_source = state.window;
-      }
-      else {                              /* copy from output */
-        from_source = output;
-        from = put - state.offset;
-        copy = state.length;
-      }
-      if (copy > left) { copy = left; }
-      left -= copy;
-      state.length -= copy;
-      do {
-        output[put++] = from_source[from++];
-      } while (--copy);
-      if (state.length === 0) { state.mode = LEN; }
-      break;
-    case LIT:
-      if (left === 0) { break inf_leave; }
-      output[put++] = state.length;
-      left--;
-      state.mode = LEN;
-      break;
-    case CHECK:
-      if (state.wrap) {
-        //=== NEEDBITS(32);
-        while (bits < 32) {
-          if (have === 0) { break inf_leave; }
-          have--;
-          // Use '|' insdead of '+' to make sure that result is signed
-          hold |= input[next++] << bits;
-          bits += 8;
-        }
-        //===//
-        _out -= left;
-        strm.total_out += _out;
-        state.total += _out;
-        if (_out) {
-          strm.adler = state.check =
-              /*UPDATE(state.check, put - _out, _out);*/
-              (state.flags ? crc32(state.check, output, _out, put - _out) : adler32(state.check, output, _out, put - _out));
-
-        }
-        _out = left;
-        // NB: crc32 stored as signed 32-bit int, ZSWAP32 returns signed too
-        if ((state.flags ? hold : ZSWAP32(hold)) !== state.check) {
-          strm.msg = 'incorrect data check';
-          state.mode = BAD;
-          break;
-        }
-        //=== INITBITS();
-        hold = 0;
-        bits = 0;
-        //===//
-        //Tracev((stderr, "inflate:   check matches trailer\n"));
-      }
-      state.mode = LENGTH;
-      /* falls through */
-    case LENGTH:
-      if (state.wrap && state.flags) {
-        //=== NEEDBITS(32);
-        while (bits < 32) {
-          if (have === 0) { break inf_leave; }
-          have--;
-          hold += input[next++] << bits;
-          bits += 8;
-        }
-        //===//
-        if (hold !== (state.total & 0xffffffff)) {
-          strm.msg = 'incorrect length check';
-          state.mode = BAD;
-          break;
-        }
-        //=== INITBITS();
-        hold = 0;
-        bits = 0;
-        //===//
-        //Tracev((stderr, "inflate:   length matches trailer\n"));
-      }
-      state.mode = DONE;
-      /* falls through */
-    case DONE:
-      ret = Z_STREAM_END;
-      break inf_leave;
-    case BAD:
-      ret = Z_DATA_ERROR;
-      break inf_leave;
-    case MEM:
-      return Z_MEM_ERROR;
-    case SYNC:
-      /* falls through */
-    default:
-      return Z_STREAM_ERROR;
-    }
-  }
-
-  // inf_leave <- here is real place for "goto inf_leave", emulated via "break inf_leave"
-
-  /*
-     Return from inflate(), updating the total counts and the check value.
-     If there was no progress during the inflate() call, return a buffer
-     error.  Call updatewindow() to create and/or update the window state.
-     Note: a memory error from inflate() is non-recoverable.
-   */
-
-  //--- RESTORE() ---
-  strm.next_out = put;
-  strm.avail_out = left;
-  strm.next_in = next;
-  strm.avail_in = have;
-  state.hold = hold;
-  state.bits = bits;
-  //---
-
-  if (state.wsize || (_out !== strm.avail_out && state.mode < BAD &&
-                      (state.mode < CHECK || flush !== Z_FINISH))) {
-    if (updatewindow(strm, strm.output, strm.next_out, _out - strm.avail_out)) {
-      state.mode = MEM;
-      return Z_MEM_ERROR;
-    }
-  }
-  _in -= strm.avail_in;
-  _out -= strm.avail_out;
-  strm.total_in += _in;
-  strm.total_out += _out;
-  state.total += _out;
-  if (state.wrap && _out) {
-    strm.adler = state.check = /*UPDATE(state.check, strm.next_out - _out, _out);*/
-      (state.flags ? crc32(state.check, output, _out, strm.next_out - _out) : adler32(state.check, output, _out, strm.next_out - _out));
-  }
-  strm.data_type = state.bits + (state.last ? 64 : 0) +
-                    (state.mode === TYPE ? 128 : 0) +
-                    (state.mode === LEN_ || state.mode === COPY_ ? 256 : 0);
-  if (((_in === 0 && _out === 0) || flush === Z_FINISH) && ret === Z_OK) {
-    ret = Z_BUF_ERROR;
-  }
-  return ret;
-}
-
-function inflateEnd(strm) {
-
-  if (!strm || !strm.state /*|| strm->zfree == (free_func)0*/) {
-    return Z_STREAM_ERROR;
-  }
-
-  var state = strm.state;
-  if (state.window) {
-    state.window = null;
-  }
-  strm.state = null;
-  return Z_OK;
-}
-
-function inflateGetHeader(strm, head) {
-  var state;
-
-  /* check state */
-  if (!strm || !strm.state) { return Z_STREAM_ERROR; }
-  state = strm.state;
-  if ((state.wrap & 2) === 0) { return Z_STREAM_ERROR; }
-
-  /* save header structure */
-  state.head = head;
-  head.done = false;
-  return Z_OK;
-}
-
-
-exports.inflateReset = inflateReset;
-exports.inflateReset2 = inflateReset2;
-exports.inflateResetKeep = inflateResetKeep;
-exports.inflateInit = inflateInit;
-exports.inflateInit2 = inflateInit2;
-exports.inflate = inflate;
-exports.inflateEnd = inflateEnd;
-exports.inflateGetHeader = inflateGetHeader;
-exports.inflateInfo = 'pako inflate (from Nodeca project)';
-
-/* Not implemented
-exports.inflateCopy = inflateCopy;
-exports.inflateGetDictionary = inflateGetDictionary;
-exports.inflateMark = inflateMark;
-exports.inflatePrime = inflatePrime;
-exports.inflateSetDictionary = inflateSetDictionary;
-exports.inflateSync = inflateSync;
-exports.inflateSyncPoint = inflateSyncPoint;
-exports.inflateUndermine = inflateUndermine;
-*/
-},{"../utils/common":27,"./adler32":29,"./crc32":31,"./inffast":34,"./inftrees":36}],36:[function(_dereq_,module,exports){
-'use strict';
-
-
-var utils = _dereq_('../utils/common');
-
-var MAXBITS = 15;
-var ENOUGH_LENS = 852;
-var ENOUGH_DISTS = 592;
-//var ENOUGH = (ENOUGH_LENS+ENOUGH_DISTS);
-
-var CODES = 0;
-var LENS = 1;
-var DISTS = 2;
-
-var lbase = [ /* Length codes 257..285 base */
-  3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31,
-  35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0
-];
-
-var lext = [ /* Length codes 257..285 extra */
-  16, 16, 16, 16, 16, 16, 16, 16, 17, 17, 17, 17, 18, 18, 18, 18,
-  19, 19, 19, 19, 20, 20, 20, 20, 21, 21, 21, 21, 16, 72, 78
-];
-
-var dbase = [ /* Distance codes 0..29 base */
-  1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193,
-  257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145,
-  8193, 12289, 16385, 24577, 0, 0
-];
-
-var dext = [ /* Distance codes 0..29 extra */
-  16, 16, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22,
-  23, 23, 24, 24, 25, 25, 26, 26, 27, 27,
-  28, 28, 29, 29, 64, 64
-];
-
-module.exports = function inflate_table(type, lens, lens_index, codes, table, table_index, work, opts)
-{
-  var bits = opts.bits;
-      //here = opts.here; /* table entry for duplication */
-
-  var len = 0;               /* a code's length in bits */
-  var sym = 0;               /* index of code symbols */
-  var min = 0, max = 0;          /* minimum and maximum code lengths */
-  var root = 0;              /* number of index bits for root table */
-  var curr = 0;              /* number of index bits for current table */
-  var drop = 0;              /* code bits to drop for sub-table */
-  var left = 0;                   /* number of prefix codes available */
-  var used = 0;              /* code entries in table used */
-  var huff = 0;              /* Huffman code */
-  var incr;              /* for incrementing code, index */
-  var fill;              /* index for replicating entries */
-  var low;               /* low bits for current root entry */
-  var mask;              /* mask for low root bits */
-  var next;             /* next available space in table */
-  var base = null;     /* base value table to use */
-  var base_index = 0;
-//  var shoextra;    /* extra bits table to use */
-  var end;                    /* use base and extra for symbol > end */
-  var count = new utils.Buf16(MAXBITS+1); //[MAXBITS+1];    /* number of codes of each length */
-  var offs = new utils.Buf16(MAXBITS+1); //[MAXBITS+1];     /* offsets in table for each length */
-  var extra = null;
-  var extra_index = 0;
-
-  var here_bits, here_op, here_val;
-
-  /*
-   Process a set of code lengths to create a canonical Huffman code.  The
-   code lengths are lens[0..codes-1].  Each length corresponds to the
-   symbols 0..codes-1.  The Huffman code is generated by first sorting the
-   symbols by length from short to long, and retaining the symbol order
-   for codes with equal lengths.  Then the code starts with all zero bits
-   for the first code of the shortest length, and the codes are integer
-   increments for the same length, and zeros are appended as the length
-   increases.  For the deflate format, these bits are stored backwards
-   from their more natural integer increment ordering, and so when the
-   decoding tables are built in the large loop below, the integer codes
-   are incremented backwards.
-
-   This routine assumes, but does not check, that all of the entries in
-   lens[] are in the range 0..MAXBITS.  The caller must assure this.
-   1..MAXBITS is interpreted as that code length.  zero means that that
-   symbol does not occur in this code.
-
-   The codes are sorted by computing a count of codes for each length,
-   creating from that a table of starting indices for each length in the
-   sorted table, and then entering the symbols in order in the sorted
-   table.  The sorted table is work[], with that space being provided by
-   the caller.
-
-   The length counts are used for other purposes as well, i.e. finding
-   the minimum and maximum length codes, determining if there are any
-   codes at all, checking for a valid set of lengths, and looking ahead
-   at length counts to determine sub-table sizes when building the
-   decoding tables.
-   */
-
-  /* accumulate lengths for codes (assumes lens[] all in 0..MAXBITS) */
-  for (len = 0; len <= MAXBITS; len++) {
-    count[len] = 0;
-  }
-  for (sym = 0; sym < codes; sym++) {
-    count[lens[lens_index + sym]]++;
-  }
-
-  /* bound code lengths, force root to be within code lengths */
-  root = bits;
-  for (max = MAXBITS; max >= 1; max--) {
-    if (count[max] !== 0) { break; }
-  }
-  if (root > max) {
-    root = max;
-  }
-  if (max === 0) {                     /* no symbols to code at all */
-    //table.op[opts.table_index] = 64;  //here.op = (var char)64;    /* invalid code marker */
-    //table.bits[opts.table_index] = 1;   //here.bits = (var char)1;
-    //table.val[opts.table_index++] = 0;   //here.val = (var short)0;
-    table[table_index++] = (1 << 24) | (64 << 16) | 0;
-
-
-    //table.op[opts.table_index] = 64;
-    //table.bits[opts.table_index] = 1;
-    //table.val[opts.table_index++] = 0;
-    table[table_index++] = (1 << 24) | (64 << 16) | 0;
-
-    opts.bits = 1;
-    return 0;     /* no symbols, but wait for decoding to report error */
-  }
-  for (min = 1; min < max; min++) {
-    if (count[min] !== 0) { break; }
-  }
-  if (root < min) {
-    root = min;
-  }
-
-  /* check for an over-subscribed or incomplete set of lengths */
-  left = 1;
-  for (len = 1; len <= MAXBITS; len++) {
-    left <<= 1;
-    left -= count[len];
-    if (left < 0) {
-      return -1;
-    }        /* over-subscribed */
-  }
-  if (left > 0 && (type === CODES || max !== 1)) {
-    return -1;                      /* incomplete set */
-  }
-
-  /* generate offsets into symbol table for each length for sorting */
-  offs[1] = 0;
-  for (len = 1; len < MAXBITS; len++) {
-    offs[len + 1] = offs[len] + count[len];
-  }
-
-  /* sort symbols by length, by symbol order within each length */
-  for (sym = 0; sym < codes; sym++) {
-    if (lens[lens_index + sym] !== 0) {
-      work[offs[lens[lens_index + sym]]++] = sym;
-    }
-  }
-
-  /*
-   Create and fill in decoding tables.  In this loop, the table being
-   filled is at next and has curr index bits.  The code being used is huff
-   with length len.  That code is converted to an index by dropping drop
-   bits off of the bottom.  For codes where len is less than drop + curr,
-   those top drop + curr - len bits are incremented through all values to
-   fill the table with replicated entries.
-
-   root is the number of index bits for the root table.  When len exceeds
-   root, sub-tables are created pointed to by the root entry with an index
-   of the low root bits of huff.  This is saved in low to check for when a
-   new sub-table should be started.  drop is zero when the root table is
-   being filled, and drop is root when sub-tables are being filled.
-
-   When a new sub-table is needed, it is necessary to look ahead in the
-   code lengths to determine what size sub-table is needed.  The length
-   counts are used for this, and so count[] is decremented as codes are
-   entered in the tables.
-
-   used keeps track of how many table entries have been allocated from the
-   provided *table space.  It is checked for LENS and DIST tables against
-   the constants ENOUGH_LENS and ENOUGH_DISTS to guard against changes in
-   the initial root table size constants.  See the comments in inftrees.h
-   for more information.
-
-   sym increments through all symbols, and the loop terminates when
-   all codes of length max, i.e. all codes, have been processed.  This
-   routine permits incomplete codes, so another loop after this one fills
-   in the rest of the decoding tables with invalid code markers.
-   */
-
-  /* set up for code type */
-  // poor man optimization - use if-else instead of switch,
-  // to avoid deopts in old v8
-  if (type === CODES) {
-      base = extra = work;    /* dummy value--not used */
-      end = 19;
-  } else if (type === LENS) {
-      base = lbase;
-      base_index -= 257;
-      extra = lext;
-      extra_index -= 257;
-      end = 256;
-  } else {                    /* DISTS */
-      base = dbase;
-      extra = dext;
-      end = -1;
-  }
-
-  /* initialize opts for loop */
-  huff = 0;                   /* starting code */
-  sym = 0;                    /* starting code symbol */
-  len = min;                  /* starting code length */
-  next = table_index;              /* current table to fill in */
-  curr = root;                /* current table index bits */
-  drop = 0;                   /* current bits to drop from code for index */
-  low = -1;                   /* trigger new sub-table when len > root */
-  used = 1 << root;          /* use root table entries */
-  mask = used - 1;            /* mask for comparing low */
-
-  /* check available table space */
-  if ((type === LENS && used > ENOUGH_LENS) ||
-    (type === DISTS && used > ENOUGH_DISTS)) {
-    return 1;
-  }
-
-  var i=0;
-  /* process all codes and make table entries */
-  for (;;) {
-    i++;
-    /* create table entry */
-    here_bits = len - drop;
-    if (work[sym] < end) {
-      here_op = 0;
-      here_val = work[sym];
-    }
-    else if (work[sym] > end) {
-      here_op = extra[extra_index + work[sym]];
-      here_val = base[base_index + work[sym]];
-    }
-    else {
-      here_op = 32 + 64;         /* end of block */
-      here_val = 0;
-    }
-
-    /* replicate for those indices with low len bits equal to huff */
-    incr = 1 << (len - drop);
-    fill = 1 << curr;
-    min = fill;                 /* save offset to next table */
-    do {
-      fill -= incr;
-      table[next + (huff >> drop) + fill] = (here_bits << 24) | (here_op << 16) | here_val |0;
-    } while (fill !== 0);
-
-    /* backwards increment the len-bit code huff */
-    incr = 1 << (len - 1);
-    while (huff & incr) {
-      incr >>= 1;
-    }
-    if (incr !== 0) {
-      huff &= incr - 1;
-      huff += incr;
-    } else {
-      huff = 0;
-    }
-
-    /* go to next symbol, update count, len */
-    sym++;
-    if (--count[len] === 0) {
-      if (len === max) { break; }
-      len = lens[lens_index + work[sym]];
-    }
-
-    /* create new sub-table if needed */
-    if (len > root && (huff & mask) !== low) {
-      /* if first time, transition to sub-tables */
-      if (drop === 0) {
-        drop = root;
-      }
-
-      /* increment past last table */
-      next += min;            /* here min is 1 << curr */
-
-      /* determine length of next table */
-      curr = len - drop;
-      left = 1 << curr;
-      while (curr + drop < max) {
-        left -= count[curr + drop];
-        if (left <= 0) { break; }
-        curr++;
-        left <<= 1;
-      }
-
-      /* check for enough space */
-      used += 1 << curr;
-      if ((type === LENS && used > ENOUGH_LENS) ||
-        (type === DISTS && used > ENOUGH_DISTS)) {
-        return 1;
-      }
-
-      /* point entry in root table to sub-table */
-      low = huff & mask;
-      /*table.op[low] = curr;
-      table.bits[low] = root;
-      table.val[low] = next - opts.table_index;*/
-      table[low] = (root << 24) | (curr << 16) | (next - table_index) |0;
-    }
-  }
-
-  /* fill in remaining table entry if code is incomplete (guaranteed to have
-   at most one remaining entry, since if the code is incomplete, the
-   maximum code length that was allowed to get this far is one bit) */
-  if (huff !== 0) {
-    //table.op[next + huff] = 64;            /* invalid code marker */
-    //table.bits[next + huff] = len - drop;
-    //table.val[next + huff] = 0;
-    table[next + huff] = ((len - drop) << 24) | (64 << 16) |0;
-  }
-
-  /* set return parameters */
-  //opts.table_index += used;
-  opts.bits = root;
-  return 0;
-};
-
-},{"../utils/common":27}],37:[function(_dereq_,module,exports){
-'use strict';
-
-module.exports = {
-  '2':    'need dictionary',     /* Z_NEED_DICT       2  */
-  '1':    'stream end',          /* Z_STREAM_END      1  */
-  '0':    '',                    /* Z_OK              0  */
-  '-1':   'file error',          /* Z_ERRNO         (-1) */
-  '-2':   'stream error',        /* Z_STREAM_ERROR  (-2) */
-  '-3':   'data error',          /* Z_DATA_ERROR    (-3) */
-  '-4':   'insufficient memory', /* Z_MEM_ERROR     (-4) */
-  '-5':   'buffer error',        /* Z_BUF_ERROR     (-5) */
-  '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
-};
-},{}],38:[function(_dereq_,module,exports){
-'use strict';
-
-
-var utils = _dereq_('../utils/common');
-
-/* Public constants ==========================================================*/
-/* ===========================================================================*/
-
-
-//var Z_FILTERED          = 1;
-//var Z_HUFFMAN_ONLY      = 2;
-//var Z_RLE               = 3;
-var Z_FIXED               = 4;
-//var Z_DEFAULT_STRATEGY  = 0;
-
-/* Possible values of the data_type field (though see inflate()) */
-var Z_BINARY              = 0;
-var Z_TEXT                = 1;
-//var Z_ASCII             = 1; // = Z_TEXT
-var Z_UNKNOWN             = 2;
-
-/*============================================================================*/
-
-
-function zero(buf) { var len = buf.length; while (--len >= 0) { buf[len] = 0; } }
-
-// From zutil.h
-
-var STORED_BLOCK = 0;
-var STATIC_TREES = 1;
-var DYN_TREES    = 2;
-/* The three kinds of block type */
-
-var MIN_MATCH    = 3;
-var MAX_MATCH    = 258;
-/* The minimum and maximum match lengths */
-
-// From deflate.h
-/* ===========================================================================
- * Internal compression state.
- */
-
-var LENGTH_CODES  = 29;
-/* number of length codes, not counting the special END_BLOCK code */
-
-var LITERALS      = 256;
-/* number of literal bytes 0..255 */
-
-var L_CODES       = LITERALS + 1 + LENGTH_CODES;
-/* number of Literal or Length codes, including the END_BLOCK code */
-
-var D_CODES       = 30;
-/* number of distance codes */
-
-var BL_CODES      = 19;
-/* number of codes used to transfer the bit lengths */
-
-var HEAP_SIZE     = 2*L_CODES + 1;
-/* maximum heap size */
-
-var MAX_BITS      = 15;
-/* All codes must not exceed MAX_BITS bits */
-
-var Buf_size      = 16;
-/* size of bit buffer in bi_buf */
-
-
-/* ===========================================================================
- * Constants
- */
-
-var MAX_BL_BITS = 7;
-/* Bit length codes must not exceed MAX_BL_BITS bits */
-
-var END_BLOCK   = 256;
-/* end of block literal code */
-
-var REP_3_6     = 16;
-/* repeat previous bit length 3-6 times (2 bits of repeat count) */
-
-var REPZ_3_10   = 17;
-/* repeat a zero length 3-10 times  (3 bits of repeat count) */
-
-var REPZ_11_138 = 18;
-/* repeat a zero length 11-138 times  (7 bits of repeat count) */
-
-var extra_lbits =   /* extra bits for each length code */
-  [0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0];
-
-var extra_dbits =   /* extra bits for each distance code */
-  [0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13];
-
-var extra_blbits =  /* extra bits for each bit length code */
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,7];
-
-var bl_order =
-  [16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];
-/* The lengths of the bit length codes are sent in order of decreasing
- * probability, to avoid transmitting the lengths for unused bit length codes.
- */
-
-/* ===========================================================================
- * Local data. These are initialized only once.
- */
-
-// We pre-fill arrays with 0 to avoid uninitialized gaps
-
-var DIST_CODE_LEN = 512; /* see definition of array dist_code below */
-
-// !!!! Use flat array insdead of structure, Freq = i*2, Len = i*2+1
-var static_ltree  = new Array((L_CODES+2) * 2);
-zero(static_ltree);
-/* The static literal tree. Since the bit lengths are imposed, there is no
- * need for the L_CODES extra codes used during heap construction. However
- * The codes 286 and 287 are needed to build a canonical tree (see _tr_init
- * below).
- */
-
-var static_dtree  = new Array(D_CODES * 2);
-zero(static_dtree);
-/* The static distance tree. (Actually a trivial tree since all codes use
- * 5 bits.)
- */
-
-var _dist_code    = new Array(DIST_CODE_LEN);
-zero(_dist_code);
-/* Distance codes. The first 256 values correspond to the distances
- * 3 .. 258, the last 256 values correspond to the top 8 bits of
- * the 15 bit distances.
- */
-
-var _length_code  = new Array(MAX_MATCH-MIN_MATCH+1);
-zero(_length_code);
-/* length code for each normalized match length (0 == MIN_MATCH) */
-
-var base_length   = new Array(LENGTH_CODES);
-zero(base_length);
-/* First normalized length for each code (0 = MIN_MATCH) */
-
-var base_dist     = new Array(D_CODES);
-zero(base_dist);
-/* First normalized distance for each code (0 = distance of 1) */
-
-
-var StaticTreeDesc = function (static_tree, extra_bits, extra_base, elems, max_length) {
-
-  this.static_tree  = static_tree;  /* static tree or NULL */
-  this.extra_bits   = extra_bits;   /* extra bits for each code or NULL */
-  this.extra_base   = extra_base;   /* base index for extra_bits */
-  this.elems        = elems;        /* max number of elements in the tree */
-  this.max_length   = max_length;   /* max bit length for the codes */
-
-  // show if `static_tree` has data or dummy - needed for monomorphic objects
-  this.has_stree    = static_tree && static_tree.length;
-};
-
-
-var static_l_desc;
-var static_d_desc;
-var static_bl_desc;
-
-
-var TreeDesc = function(dyn_tree, stat_desc) {
-  this.dyn_tree = dyn_tree;     /* the dynamic tree */
-  this.max_code = 0;            /* largest code with non zero frequency */
-  this.stat_desc = stat_desc;   /* the corresponding static tree */
-};
-
-
-
-function d_code(dist) {
-  return dist < 256 ? _dist_code[dist] : _dist_code[256 + (dist >>> 7)];
-}
-
-
-/* ===========================================================================
- * Output a short LSB first on the stream.
- * IN assertion: there is enough room in pendingBuf.
- */
-function put_short (s, w) {
-//    put_byte(s, (uch)((w) & 0xff));
-//    put_byte(s, (uch)((ush)(w) >> 8));
-  s.pending_buf[s.pending++] = (w) & 0xff;
-  s.pending_buf[s.pending++] = (w >>> 8) & 0xff;
-}
-
-
-/* ===========================================================================
- * Send a value on a given number of bits.
- * IN assertion: length <= 16 and value fits in length bits.
- */
-function send_bits(s, value, length) {
-  if (s.bi_valid > (Buf_size - length)) {
-    s.bi_buf |= (value << s.bi_valid) & 0xffff;
-    put_short(s, s.bi_buf);
-    s.bi_buf = value >> (Buf_size - s.bi_valid);
-    s.bi_valid += length - Buf_size;
-  } else {
-    s.bi_buf |= (value << s.bi_valid) & 0xffff;
-    s.bi_valid += length;
-  }
-}
-
-
-function send_code(s, c, tree) {
-  send_bits(s, tree[c*2]/*.Code*/, tree[c*2 + 1]/*.Len*/);
-}
-
-
-/* ===========================================================================
- * Reverse the first len bits of a code, using straightforward code (a faster
- * method would use a table)
- * IN assertion: 1 <= len <= 15
- */
-function bi_reverse(code, len) {
-  var res = 0;
-  do {
-    res |= code & 1;
-    code >>>= 1;
-    res <<= 1;
-  } while (--len > 0);
-  return res >>> 1;
-}
-
-
-/* ===========================================================================
- * Flush the bit buffer, keeping at most 7 bits in it.
- */
-function bi_flush(s) {
-  if (s.bi_valid === 16) {
-    put_short(s, s.bi_buf);
-    s.bi_buf = 0;
-    s.bi_valid = 0;
-
-  } else if (s.bi_valid >= 8) {
-    s.pending_buf[s.pending++] = s.bi_buf & 0xff;
-    s.bi_buf >>= 8;
-    s.bi_valid -= 8;
-  }
-}
-
-
-/* ===========================================================================
- * Compute the optimal bit lengths for a tree and update the total bit length
- * for the current block.
- * IN assertion: the fields freq and dad are set, heap[heap_max] and
- *    above are the tree nodes sorted by increasing frequency.
- * OUT assertions: the field len is set to the optimal bit length, the
- *     array bl_count contains the frequencies for each bit length.
- *     The length opt_len is updated; static_len is also updated if stree is
- *     not null.
- */
-function gen_bitlen(s, desc)
-//    deflate_state *s;
-//    tree_desc *desc;    /* the tree descriptor */
-{
-  var tree            = desc.dyn_tree;
-  var max_code        = desc.max_code;
-  var stree           = desc.stat_desc.static_tree;
-  var has_stree       = desc.stat_desc.has_stree;
-  var extra           = desc.stat_desc.extra_bits;
-  var base            = desc.stat_desc.extra_base;
-  var max_length      = desc.stat_desc.max_length;
-  var h;              /* heap index */
-  var n, m;           /* iterate over the tree elements */
-  var bits;           /* bit length */
-  var xbits;          /* extra bits */
-  var f;              /* frequency */
-  var overflow = 0;   /* number of elements with bit length too large */
-
-  for (bits = 0; bits <= MAX_BITS; bits++) {
-    s.bl_count[bits] = 0;
-  }
-
-  /* In a first pass, compute the optimal bit lengths (which may
-   * overflow in the case of the bit length tree).
-   */
-  tree[s.heap[s.heap_max]*2 + 1]/*.Len*/ = 0; /* root of the heap */
-
-  for (h = s.heap_max+1; h < HEAP_SIZE; h++) {
-    n = s.heap[h];
-    bits = tree[tree[n*2 +1]/*.Dad*/ * 2 + 1]/*.Len*/ + 1;
-    if (bits > max_length) {
-      bits = max_length;
-      overflow++;
-    }
-    tree[n*2 + 1]/*.Len*/ = bits;
-    /* We overwrite tree[n].Dad which is no longer needed */
-
-    if (n > max_code) { continue; } /* not a leaf node */
-
-    s.bl_count[bits]++;
-    xbits = 0;
-    if (n >= base) {
-      xbits = extra[n-base];
-    }
-    f = tree[n * 2]/*.Freq*/;
-    s.opt_len += f * (bits + xbits);
-    if (has_stree) {
-      s.static_len += f * (stree[n*2 + 1]/*.Len*/ + xbits);
-    }
-  }
-  if (overflow === 0) { return; }
-
-  // Trace((stderr,"\nbit length overflow\n"));
-  /* This happens for example on obj2 and pic of the Calgary corpus */
-
-  /* Find the first bit length which could increase: */
-  do {
-    bits = max_length-1;
-    while (s.bl_count[bits] === 0) { bits--; }
-    s.bl_count[bits]--;      /* move one leaf down the tree */
-    s.bl_count[bits+1] += 2; /* move one overflow item as its brother */
-    s.bl_count[max_length]--;
-    /* The brother of the overflow item also moves one step up,
-     * but this does not affect bl_count[max_length]
-     */
-    overflow -= 2;
-  } while (overflow > 0);
-
-  /* Now recompute all bit lengths, scanning in increasing frequency.
-   * h is still equal to HEAP_SIZE. (It is simpler to reconstruct all
-   * lengths instead of fixing only the wrong ones. This idea is taken
-   * from 'ar' written by Haruhiko Okumura.)
-   */
-  for (bits = max_length; bits !== 0; bits--) {
-    n = s.bl_count[bits];
-    while (n !== 0) {
-      m = s.heap[--h];
-      if (m > max_code) { continue; }
-      if (tree[m*2 + 1]/*.Len*/ !== bits) {
-        // Trace((stderr,"code %d bits %d->%d\n", m, tree[m].Len, bits));
-        s.opt_len += (bits - tree[m*2 + 1]/*.Len*/)*tree[m*2]/*.Freq*/;
-        tree[m*2 + 1]/*.Len*/ = bits;
-      }
-      n--;
-    }
-  }
-}
-
-
-/* ===========================================================================
- * Generate the codes for a given tree and bit counts (which need not be
- * optimal).
- * IN assertion: the array bl_count contains the bit length statistics for
- * the given tree and the field len is set for all tree elements.
- * OUT assertion: the field code is set for all tree elements of non
- *     zero code length.
- */
-function gen_codes(tree, max_code, bl_count)
-//    ct_data *tree;             /* the tree to decorate */
-//    int max_code;              /* largest code with non zero frequency */
-//    ushf *bl_count;            /* number of codes at each bit length */
-{
-  var next_code = new Array(MAX_BITS+1); /* next code value for each bit length */
-  var code = 0;              /* running code value */
-  var bits;                  /* bit index */
-  var n;                     /* code index */
-
-  /* The distribution counts are first used to generate the code values
-   * without bit reversal.
-   */
-  for (bits = 1; bits <= MAX_BITS; bits++) {
-    next_code[bits] = code = (code + bl_count[bits-1]) << 1;
-  }
-  /* Check that the bit counts in bl_count are consistent. The last code
-   * must be all ones.
-   */
-  //Assert (code + bl_count[MAX_BITS]-1 == (1<<MAX_BITS)-1,
-  //        "inconsistent bit counts");
-  //Tracev((stderr,"\ngen_codes: max_code %d ", max_code));
-
-  for (n = 0;  n <= max_code; n++) {
-    var len = tree[n*2 + 1]/*.Len*/;
-    if (len === 0) { continue; }
-    /* Now reverse the bits */
-    tree[n*2]/*.Code*/ = bi_reverse(next_code[len]++, len);
-
-    //Tracecv(tree != static_ltree, (stderr,"\nn %3d %c l %2d c %4x (%x) ",
-    //     n, (isgraph(n) ? n : ' '), len, tree[n].Code, next_code[len]-1));
-  }
-}
-
-
-/* ===========================================================================
- * Initialize the various 'constant' tables.
- */
-function tr_static_init() {
-  var n;        /* iterates over tree elements */
-  var bits;     /* bit counter */
-  var length;   /* length value */
-  var code;     /* code value */
-  var dist;     /* distance index */
-  var bl_count = new Array(MAX_BITS+1);
-  /* number of codes at each bit length for an optimal tree */
-
-  // do check in _tr_init()
-  //if (static_init_done) return;
-
-  /* For some embedded targets, global variables are not initialized: */
-/*#ifdef NO_INIT_GLOBAL_POINTERS
-  static_l_desc.static_tree = static_ltree;
-  static_l_desc.extra_bits = extra_lbits;
-  static_d_desc.static_tree = static_dtree;
-  static_d_desc.extra_bits = extra_dbits;
-  static_bl_desc.extra_bits = extra_blbits;
-#endif*/
-
-  /* Initialize the mapping length (0..255) -> length code (0..28) */
-  length = 0;
-  for (code = 0; code < LENGTH_CODES-1; code++) {
-    base_length[code] = length;
-    for (n = 0; n < (1<<extra_lbits[code]); n++) {
-      _length_code[length++] = code;
-    }
-  }
-  //Assert (length == 256, "tr_static_init: length != 256");
-  /* Note that the length 255 (match length 258) can be represented
-   * in two different ways: code 284 + 5 bits or code 285, so we
-   * overwrite length_code[255] to use the best encoding:
-   */
-  _length_code[length-1] = code;
-
-  /* Initialize the mapping dist (0..32K) -> dist code (0..29) */
-  dist = 0;
-  for (code = 0 ; code < 16; code++) {
-    base_dist[code] = dist;
-    for (n = 0; n < (1<<extra_dbits[code]); n++) {
-      _dist_code[dist++] = code;
-    }
-  }
-  //Assert (dist == 256, "tr_static_init: dist != 256");
-  dist >>= 7; /* from now on, all distances are divided by 128 */
-  for ( ; code < D_CODES; code++) {
-    base_dist[code] = dist << 7;
-    for (n = 0; n < (1<<(extra_dbits[code]-7)); n++) {
-      _dist_code[256 + dist++] = code;
-    }
-  }
-  //Assert (dist == 256, "tr_static_init: 256+dist != 512");
-
-  /* Construct the codes of the static literal tree */
-  for (bits = 0; bits <= MAX_BITS; bits++) {
-    bl_count[bits] = 0;
-  }
-
-  n = 0;
-  while (n <= 143) {
-    static_ltree[n*2 + 1]/*.Len*/ = 8;
-    n++;
-    bl_count[8]++;
-  }
-  while (n <= 255) {
-    static_ltree[n*2 + 1]/*.Len*/ = 9;
-    n++;
-    bl_count[9]++;
-  }
-  while (n <= 279) {
-    static_ltree[n*2 + 1]/*.Len*/ = 7;
-    n++;
-    bl_count[7]++;
-  }
-  while (n <= 287) {
-    static_ltree[n*2 + 1]/*.Len*/ = 8;
-    n++;
-    bl_count[8]++;
-  }
-  /* Codes 286 and 287 do not exist, but we must include them in the
-   * tree construction to get a canonical Huffman tree (longest code
-   * all ones)
-   */
-  gen_codes(static_ltree, L_CODES+1, bl_count);
-
-  /* The static distance tree is trivial: */
-  for (n = 0; n < D_CODES; n++) {
-    static_dtree[n*2 + 1]/*.Len*/ = 5;
-    static_dtree[n*2]/*.Code*/ = bi_reverse(n, 5);
-  }
-
-  // Now data ready and we can init static trees
-  static_l_desc = new StaticTreeDesc(static_ltree, extra_lbits, LITERALS+1, L_CODES, MAX_BITS);
-  static_d_desc = new StaticTreeDesc(static_dtree, extra_dbits, 0,          D_CODES, MAX_BITS);
-  static_bl_desc =new StaticTreeDesc(new Array(0), extra_blbits, 0,         BL_CODES, MAX_BL_BITS);
-
-  //static_init_done = true;
-}
-
-
-/* ===========================================================================
- * Initialize a new block.
- */
-function init_block(s) {
-  var n; /* iterates over tree elements */
-
-  /* Initialize the trees. */
-  for (n = 0; n < L_CODES;  n++) { s.dyn_ltree[n*2]/*.Freq*/ = 0; }
-  for (n = 0; n < D_CODES;  n++) { s.dyn_dtree[n*2]/*.Freq*/ = 0; }
-  for (n = 0; n < BL_CODES; n++) { s.bl_tree[n*2]/*.Freq*/ = 0; }
-
-  s.dyn_ltree[END_BLOCK*2]/*.Freq*/ = 1;
-  s.opt_len = s.static_len = 0;
-  s.last_lit = s.matches = 0;
-}
-
-
-/* ===========================================================================
- * Flush the bit buffer and align the output on a byte boundary
- */
-function bi_windup(s)
-{
-  if (s.bi_valid > 8) {
-    put_short(s, s.bi_buf);
-  } else if (s.bi_valid > 0) {
-    //put_byte(s, (Byte)s->bi_buf);
-    s.pending_buf[s.pending++] = s.bi_buf;
-  }
-  s.bi_buf = 0;
-  s.bi_valid = 0;
-}
-
-/* ===========================================================================
- * Copy a stored block, storing first the length and its
- * one's complement if requested.
- */
-function copy_block(s, buf, len, header)
-//DeflateState *s;
-//charf    *buf;    /* the input data */
-//unsigned len;     /* its length */
-//int      header;  /* true if block header must be written */
-{
-  bi_windup(s);        /* align on byte boundary */
-
-  if (header) {
-    put_short(s, len);
-    put_short(s, ~len);
-  }
-//  while (len--) {
-//    put_byte(s, *buf++);
-//  }
-  utils.arraySet(s.pending_buf, s.window, buf, len, s.pending);
-  s.pending += len;
-}
-
-/* ===========================================================================
- * Compares to subtrees, using the tree depth as tie breaker when
- * the subtrees have equal frequency. This minimizes the worst case length.
- */
-function smaller(tree, n, m, depth) {
-  var _n2 = n*2;
-  var _m2 = m*2;
-  return (tree[_n2]/*.Freq*/ < tree[_m2]/*.Freq*/ ||
-         (tree[_n2]/*.Freq*/ === tree[_m2]/*.Freq*/ && depth[n] <= depth[m]));
-}
-
-/* ===========================================================================
- * Restore the heap property by moving down the tree starting at node k,
- * exchanging a node with the smallest of its two sons if necessary, stopping
- * when the heap property is re-established (each father smaller than its
- * two sons).
- */
-function pqdownheap(s, tree, k)
-//    deflate_state *s;
-//    ct_data *tree;  /* the tree to restore */
-//    int k;               /* node to move down */
-{
-  var v = s.heap[k];
-  var j = k << 1;  /* left son of k */
-  while (j <= s.heap_len) {
-    /* Set j to the smallest of the two sons: */
-    if (j < s.heap_len &&
-      smaller(tree, s.heap[j+1], s.heap[j], s.depth)) {
-      j++;
-    }
-    /* Exit if v is smaller than both sons */
-    if (smaller(tree, v, s.heap[j], s.depth)) { break; }
-
-    /* Exchange v with the smallest son */
-    s.heap[k] = s.heap[j];
-    k = j;
-
-    /* And continue down the tree, setting j to the left son of k */
-    j <<= 1;
-  }
-  s.heap[k] = v;
-}
-
-
-// inlined manually
-// var SMALLEST = 1;
-
-/* ===========================================================================
- * Send the block data compressed using the given Huffman trees
- */
-function compress_block(s, ltree, dtree)
-//    deflate_state *s;
-//    const ct_data *ltree; /* literal tree */
-//    const ct_data *dtree; /* distance tree */
-{
-  var dist;           /* distance of matched string */
-  var lc;             /* match length or unmatched char (if dist == 0) */
-  var lx = 0;         /* running index in l_buf */
-  var code;           /* the code to send */
-  var extra;          /* number of extra bits to send */
-
-  if (s.last_lit !== 0) {
-    do {
-      dist = (s.pending_buf[s.d_buf + lx*2] << 8) | (s.pending_buf[s.d_buf + lx*2 + 1]);
-      lc = s.pending_buf[s.l_buf + lx];
-      lx++;
-
-      if (dist === 0) {
-        send_code(s, lc, ltree); /* send a literal byte */
-        //Tracecv(isgraph(lc), (stderr," '%c' ", lc));
-      } else {
-        /* Here, lc is the match length - MIN_MATCH */
-        code = _length_code[lc];
-        send_code(s, code+LITERALS+1, ltree); /* send the length code */
-        extra = extra_lbits[code];
-        if (extra !== 0) {
-          lc -= base_length[code];
-          send_bits(s, lc, extra);       /* send the extra length bits */
-        }
-        dist--; /* dist is now the match distance - 1 */
-        code = d_code(dist);
-        //Assert (code < D_CODES, "bad d_code");
-
-        send_code(s, code, dtree);       /* send the distance code */
-        extra = extra_dbits[code];
-        if (extra !== 0) {
-          dist -= base_dist[code];
-          send_bits(s, dist, extra);   /* send the extra distance bits */
-        }
-      } /* literal or match pair ? */
-
-      /* Check that the overlay between pending_buf and d_buf+l_buf is ok: */
-      //Assert((uInt)(s->pending) < s->lit_bufsize + 2*lx,
-      //       "pendingBuf overflow");
-
-    } while (lx < s.last_lit);
-  }
-
-  send_code(s, END_BLOCK, ltree);
-}
-
-
-/* ===========================================================================
- * Construct one Huffman tree and assigns the code bit strings and lengths.
- * Update the total bit length for the current block.
- * IN assertion: the field freq is set for all tree elements.
- * OUT assertions: the fields len and code are set to the optimal bit length
- *     and corresponding code. The length opt_len is updated; static_len is
- *     also updated if stree is not null. The field max_code is set.
- */
-function build_tree(s, desc)
-//    deflate_state *s;
-//    tree_desc *desc; /* the tree descriptor */
-{
-  var tree     = desc.dyn_tree;
-  var stree    = desc.stat_desc.static_tree;
-  var has_stree = desc.stat_desc.has_stree;
-  var elems    = desc.stat_desc.elems;
-  var n, m;          /* iterate over heap elements */
-  var max_code = -1; /* largest code with non zero frequency */
-  var node;          /* new node being created */
-
-  /* Construct the initial heap, with least frequent element in
-   * heap[SMALLEST]. The sons of heap[n] are heap[2*n] and heap[2*n+1].
-   * heap[0] is not used.
-   */
-  s.heap_len = 0;
-  s.heap_max = HEAP_SIZE;
-
-  for (n = 0; n < elems; n++) {
-    if (tree[n * 2]/*.Freq*/ !== 0) {
-      s.heap[++s.heap_len] = max_code = n;
-      s.depth[n] = 0;
-
-    } else {
-      tree[n*2 + 1]/*.Len*/ = 0;
-    }
-  }
-
-  /* The pkzip format requires that at least one distance code exists,
-   * and that at least one bit should be sent even if there is only one
-   * possible code. So to avoid special checks later on we force at least
-   * two codes of non zero frequency.
-   */
-  while (s.heap_len < 2) {
-    node = s.heap[++s.heap_len] = (max_code < 2 ? ++max_code : 0);
-    tree[node * 2]/*.Freq*/ = 1;
-    s.depth[node] = 0;
-    s.opt_len--;
-
-    if (has_stree) {
-      s.static_len -= stree[node*2 + 1]/*.Len*/;
-    }
-    /* node is 0 or 1 so it does not have extra bits */
-  }
-  desc.max_code = max_code;
-
-  /* The elements heap[heap_len/2+1 .. heap_len] are leaves of the tree,
-   * establish sub-heaps of increasing lengths:
-   */
-  for (n = (s.heap_len >> 1/*int /2*/); n >= 1; n--) { pqdownheap(s, tree, n); }
-
-  /* Construct the Huffman tree by repeatedly combining the least two
-   * frequent nodes.
-   */
-  node = elems;              /* next internal node of the tree */
-  do {
-    //pqremove(s, tree, n);  /* n = node of least frequency */
-    /*** pqremove ***/
-    n = s.heap[1/*SMALLEST*/];
-    s.heap[1/*SMALLEST*/] = s.heap[s.heap_len--];
-    pqdownheap(s, tree, 1/*SMALLEST*/);
-    /***/
-
-    m = s.heap[1/*SMALLEST*/]; /* m = node of next least frequency */
-
-    s.heap[--s.heap_max] = n; /* keep the nodes sorted by frequency */
-    s.heap[--s.heap_max] = m;
-
-    /* Create a new node father of n and m */
-    tree[node * 2]/*.Freq*/ = tree[n * 2]/*.Freq*/ + tree[m * 2]/*.Freq*/;
-    s.depth[node] = (s.depth[n] >= s.depth[m] ? s.depth[n] : s.depth[m]) + 1;
-    tree[n*2 + 1]/*.Dad*/ = tree[m*2 + 1]/*.Dad*/ = node;
-
-    /* and insert the new node in the heap */
-    s.heap[1/*SMALLEST*/] = node++;
-    pqdownheap(s, tree, 1/*SMALLEST*/);
-
-  } while (s.heap_len >= 2);
-
-  s.heap[--s.heap_max] = s.heap[1/*SMALLEST*/];
-
-  /* At this point, the fields freq and dad are set. We can now
-   * generate the bit lengths.
-   */
-  gen_bitlen(s, desc);
-
-  /* The field len is now set, we can generate the bit codes */
-  gen_codes(tree, max_code, s.bl_count);
-}
-
-
-/* ===========================================================================
- * Scan a literal or distance tree to determine the frequencies of the codes
- * in the bit length tree.
- */
-function scan_tree(s, tree, max_code)
-//    deflate_state *s;
-//    ct_data *tree;   /* the tree to be scanned */
-//    int max_code;    /* and its largest code of non zero frequency */
-{
-  var n;                     /* iterates over all tree elements */
-  var prevlen = -1;          /* last emitted length */
-  var curlen;                /* length of current code */
-
-  var nextlen = tree[0*2 + 1]/*.Len*/; /* length of next code */
-
-  var count = 0;             /* repeat count of the current code */
-  var max_count = 7;         /* max repeat count */
-  var min_count = 4;         /* min repeat count */
-
-  if (nextlen === 0) {
-    max_count = 138;
-    min_count = 3;
-  }
-  tree[(max_code+1)*2 + 1]/*.Len*/ = 0xffff; /* guard */
-
-  for (n = 0; n <= max_code; n++) {
-    curlen = nextlen;
-    nextlen = tree[(n+1)*2 + 1]/*.Len*/;
-
-    if (++count < max_count && curlen === nextlen) {
-      continue;
-
-    } else if (count < min_count) {
-      s.bl_tree[curlen * 2]/*.Freq*/ += count;
-
-    } else if (curlen !== 0) {
-
-      if (curlen !== prevlen) { s.bl_tree[curlen * 2]/*.Freq*/++; }
-      s.bl_tree[REP_3_6*2]/*.Freq*/++;
-
-    } else if (count <= 10) {
-      s.bl_tree[REPZ_3_10*2]/*.Freq*/++;
-
-    } else {
-      s.bl_tree[REPZ_11_138*2]/*.Freq*/++;
-    }
-
-    count = 0;
-    prevlen = curlen;
-
-    if (nextlen === 0) {
-      max_count = 138;
-      min_count = 3;
-
-    } else if (curlen === nextlen) {
-      max_count = 6;
-      min_count = 3;
-
-    } else {
-      max_count = 7;
-      min_count = 4;
-    }
-  }
-}
-
-
-/* ===========================================================================
- * Send a literal or distance tree in compressed form, using the codes in
- * bl_tree.
- */
-function send_tree(s, tree, max_code)
-//    deflate_state *s;
-//    ct_data *tree; /* the tree to be scanned */
-//    int max_code;       /* and its largest code of non zero frequency */
-{
-  var n;                     /* iterates over all tree elements */
-  var prevlen = -1;          /* last emitted length */
-  var curlen;                /* length of current code */
-
-  var nextlen = tree[0*2 + 1]/*.Len*/; /* length of next code */
-
-  var count = 0;             /* repeat count of the current code */
-  var max_count = 7;         /* max repeat count */
-  var min_count = 4;         /* min repeat count */
-
-  /* tree[max_code+1].Len = -1; */  /* guard already set */
-  if (nextlen === 0) {
-    max_count = 138;
-    min_count = 3;
-  }
-
-  for (n = 0; n <= max_code; n++) {
-    curlen = nextlen;
-    nextlen = tree[(n+1)*2 + 1]/*.Len*/;
-
-    if (++count < max_count && curlen === nextlen) {
-      continue;
-
-    } else if (count < min_count) {
-      do { send_code(s, curlen, s.bl_tree); } while (--count !== 0);
-
-    } else if (curlen !== 0) {
-      if (curlen !== prevlen) {
-        send_code(s, curlen, s.bl_tree);
-        count--;
-      }
-      //Assert(count >= 3 && count <= 6, " 3_6?");
-      send_code(s, REP_3_6, s.bl_tree);
-      send_bits(s, count-3, 2);
-
-    } else if (count <= 10) {
-      send_code(s, REPZ_3_10, s.bl_tree);
-      send_bits(s, count-3, 3);
-
-    } else {
-      send_code(s, REPZ_11_138, s.bl_tree);
-      send_bits(s, count-11, 7);
-    }
-
-    count = 0;
-    prevlen = curlen;
-    if (nextlen === 0) {
-      max_count = 138;
-      min_count = 3;
-
-    } else if (curlen === nextlen) {
-      max_count = 6;
-      min_count = 3;
-
-    } else {
-      max_count = 7;
-      min_count = 4;
-    }
-  }
-}
-
-
-/* ===========================================================================
- * Construct the Huffman tree for the bit lengths and return the index in
- * bl_order of the last bit length code to send.
- */
-function build_bl_tree(s) {
-  var max_blindex;  /* index of last bit length code of non zero freq */
-
-  /* Determine the bit length frequencies for literal and distance trees */
-  scan_tree(s, s.dyn_ltree, s.l_desc.max_code);
-  scan_tree(s, s.dyn_dtree, s.d_desc.max_code);
-
-  /* Build the bit length tree: */
-  build_tree(s, s.bl_desc);
-  /* opt_len now includes the length of the tree representations, except
-   * the lengths of the bit lengths codes and the 5+5+4 bits for the counts.
-   */
-
-  /* Determine the number of bit length codes to send. The pkzip format
-   * requires that at least 4 bit length codes be sent. (appnote.txt says
-   * 3 but the actual value used is 4.)
-   */
-  for (max_blindex = BL_CODES-1; max_blindex >= 3; max_blindex--) {
-    if (s.bl_tree[bl_order[max_blindex]*2 + 1]/*.Len*/ !== 0) {
-      break;
-    }
-  }
-  /* Update opt_len to include the bit length tree and counts */
-  s.opt_len += 3*(max_blindex+1) + 5+5+4;
-  //Tracev((stderr, "\ndyn trees: dyn %ld, stat %ld",
-  //        s->opt_len, s->static_len));
-
-  return max_blindex;
-}
-
-
-/* ===========================================================================
- * Send the header for a block using dynamic Huffman trees: the counts, the
- * lengths of the bit length codes, the literal tree and the distance tree.
- * IN assertion: lcodes >= 257, dcodes >= 1, blcodes >= 4.
- */
-function send_all_trees(s, lcodes, dcodes, blcodes)
-//    deflate_state *s;
-//    int lcodes, dcodes, blcodes; /* number of codes for each tree */
-{
-  var rank;                    /* index in bl_order */
-
-  //Assert (lcodes >= 257 && dcodes >= 1 && blcodes >= 4, "not enough codes");
-  //Assert (lcodes <= L_CODES && dcodes <= D_CODES && blcodes <= BL_CODES,
-  //        "too many codes");
-  //Tracev((stderr, "\nbl counts: "));
-  send_bits(s, lcodes-257, 5); /* not +255 as stated in appnote.txt */
-  send_bits(s, dcodes-1,   5);
-  send_bits(s, blcodes-4,  4); /* not -3 as stated in appnote.txt */
-  for (rank = 0; rank < blcodes; rank++) {
-    //Tracev((stderr, "\nbl code %2d ", bl_order[rank]));
-    send_bits(s, s.bl_tree[bl_order[rank]*2 + 1]/*.Len*/, 3);
-  }
-  //Tracev((stderr, "\nbl tree: sent %ld", s->bits_sent));
-
-  send_tree(s, s.dyn_ltree, lcodes-1); /* literal tree */
-  //Tracev((stderr, "\nlit tree: sent %ld", s->bits_sent));
-
-  send_tree(s, s.dyn_dtree, dcodes-1); /* distance tree */
-  //Tracev((stderr, "\ndist tree: sent %ld", s->bits_sent));
-}
-
-
-/* ===========================================================================
- * Check if the data type is TEXT or BINARY, using the following algorithm:
- * - TEXT if the two conditions below are satisfied:
- *    a) There are no non-portable control characters belonging to the
- *       "black list" (0..6, 14..25, 28..31).
- *    b) There is at least one printable character belonging to the
- *       "white list" (9 {TAB}, 10 {LF}, 13 {CR}, 32..255).
- * - BINARY otherwise.
- * - The following partially-portable control characters form a
- *   "gray list" that is ignored in this detection algorithm:
- *   (7 {BEL}, 8 {BS}, 11 {VT}, 12 {FF}, 26 {SUB}, 27 {ESC}).
- * IN assertion: the fields Freq of dyn_ltree are set.
- */
-function detect_data_type(s) {
-  /* black_mask is the bit mask of black-listed bytes
-   * set bits 0..6, 14..25, and 28..31
-   * 0xf3ffc07f = binary 11110011111111111100000001111111
-   */
-  var black_mask = 0xf3ffc07f;
-  var n;
-
-  /* Check for non-textual ("black-listed") bytes. */
-  for (n = 0; n <= 31; n++, black_mask >>>= 1) {
-    if ((black_mask & 1) && (s.dyn_ltree[n*2]/*.Freq*/ !== 0)) {
-      return Z_BINARY;
-    }
-  }
-
-  /* Check for textual ("white-listed") bytes. */
-  if (s.dyn_ltree[9 * 2]/*.Freq*/ !== 0 || s.dyn_ltree[10 * 2]/*.Freq*/ !== 0 ||
-      s.dyn_ltree[13 * 2]/*.Freq*/ !== 0) {
-    return Z_TEXT;
-  }
-  for (n = 32; n < LITERALS; n++) {
-    if (s.dyn_ltree[n * 2]/*.Freq*/ !== 0) {
-      return Z_TEXT;
-    }
-  }
-
-  /* There are no "black-listed" or "white-listed" bytes:
-   * this stream either is empty or has tolerated ("gray-listed") bytes only.
-   */
-  return Z_BINARY;
-}
-
-
-var static_init_done = false;
-
-/* ===========================================================================
- * Initialize the tree data structures for a new zlib stream.
- */
-function _tr_init(s)
-{
-
-  if (!static_init_done) {
-    tr_static_init();
-    static_init_done = true;
-  }
-
-  s.l_desc  = new TreeDesc(s.dyn_ltree, static_l_desc);
-  s.d_desc  = new TreeDesc(s.dyn_dtree, static_d_desc);
-  s.bl_desc = new TreeDesc(s.bl_tree, static_bl_desc);
-
-  s.bi_buf = 0;
-  s.bi_valid = 0;
-
-  /* Initialize the first block of the first file: */
-  init_block(s);
-}
-
-
-/* ===========================================================================
- * Send a stored block
- */
-function _tr_stored_block(s, buf, stored_len, last)
-//DeflateState *s;
-//charf *buf;       /* input block */
-//ulg stored_len;   /* length of input block */
-//int last;         /* one if this is the last block for a file */
-{
-  send_bits(s, (STORED_BLOCK<<1)+(last ? 1 : 0), 3);    /* send block type */
-  copy_block(s, buf, stored_len, true); /* with header */
-}
-
-
-/* ===========================================================================
- * Send one empty static block to give enough lookahead for inflate.
- * This takes 10 bits, of which 7 may remain in the bit buffer.
- */
-function _tr_align(s) {
-  send_bits(s, STATIC_TREES<<1, 3);
-  send_code(s, END_BLOCK, static_ltree);
-  bi_flush(s);
-}
-
-
-/* ===========================================================================
- * Determine the best encoding for the current block: dynamic trees, static
- * trees or store, and output the encoded block to the zip file.
- */
-function _tr_flush_block(s, buf, stored_len, last)
-//DeflateState *s;
-//charf *buf;       /* input block, or NULL if too old */
-//ulg stored_len;   /* length of input block */
-//int last;         /* one if this is the last block for a file */
-{
-  var opt_lenb, static_lenb;  /* opt_len and static_len in bytes */
-  var max_blindex = 0;        /* index of last bit length code of non zero freq */
-
-  /* Build the Huffman trees unless a stored block is forced */
-  if (s.level > 0) {
-
-    /* Check if the file is binary or text */
-    if (s.strm.data_type === Z_UNKNOWN) {
-      s.strm.data_type = detect_data_type(s);
-    }
-
-    /* Construct the literal and distance trees */
-    build_tree(s, s.l_desc);
-    // Tracev((stderr, "\nlit data: dyn %ld, stat %ld", s->opt_len,
-    //        s->static_len));
-
-    build_tree(s, s.d_desc);
-    // Tracev((stderr, "\ndist data: dyn %ld, stat %ld", s->opt_len,
-    //        s->static_len));
-    /* At this point, opt_len and static_len are the total bit lengths of
-     * the compressed block data, excluding the tree representations.
-     */
-
-    /* Build the bit length tree for the above two trees, and get the index
-     * in bl_order of the last bit length code to send.
-     */
-    max_blindex = build_bl_tree(s);
-
-    /* Determine the best encoding. Compute the block lengths in bytes. */
-    opt_lenb = (s.opt_len+3+7) >>> 3;
-    static_lenb = (s.static_len+3+7) >>> 3;
-
-    // Tracev((stderr, "\nopt %lu(%lu) stat %lu(%lu) stored %lu lit %u ",
-    //        opt_lenb, s->opt_len, static_lenb, s->static_len, stored_len,
-    //        s->last_lit));
-
-    if (static_lenb <= opt_lenb) { opt_lenb = static_lenb; }
-
-  } else {
-    // Assert(buf != (char*)0, "lost buf");
-    opt_lenb = static_lenb = stored_len + 5; /* force a stored block */
-  }
-
-  if ((stored_len+4 <= opt_lenb) && (buf !== -1)) {
-    /* 4: two words for the lengths */
-
-    /* The test buf != NULL is only necessary if LIT_BUFSIZE > WSIZE.
-     * Otherwise we can't have processed more than WSIZE input bytes since
-     * the last block flush, because compression would have been
-     * successful. If LIT_BUFSIZE <= WSIZE, it is never too late to
-     * transform a block into a stored block.
-     */
-    _tr_stored_block(s, buf, stored_len, last);
-
-  } else if (s.strategy === Z_FIXED || static_lenb === opt_lenb) {
-
-    send_bits(s, (STATIC_TREES<<1) + (last ? 1 : 0), 3);
-    compress_block(s, static_ltree, static_dtree);
-
-  } else {
-    send_bits(s, (DYN_TREES<<1) + (last ? 1 : 0), 3);
-    send_all_trees(s, s.l_desc.max_code+1, s.d_desc.max_code+1, max_blindex+1);
-    compress_block(s, s.dyn_ltree, s.dyn_dtree);
-  }
-  // Assert (s->compressed_len == s->bits_sent, "bad compressed size");
-  /* The above check is made mod 2^32, for files larger than 512 MB
-   * and uLong implemented on 32 bits.
-   */
-  init_block(s);
-
-  if (last) {
-    bi_windup(s);
-  }
-  // Tracev((stderr,"\ncomprlen %lu(%lu) ", s->compressed_len>>3,
-  //       s->compressed_len-7*last));
-}
-
-/* ===========================================================================
- * Save the match info and tally the frequency counts. Return true if
- * the current block must be flushed.
- */
-function _tr_tally(s, dist, lc)
-//    deflate_state *s;
-//    unsigned dist;  /* distance of matched string */
-//    unsigned lc;    /* match length-MIN_MATCH or unmatched char (if dist==0) */
-{
-  //var out_length, in_length, dcode;
-
-  s.pending_buf[s.d_buf + s.last_lit * 2]     = (dist >>> 8) & 0xff;
-  s.pending_buf[s.d_buf + s.last_lit * 2 + 1] = dist & 0xff;
-
-  s.pending_buf[s.l_buf + s.last_lit] = lc & 0xff;
-  s.last_lit++;
-
-  if (dist === 0) {
-    /* lc is the unmatched char */
-    s.dyn_ltree[lc*2]/*.Freq*/++;
-  } else {
-    s.matches++;
-    /* Here, lc is the match length - MIN_MATCH */
-    dist--;             /* dist = match distance - 1 */
-    //Assert((ush)dist < (ush)MAX_DIST(s) &&
-    //       (ush)lc <= (ush)(MAX_MATCH-MIN_MATCH) &&
-    //       (ush)d_code(dist) < (ush)D_CODES,  "_tr_tally: bad match");
-
-    s.dyn_ltree[(_length_code[lc]+LITERALS+1) * 2]/*.Freq*/++;
-    s.dyn_dtree[d_code(dist) * 2]/*.Freq*/++;
-  }
-
-// (!) This block is disabled in zlib defailts,
-// don't enable it for binary compatibility
-
-//#ifdef TRUNCATE_BLOCK
-//  /* Try to guess if it is profitable to stop the current block here */
-//  if ((s.last_lit & 0x1fff) === 0 && s.level > 2) {
-//    /* Compute an upper bound for the compressed length */
-//    out_length = s.last_lit*8;
-//    in_length = s.strstart - s.block_start;
-//
-//    for (dcode = 0; dcode < D_CODES; dcode++) {
-//      out_length += s.dyn_dtree[dcode*2]/*.Freq*/ * (5 + extra_dbits[dcode]);
-//    }
-//    out_length >>>= 3;
-//    //Tracev((stderr,"\nlast_lit %u, in %ld, out ~%ld(%ld%%) ",
-//    //       s->last_lit, in_length, out_length,
-//    //       100L - out_length*100L/in_length));
-//    if (s.matches < (s.last_lit>>1)/*int /2*/ && out_length < (in_length>>1)/*int /2*/) {
-//      return true;
-//    }
-//  }
-//#endif
-
-  return (s.last_lit === s.lit_bufsize-1);
-  /* We avoid equality with lit_bufsize because of wraparound at 64K
-   * on 16 bit machines and because stored blocks are restricted to
-   * 64K-1 bytes.
-   */
-}
-
-exports._tr_init  = _tr_init;
-exports._tr_stored_block = _tr_stored_block;
-exports._tr_flush_block  = _tr_flush_block;
-exports._tr_tally = _tr_tally;
-exports._tr_align = _tr_align;
-},{"../utils/common":27}],39:[function(_dereq_,module,exports){
-'use strict';
-
-
-function ZStream() {
-  /* next input byte */
-  this.input = null; // JS specific, because we have no pointers
-  this.next_in = 0;
-  /* number of bytes available at input */
-  this.avail_in = 0;
-  /* total number of input bytes read so far */
-  this.total_in = 0;
-  /* next output byte should be put there */
-  this.output = null; // JS specific, because we have no pointers
-  this.next_out = 0;
-  /* remaining free space at output */
-  this.avail_out = 0;
-  /* total number of bytes output so far */
-  this.total_out = 0;
-  /* last error message, NULL if no error */
-  this.msg = ''/*Z_NULL*/;
-  /* not visible by applications */
-  this.state = null;
-  /* best guess about the data type: binary or text */
-  this.data_type = 2/*Z_UNKNOWN*/;
-  /* adler32 value of the uncompressed data */
-  this.adler = 0;
-}
-
-module.exports = ZStream;
-},{}]},{},[9])
-(9)
-});
 
 /*! pdfmake v0.1.36, @license MIT, @link http://pdfmake.org */
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -59642,18 +50486,17 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
   "Roboto-Regular.ttf": "AAEAAAASAQAABAAgR0RFRtRX1FkAAg/sAAACREdQT1NKcuCzAAISMAAAUiRHU1VCw4aZEQACZFQAABfoT1MvMqCnsaYAAAGoAAAAYGNtYXBAmkl2AAAafAAAEshjdnQgJEEG5QAAL9wAAABMZnBnbWf0XKsAAC1EAAABvGdhc3AACAATAAIP4AAAAAxnbHlmHN2bBQAAOfAAAdM2aGRteDc4ERcAABWQAAAE7GhlYWT4RqsOAAABLAAAADZoaGVhCroKggAAAWQAAAAkaG10eOiEiIgAAAIIAAATiGxvY2HgyGepAAAwKAAACcZtYXhwBxIC+QAAAYgAAAAgbmFtZTVTY1kAAg0oAAACmHBvc3T/bQBkAAIPwAAAACBwcmVwdKCP7AAALwAAAADbAAEAAAACAACEKlnoXw889QAbCAAAAAAAxPARLgAAAADQ206a+hv91QkwCHMAAAAJAAIAAAAAAAAAAQAAB2z+DAAACUn6G/5KCTAAAQAAAAAAAAAAAAAAAAAABOIAAQAABOIAjwAWAFQABQABAAAAAAAOAAACAAIUAAYAAQADBIUBkAAFAAAFmgUzAAABHwWaBTMAAAPRAGYCAAAAAgAAAAAAAAAAAOAACv9QACF/AAAAIQAAAABHT09HAEAAAP/9BgD+AABmB5oCACAAAZ8AAAAABDoFsAAgACAAAgOMAGQAAAAAAAAAAAH7AAAB+wAAAg8AoAKPAIgE7QB3BH4AbgXcAGkE+QBlAWUAZwK8AIUCyAAmA3IAHASJAE4BkgAdAjUAJQIbAJADTAASBH4AcwR+AKoEfgBdBH4AXgR+ADUEfgCaBH4AhAR+AE0EfgBwBH4AZAHwAIYBsQApBBEASARkAJgELgCGA8cASwcvAGoFOAAcBPsAqQU1AHcFPwCpBIwAqQRsAKkFcwB6BbQAqQItALcEagA1BQQAqQROAKkG/ACpBbQAqQWAAHYFDACpBYAAbQTtAKgEvwBQBMYAMQUwAIwFFwAcBxkAPQUEADkEzgAPBMoAVgIfAJIDSAAoAh8ACQNYAEADnAAEAnkAOQRaAG0EfQCMBDAAXASDAF8EPQBdAscAPAR9AGAEaACMAfEAjQHp/78EDgCNAfEAnAcDAIsEagCMBJAAWwR9AIwEjABfArUAjAQgAF8CnQAJBGkAiAPgACEGAwArA/cAKQPJABYD9wBYArUAQAHzAK8CtQATBXEAgwHzAIsEYABpBKYAWwW0AGkE2AAfAesAkwToAFoDWABmBkkAWwOTAJMDwQBmBG4AfwZKAFoDqgB4Av0AggRGAGEC7wBCAu8APgKCAHsEiACaA+kAQwIWAJMB+wB0Au8AegOjAHoDwABmBdwAVQY1AFAGOQBvA8kARAd6//IERABZBYAAdgS6AKYEwgCLBsEATgSwAH4EkQBHBIgAWwScAJUFmgAdAfoAmwRzAJoETwAiAikAIgWLAKIEiACRB6EAaAdEAGEB/ACgBYcAXQK5/+QFfgBlBJIAWwWQAIwE8wCIAgP/tAQ3AGIDxACpA40AjAOrAHgDagCBAfEAjQKtAHkCKgAyA8YAewL8AF4CWgB+AAD8pwAA/W8AAPyLAAD9XgAA/CcB7/04Ag0AtwQLAHECFwCTBHMAsQWkAB8FcQBnBT4AMgSRAHgFtQCyBJEARQW7AE0FiQBaBVIAcQSFAGQEvQCgBAIALgSIAGAEUABjBCUAbQSIAJEEjgB6ApcAwwRuACUD7ABlBMQAKQSIAJEETQBlBIgAYAQsAFEEXQCPBaMAVwWaAF8GlwB6BKEAeQRC/9oGSABKBf8AKgVkAHsIkQAxCKQAsQaCAD4FtACwBQsAogYEADIHQwAbBL8AUAW0ALEFqQAvBQcATQYsAFMF2QCvBXoAlgeHALAHwACwBhIAEAbrALIFBQCjBWQAkwcnALcFGABZBGwAYQSSAJ0DWwCaBNQALgYgABUEEABYBJ4AnARSAJwEoAAsBe8AnQSdAJwEngCcA9gAKAXNAGQEvQCcBFkAZwZ4AJwGngCRBPcAHgY2AJ0EWACdBE0AZAaHAJ0EZAAvBGj/6ARNAGcGyQAnBuQAnASJ//0EngCcBwgAnAYrAIEEVv/cBysAtwX4AJkE0gAoBEYADwcLAMkGCwC8BtEAkwXhAJYJBAC2B9EAmwQjAFAD2wBMBXEAZwSLAFsFCgAWBAMALgVxAGcEiABbBwEAnAYkAH4HCACcBisAgQUyAHUERwBkBP0AdAAA/GcAAPxxAAD9ZgAA/aQAAPobAAD6LARW/9wFGwCoBIkAjARjAKIDkACRBNsAsQQFAJEFCQCjBH4AmgaMAEQFgwA+B88AqAW0AJEIMQCwBvQAkQXuAHEE0wBtBywANAVcAB8FbwCWBGoAgwVwAIoGLwA/BL3/3gUJAKMEWgCaBbIAsQSIAJEFhwBdBKgAaASoAGkEtwA6A0kAOwT2AFcGlABZBuQAZAZWADYFKwAxBEkAUgQHAHkHwQBEBnUAPwf7AKkGoQCQBPYAdgQdAGUFrQAjBSAARgVkAJYDIABvBBQAAAgpAAAEFAAACCkAAAK5AAACCgAAAVwAAAR/AAACMAAAAaIAAADRAAAAAAAAAjQAJQI0ACUFQACiBj8AkAOmAA0BmQBgAZkAMAGXACQBmQBPAtQAaALbADwCwQAkBGkARgSPAFcCsgCKA8QAlAVaAJQA9gAmB6oARAJmAGwCZgBZA6MAOwLvADYDYAB6BKYAWwZVAB8GkACnCHYAqAdjADkGKwCMBH4AXwXaAB8EIgAqBHQAIAVIAF0FTwAfBecAegPOAGgIOgCiBQEAZwUXAJgGJgBUBtcAZAbPAGMGagBZBI8AagWOAKkErwBFBJIAqATFAD8IOgBiAgz/sASCAGUEZACYBBEAPgQvAIUECAArAkwAtQKPAG4CAwBcBPMAPARuAB8EiwA8BtQAPAbUADwE7gA8BpsAXwAAAAAIMwBbCDUAXAQgADsEngBaAfz/tgGRAGcDpACDA54AgQOfAIED9ABpBA4AaQPz/14D7wBuA6QAgQH9AJ8EhQATBFAAigR8AGAEgACKA+YAigPLAIoErABjBOMAigHoAJcDzwArBFQAigO0AIoGAgCKBOMAigS7AGAEXACKBLsAWQRKAIoEIABDBCYAKAR8AHQEZwAUBhUAMQRUACYEKwANBCMARwLvAFAC7wB6Au8AQgLvAD4C7wA2Au8AWwLvAFYC7wA6Au8ATwLvAEkDlgCPArUAngQ6AB4EwwBkBUwAsQUkALIEEwCSBT0AsgQPAJIEIABDBDMAMAQ8ABYDrwCKBGcAFAS7AGAEZwAUA4kAPgTOAIoD7wA/BWcAYAUXAGAE8gB1BXIAJgR8AGAHQQAnB08AigV0ACgEzQCKBFkAigUkAC4GCwAfBD8ARwTsAIoETgCLBMEAJwQfACIFKACKBGoAPQZRAIoGrACKBR0ACAXxAIoETgCKBHsASwZ2AIoEhwBQBBEACwZHAB8EeQCLBQkAiwU3ACMFwgBgBF8ADQSoACYGYQAmBGoAPQRqAIoFwwACBMoAXgQ/AEcEuwBgBDMAMAPjAEIIIgCKBKsAKAR9AIwEMgBcBJMAWwSMAFsDeQBXBI0AjAScAFsEPQBdBH0AYAWBAH4FrgB+BZMAsgXgAH4F4wB+A9UAoASCAIMDrwCKBFgADwTPAD4C7wBQAu8ANgLvAFsC7wBWAu8AOgLvAE8C7wBJBGsAZQQuAEoGpABgBLkAggUAAHgCBv+0AgT/tAH7AJsB+//6AfsAmwH7AIYEUACKAfsAAAI1ACUFXQAlBV0AJQSGAAAExgAxAp3/9AU4ABwFOAAcBTgAHAU4ABwFOAAcBTgAHAU4ABwFNQB3BIwAqQSMAKkEjACpBIwAqQIt/+ACLQCwAi3/6QIt/9YFtACpBYAAdgWAAHYFgAB2BYAAdgWAAHYFMACMBTAAjAUwAIwFMACMBM4ADwRaAG0EWgBtBFoAbQRaAG0EWgBtBFoAbQRaAG0EMABcBD0AXQQ9AF0EPQBdBD0AXQH6/8YB+gCWAfr/zwH6/7wEagCMBJAAWwSQAFsEkABbBJAAWwSQAFsEaQCIBGkAiARpAIgEaQCIA8kAFgPJABYFOAAcBFoAbQU4ABwEWgBtBTgAHARaAG0FNQB3BDAAXAU1AHcEMABcBTUAdwQwAFwFNQB3BDAAXAU/AKkFGQBfBIwAqQQ9AF0EjACpBD0AXQSMAKkEPQBdBIwAqQQ9AF0EjACpBD0AXQVzAHoEfQBgBXMAegR9AGAFcwB6BH0AYAVzAHoEfQBgBbQAqQRoAIwCLf+3Afr/nQIt/7YB+v+cAi3/7AH6/9ICLQAYAfH/+wItAKoGlwC3A9oAjQRqADUCA/+0BQQAqQQOAI0ETgChAfEAkwROAKkB8QBXBE4AqQKHAJwETgCpAs0AnAW0AKkEagCMBbQAqQRqAIwFtACpBGoAjARq/7wFgAB2BJAAWwWAAHYEkABbBYAAdgSQAFsE7QCoArUAjATtAKgCtQBTBO0AqAK1AGMEvwBQBCAAXwS/AFAEIABfBL8AUAQgAF8EvwBQBCAAXwS/AFAEIABfBMYAMQKdAAkExgAxAp0ACQTGADECxQAJBTAAjARpAIgFMACMBGkAiAUwAIwEaQCIBTAAjARpAIgFMACMBGkAiAUwAIwEaQCIBxkAPQYDACsEzgAPA8kAFgTOAA8EygBWA/cAWATKAFYD9wBYBMoAVgP3AFgHev/yBsEATgWAAHYEiABbBID/vgSA/74EJgAoBIUAEwSFABMEhQATBIUAEwSFABMEhQATBIUAEwR8AGAD5gCKA+YAigPmAIoD5gCKAej/vgHoAI4B6P/HAej/tATjAIoEuwBgBLsAYAS7AGAEuwBgBLsAYAR8AHQEfAB0BHwAdAR8AHQEKwANBIUAEwSFABMEhQATBHwAYAR8AGAEfABgBHwAYASAAIoD5gCKA+YAigPmAIoD5gCKA+YAigSsAGMErABjBKwAYwSsAGME4wCKAej/lQHo/5QB6P/KAegABgHoAIkDzwArBFQAigO0AIIDtACKA7QAigO0AIoE4wCKBOMAigTjAIoEuwBgBLsAYAS7AGAESgCKBEoAigRKAIoEIABDBCAAQwQgAEMEIABDBCYAKAQmACgEJgAoBHwAdAR8AHQEfAB0BHwAdAR8AHQEfAB0BhUAMQQrAA0EKwANBCMARwQjAEcEIwBHBTgAHATw//AGGP/+ApEABAWU//oFMv94BWb//QKX/5sFOAAcBPsAqQSMAKkEygBWBbQAqQItALcFBACpBvwAqQW0AKkFgAB2BQwAqQTGADEEzgAPBQQAOQIt/9YEzgAPBIUAZARQAGMEiACRApcAwwRdAI8EcwCaBJAAWwSIAJoD4AAhA/cAKQKX/+YEXQCPBJAAWwRdAI8GlwB6BIwAqQRzALEEvwBQAi0AtwIt/9YEagA1BSQAsgUEAKkFBwBNBTgAHAT7AKkEcwCxBIwAqQW0ALEG/ACpBbQAqQWAAHYFtQCyBQwAqQU1AHcExgAxBQQAOQRaAG0EPQBdBJ4AnASQAFsEfQCMBDAAXAPJABYD9wApBD0AXQNbAJoEIABfAfEAjQH6/7wB6f+/BFIAnAPJABYHGQA9BgMAKwcZAD0GAwArBxkAPQYDACsEzgAPA8kAFgFlAGcCjwCIBB4AoAID/7QBmQAwBvwAqQcDAIsFOAAcBFoAbQSMAKkFtACxBD0AXQSeAJwFiQBaBZoAXwUKABYEA//7CFkAWwlJAHYEvwBQBBAAWAU1AHcEMABcBM4ADwQCAC4CLQC3B0MAGwYgABUCLQC3BTgAHARaAG0FOAAcBFoAbQd6//IGwQBOBIwAqQQ9AF0FhwBdBDcAYgQ3AGIHQwAbBiAAFQS/AFAEEABYBbQAsQSeAJwFtACxBJ4AnAWAAHYEkABbBXEAZwSLAFsFcQBnBIsAWwVkAJMETQBkBQcATQPJABYFBwBNA8kAFgUHAE0DyQAWBXoAlgRZAGcG6wCyBjYAnQUEADkD9wApBIMAXwWpAC8EoAAsBTgAHARaAG0FOAAcBFoAbQU4ABwEWgBtBTgAHARa/8oFOAAcBFoAbQU4ABwEWgBtBTgAHARaAG0FOAAcBFoAbQU4ABwEWgBtBTgAHARaAG0FOAAcBFoAbQU4ABwEWgBtBIwAqQQ9AF0EjACpBD0AXQSMAKkEPQBdBIwAqQQ9AF0EjP/wBD3/ugSMAKkEPQBdBIwAqQQ9AF0EjACpBD0AXQItALcB+gCbAi0AowHxAIUFgAB2BJAAWwWAAHYEkABbBYAAdgSQAFsFgABHBJD/xAWAAHYEkABbBYAAdgSQAFsFgAB2BJAAWwV+AGUEkgBbBX4AZQSSAFsFfgBlBJIAWwV+AGUEkgBbBX4AZQSSAFsFMACMBGkAiAUwAIwEaQCIBZAAjATzAIgFkACMBPMAiAWQAIwE8wCIBZAAjATzAIgFkACMBPMAiATOAA8DyQAWBM4ADwPJABYEzgAPA8kAFgShAF8EoQBfBSQAsgRSAJwFtACpBJ0AnATGADED2AAoBQQAOQP3ACkFegCWBFkAZwV6AJYEWQBnBHMAsQNbAJoHQwAbBiAAFQYvAD8Evf/eBGgAjAUF/9QFBf/UBHMAAwNb//wFOAALBCf/0wW0ALEEngCcBbQAqQSdAJwG/ACpBe8AnQWpAC8EoAAsBM4ADwQCAC4FBAA5A/cAKQRQAGMEbAASBj8AkAR+AF0EfgBeBH4ANQR+AJoEkgBkBKYAhwVzAHoEfQBgBbQAqQRqAIwFOAAcBFoAOQSMAF8EPQApAi3/CgH6/vAFgAB2BJAAMwTtAFUCtf+LBTAAjARpACsEpv86BPsAqQR9AIwFPwCpBIMAXwU/AKkEgwBfBbQAqQRoAIwFBACpBA4AjQUEAKkEDgCNBE4AqQHxAIYG/ACpBwMAiwW0AKkEagCMBQwAqQR9AIwE7QCoArUAggS/AFAEIABfBMYAMQKdAAkFFwAcA+AAIQUXABwD4AAhBxkAPQYDACsEygBWA/cAWAXG/ngEhQATBCL/nwUf/7wCJP/ABMX/3wRn/1cE/P/4BIUAEwRQAIoD5gCKBCMARwTjAIoB6ACXBFQAigYCAIoEuwBgBFwAigQmACgEKwANBFQAJgHo/7QEKwANA+YAigOvAIoEIABDAegAlwHo/7QDzwArBFQAigQfACIEhQATBFAAigOvAIoD5gCKBOwAigYCAIoE4wCKBLsAYATOAIoEXACKBHwAYAQmACgEVAAmBD8ARwTjAIoEfABgBCsADQXDAAIE7ACKBB8AIgVnAGAFOAAcBFoAbQSMAKkEPQBdAAAAAQAABOQJCgQAAAICAgMGBQcGAgMDBAUCAgIEBQUFBQUFBQUFBQICBQUFBAgGBgYGBQUGBgIFBgUIBgYGBgYFBQYGCAYFBQIEAgQEAwUFBQUFAwUFAgIFAggFBQUFAwUDBQQHBAQEAwIDBgIFBQYFAgYEBwQEBQcEAwUDAwMFBAICAwQEBwcHBAgFBgUFCAUFBQUGAgUFAgYFCQgCBgMGBQYGAgUEBAQEAgMCBAMDAAAAAAACAgUCBQYGBgUGBQYGBgUFBQUFBQUFAwUEBQUFBQUFBgYHBQUHBwYKCgcGBgcIBQYGBgcHBggJBwgGBggGBQUEBQcFBQUFBwUFBAcFBQcHBgcFBQcFBQUICAUFCAcFCAcFBQgHCAcKCQUEBgUGBQYFCAcIBwYFBgAAAAAAAAUGBQUEBQUGBQcGCQYJCAcFCAYGBQYHBQYFBgUGBQUFBAYHCAcGBQUJBwkHBgUGBgYEBQkFCQMCAgUCAgEAAgIGBwQCAgICAwMDBQUDBAYBCQMDBAMEBQcHCggHBQcFBQYGBwQJBgYHCAgHBQYFBQUJAgUFBQUFAwMCBgUFCAgGBwAJCQUFAgIEBAQEBQQEBAIFBQUFBAQFBgIEBQQHBgUFBQUFBQUFBwUFBQMDAwMDAwMDAwMEAwUFBgYFBgUFBQUEBQUFBAUEBgYGBgUICAYFBQYHBQYFBQUGBQcIBgcFBQcFBQcFBgYGBQUHBQUGBQUFBQQJBQUFBQUEBQUFBQYGBgcHBAUEBQUDAwMDAwMDBQUHBQYCAgICAgIFAgIGBgUFAwYGBgYGBgYGBQUFBQICAgIGBgYGBgYGBgYGBQUFBQUFBQUFBQUFBQICAgIFBQUFBQUFBQUFBAQGBQYFBgUGBQYFBgUGBQYGBQUFBQUFBQUFBQYFBgUGBQYFBgUCAgICAgICAgIHBAUCBgUFAgUCBQMFAwYFBgUGBQUGBQYFBgUGAwYDBgMFBQUFBQUFBQUFBQMFAwUDBgUGBQYFBgUGBQYFCAcFBAUFBAUEBQQICAYFBQUFBQUF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sRCxUrG2sc2x5LH7shKyK7JEslCyXLJzsoqyobK6stGy6LL/sxizL7NGs12zdLOLs6Szu7PSs+m0ArQZtDC0R7RdtHO0jLSltLG0vbTUtOu1AbUatTC1RrVdtXa1jLWjtbq10LXmtf+2FrYttkO2XLZztou2ora4ts+25rdJt9+39rgNuCS4OrhRuGi4f7iVuKy43bj0uQq5Ibk4uU+5ZrnOulK6abp/upa6rLrDutq68bsIuxS7K7tCu1S7a7uCu5m7sLvHu9676bv0vAu8F7wjvDq8UbxdvGm8gLyXvKO8r7zEvPm9Bb0RvSi9P71LvVe9br2EvZS9q73Bvdi9774IviG+OL5Pvlu+Z75+vpS+q77Cvtm+7777vwe/E78fvza/TL9Yv2S/cL98v5O/n7+2v8y/47/5wBDAJ8BAwFnAcsCLwOjBTsFlwXzBk8GpwcLB2cHwwgfCHsI1wkvCYsJ5wpDCp8LKwvLDBcMcwzPDScNfw3jDkcOdw6nDwMPXw+3EBcQbxDHESMRhxHjEj8SmxL3E1MTtxQTFG8UxxUrFYcV3xY7F8cYIxh7GNcZMxmLGeMaOxqXHDsckxzrHUcdox3THi8eix7nH0Mfbx/HICMgUyCrINshLyFfIbsh6yJHIqMi/yNjI78j7yRHJKMk+yUrJYMlsyYLJjsmkybrJ0cnqygPKX8p2yozKpMq7ytLK6Mrzyv/LC8sXyyPLL8s7y1fLX8tny2/Ld8t/y4fLj8uXy5/Lp8uvy7fLv8vHy+DL+cwQzCfMPsxUzG/Md8x/zIfMj8yXzK/Mx8zezPXNDM0lzTzNp82vzcjN0M3Yze/OBs4OzhbOHs4mzj3ORc5NzlXOXc5lzm3Odc59zoXOjc6kzqzOtM8Hzw/PF88wz0fPT89Xz3DPeM+Pz6XPvM/Tz+rQAdAa0DPQStBh0GnQcdB90JTQnNCz0MrQ1tDi0PnRENEn0T7RRtFO0WfRgNGM0ZjRpNGw0bzRyNHQ0djR4NH30g7SFtIt0kTSW9J00nzShNKb0rLSy9LT0uzTBdMe0zfTT9Nm03zTldOu08fT4NPo0/DUCdQi1DvUU9Rq1IDUmdSx1MrU49T81RTVMdVO1VrVZtVu1XrVhtWS1Z7VtdXM1eXV/dYW1i7WR9Zf1njWkNar1sXW3tb31xDXKddC11vXdNeN16jXw9fP19vX8tgJ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AAUAJABIAAEA3gAIACUAJgAnACgAKQAqACsALAAtAC4ALwAwADEAMgAzADQANQA2ADcAOAA5ADoAOwA8AD0APgBlAGcAkgCwALEAsgCzALQAtQC2ALcAuAC5ANEA0gDTANQA1QDWANcA2ADZANoA2wDcAN0A3gDfAOAA4QDiAOMA5ADlAOYA5wDoASwBMAEyATgBOgE8AT4BPwFFAUYBfwGFAYoBjQJHAkgCSgJMAk0CTgJPAlACUQJSAlMCVAJVAlYCVwJYAlkCWgJbAlwCXQJeAl8CYAJhAmICYwJkAmUCZgKDAoUChwKJAosCjQKPApECkwKVApcCmQKbAp0CnwKhAqMCpQKnAqkCqwKtAq8CsgK0ArYCuAK6ArwCvgLAAsICxQLHAskCywLNAs8C0QLTAtUC2QLbAt0C3wLhAuMC5QLnAukC6wLtAu8C8QLyAvQC9gNTA1QDVQNWA1cDWANZA1sDXANdA14DXwNgA2EDYgNkA2UDZgNnA2gDaQNqA3oDewN8A30DfgN/A4ADgQOCA4MDhAOFA4YDhwOIA4kDigOLA4wDjQOOA48DuwO9A78D1APaA+AESQRLBE8EVwRZBF4EagACAAAABAAOD84V8jViAAEDVAAEAAABpQrSCtIGggtwCoAK/g+aDAAGiA7uDu4MRg6gCiIO7g7uD5oKigaSDGYMRgrYCqwNUg8QCl4L4gsQDBYGmA22DbYNtgwgCxAKUAxMDbAMTAsQBqYN5gtwD5oLcAasBrIGvAbCBsgMTAbOBtgNtgb+BxQHKgcwB0YHTAdSB4QHigeQDcANwAe+Du4H4AgCDVIIMA7uDu4LJg7uDu4IRg3ADcAIeAiCCIwIpg1ICLgNsAjSCOgLEAkyCUwJaAloCxAJYgloCWgJaAtwDCAK2AxMCxAN5g1IDqAOoA1ICtIK0grSCtIK0gmKCbAJugnECeIJ9AoGChgK/g+aD5oPmg+aDGYLcAtwC3ALcAtwC3ALcAr+DAAMAAwADAAO7g7uDu4O7g7uD5oPmg+aD5oPmgxGDEYMRgxGDxAL4gviC+IL4gviC+IL4gwWDBYMFgwWDbYMIAwgDCAMIAwgDEwMTAtwC+ILcAviC3AL4gr+Cv4K/gr+D5oMAAwWDAAMFgwADBYMAAwWDAAMFg7uDbYO7g7uDu4O7g7uDEYOoAoiCiIKIgoiDu4Ntg7uDbYO7g22DbYPmgwgD5oMIA+aDCAKUApQClAMZgxmDGYMRgxGDEYMRgxGDEYKrA8QDEwPEApeCl4KXgtwDAAO7g7uD5oPEAtwCoAMAApeDu4O7g6gDu4O7g+aCooMZg8QDVIO7g8QDbYMIAxMDCAMAA3mDu4O7gxGDqAOoAsmC3AKgA3mDAAO7g7uD5oKigr+DGYNUgviDBYMIAsQDEwNsAwWDUgMTAqsCqwKrA8QDEwK0grSCtIO7g22C3AL4gwADBYK2AxMCv4PEAxMDu4NUg2wDu4LcAviC3AL4gwADBYMFgwWDVINsA+aDCAMIAsQCyYMTAsmDEwLJgxMDVINsAtwC+ILcAviC3AL4gtwC+ILcAviC3AL4gtwC+ILcAviC3AL4gtwC+ILcAviC3AL4gwADBYMAAwWDAAMFgwADBYMAAwWDAAMFgwADBYMAAwWDu4O7g+aDCAPmgwgD5oMIA+aDCAPmgwgD5oMIA+aDCAMIAxGDEYPEAxMDxAMTA8QDEwOoA7uDGYNUg2wDeYNSA1SDbANtg3ADeYOoA7uDu4PEA+aAAIAhwAGAAYAAAALAAsAAQATABMAAgAlACoAAwAsADUACQA4AD4AEwBFAEYAGgBJAEoAHABMAEwAHgBRAFQAHwBWAFYAIwBaAFoAJABcAF0AJQCKAIoAJwCcAJwAKACwALQAKQC2ALgALgC6ALoAMQC8AL0AMgC/AMAANADCAMQANgDGAMsAOQDRANEAPwDTAN0AQADfAN8ASwDhAOMATADlAOcATwDpAO0AUgDwAPAAVwD1APcAWAD6APsAWwD9AP8AXQEDAQQAYAEJAQkAYgEMAQwAYwEXARkAZAErAS0AZwEwATAAagEyATIAawFJAUkAbAFsAW0AbQFvAXEAbwG6AboAcgG9Ab0AcwHEAcUAdAHIAcgAdgHKAcsAdwHNAc0AeQIoAigAegIqAisAewJHAkgAfQJKAkoAfwJMAm0AgAJvAnIAogJ3AnwApgKBAokArAKLAosAtQKNAo0AtgKPAo8AtwKRApEAuAKTApwAuQKlAqcAwwKpAqkAxgKrAqsAxwKtAq0AyAKvAq8AyQKyArIAygK0ArQAywK2ArYAzAK4ArgAzQK6AroAzgK8ArwAzwK+AsoA0ALMAswA3QLOAs4A3gLQAtAA3wLbAtsA4ALdAt0A4QLfAt8A4gLh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BB7/6wQg/+sEIv/rBCT/6wQm/+sEKP/rBCr/6wQs/+sELv/rBDD/6wQy/+sENP/qBDb/6gQ4/+oEOv/qBDz/6gQ+/+oEQP/qBEL/6ARE/+gERv/oBE0AFAAfADj/1QA6/+QAO//sAD3/3QDR/9UA1f/VARj/5AEy/9UBOv/VAmb/3QLb/9UC3f/VAt//1QLt/+wC7//dAvH/3QNY/90DZ//dA2r/3QOO/9UDoP/sA6L/7AOk/+wDpv/dA7f/5AO//90EQf/dBEP/3QRF/90ETf/VBGr/3QAaADj/sAA6/+0APf/QANH/sADV/7ABGP/tATL/sAE6/7ACZv/QAtv/sALd/7AC3/+wAu//0ALx/9ADWP/QA2f/0ANq/9ADjv+wA6b/0AO3/+0Dv//QBEH/0ARD/9AERf/QBE3/sARq/9AAEAAu/+4AOf/uAmL/7gJj/+4CZP/uAmX/7gKy/+4C4f/uAuP/7gLl/+4C5//uAun/7gLr/+4Df//uBDP/7gQ1/+4ARwAGABAACwAQAEf/6ABI/+gASf/oAEv/6ABV/+gAk//oAJj/6AC6/+gAx//oAMj/6AD2/+gBAv/oAR3/6AEh/+gBOf/oAUv/6AFM/+gBVv/oAWwAEAFtABABbwAQAXAAEAFxABACbv/oAm//6AJw/+gCcf/oAnL/6AKK/+gCjP/oAo7/6AKQ/+gCkv/oApT/6AKW/+gCmP/oApr/6AKc/+gCnv/oAqD/6AKi/+gCpP/oA2v/6AOR/+gDlf/oA5j/6AOoABADqQAQA6wAEAOz/+gDuf/oA77/6APM/+gDzv/oA8//6APb/+gD7P/oBAj/6AQK/+gEDP/oBA7/6AQQ/+gEEv/oBBT/6AQW/+gEKv/oBCz/6AQu/+gEMv/oAAEAVgAEAAAAJgCmAZwB+gIUAlYCzAPCBLgFkgYsCMYKjAteDFQOGg5MDn4O/BDiEVgSKhRMFQIWaBciF6gYBhjIGT4ewBlQGqIc4B0CHhgelh7AHuoAAQAmAE8AWABbAF8AnAC0ALYAtwC4AL8AwgDDAMQAyQDLAMwAzQDRANUA1wDYANoA4gDmAOcA6ADpAOoA7ADuAPAA9QD3APoA/wECASEBbQA9AEf/7ABI/+wASf/sAEv/7ABV/+wAk//sAJj/7AC6/+wAx//sAMj/7AD2/+wBAv/sAR3/7AEh/+wBOf/sAUv/7AFM/+wBVv/sAm7/7AJv/+wCcP/sAnH/7AJy/+wCiv/sAoz/7AKO/+wCkP/sApL/7AKU/+wClv/sApj/7AKa/+wCnP/sAp7/7AKg/+wCov/sAqT/7ANr/+wDkf/sA5X/7AOY/+wDs//sA7n/7AO+/+wDzP/sA87/7APP/+wD2//sA+z/7AQI/+wECv/sBAz/7AQO/+wEEP/sBBL/7AQU/+wEFv/sBCr/7AQs/+wELv/sBDL/7AAXAFP/7AEX/+wCeP/sAnn/7AJ6/+wCe//sAnz/7ALG/+wCyP/sAsr/7ANx/+wDd//sA5P/7APZ/+wD3f/sBBz/7AQe/+wEIP/sBCL/7AQk/+wEJv/sBCj/7AQw/+wABgAQ/4QAEv+EAW7/hAFy/4QBdv+EAXf/hAAQAC7/7AA5/+wCYv/sAmP/7AJk/+wCZf/sArL/7ALh/+wC4//sAuX/7ALn/+wC6f/sAuv/7AN//+wEM//sBDX/7AAdAAb/8gAL//IAWv/zAF3/8wC8//MBGf/zAWz/8gFt//IBb//yAXD/8gFx//ICgf/zAoL/8wLw//MDc//zA5b/8wOf//MDp//zA6j/8gOp//IDrP/yA7j/8wPA//MD4f/zA+P/8wPl//MEQv/zBET/8wRG//MAPQAn//MAK//zADP/8wA1//MAg//zAJL/8wCX//MAsv/zANL/8wEH//MBFv/zARr/8wEc//MBHv/zASD/8wE4//MBVf/zAij/8wIp//MCK//zAiz/8wJT//MCXf/zAl7/8wJf//MCYP/zAmH/8wKJ//MCi//zAo3/8wKP//MCnf/zAp//8wKh//MCo//zAsX/8wLH//MCyf/zAvr/8wNX//MDZP/zA4r/8wON//MDuv/zA73/8wPY//MD2v/zA9z/8wQb//MEHf/zBB//8wQh//MEI//zBCX/8wQn//MEKf/zBCv/8wQt//MEL//zBDH/8wSq//MAPQAn/+YAK//mADP/5gA1/+YAg//mAJL/5gCX/+YAsv/mANL/5gEH/+YBFv/mARr/5gEc/+YBHv/mASD/5gE4/+YBVf/mAij/5gIp/+YCK//mAiz/5gJT/+YCXf/mAl7/5gJf/+YCYP/mAmH/5gKJ/+YCi//mAo3/5gKP/+YCnf/mAp//5gKh/+YCo//mAsX/5gLH/+YCyf/mAvr/5gNX/+YDZP/mA4r/5gON/+YDuv/mA73/5gPY/+YD2v/mA9z/5gQb/+YEHf/mBB//5gQh/+YEI//mBCX/5gQn/+YEKf/mBCv/5gQt/+YEL//mBDH/5gSq/+YANgAl/+QAPP/SAD3/0wCx/+QAs//kANn/0gEM/+QCTP/kAk3/5AJO/+QCT//kAlD/5AJR/+QCUv/kAmb/0wKD/+QChf/kAof/5ALv/9MC8f/TA1P/5ANY/9MDW//kA2f/0wNo/9IDav/TA4P/5AOP/9IDpv/TA6//5AO//9MDwv/SA8X/5APH/+QD0P/SA+r/0gPv/+QD8f/kA/P/5AP1/+QD9//kA/n/5AP7/+QD/f/kA///5AQB/+QEA//kBAX/5ARB/9MEQ//TBEX/0wRP/9IEV//SBGr/0wAmABD/HgAS/x4AJf/NALH/zQCz/80BDP/NAW7/HgFy/x4Bdv8eAXf/HgJM/80CTf/NAk7/zQJP/80CUP/NAlH/zQJS/80Cg//NAoX/zQKH/80DU//NA1v/zQOD/80Dr//NA8X/zQPH/80D7//NA/H/zQPz/80D9f/NA/f/zQP5/80D+//NA/3/zQP//80EAf/NBAP/zQQF/80ApgBH/9wASP/cAEn/3ABL/9wAUf/zAFL/8wBT/9YAVP/zAFX/3ABZ/90AWv/hAF3/4QCT/9wAmP/cAJr/3QC6/9wAvP/hAMD/8wDH/9wAyP/cAMr/3QDr//MA7//zAPD/8wDy//MA8//zAPT/8wD2/9wA9//zAPn/8wD6//MA/f/zAP//8wEC/9wBBP/zARf/1gEZ/+EBHf/cASH/3AE1//MBOf/cAUT/8wFJ//MBS//cAUz/3AFW/9wCbv/cAm//3AJw/9wCcf/cAnL/3AJ3//MCeP/WAnn/1gJ6/9YCe//WAnz/1gJ9/90Cfv/dAn//3QKA/90Cgf/hAoL/4QKK/9wCjP/cAo7/3AKQ/9wCkv/cApT/3AKW/9wCmP/cApr/3AKc/9wCnv/cAqD/3AKi/9wCpP/cAr//8wLB//MCw//zAsT/8wLG/9YCyP/WAsr/1gLi/90C5P/dAub/3QLo/90C6v/dAuz/3QLw/+EDa//cA23/8wNv/90Dcf/WA3P/4QN2/90Dd//WA3j/3QOR/9wDkv/zA5P/1gOU//MDlf/cA5b/4QOY/9wDmf/zA57/8wOf/+EDp//hA67/8wOz/9wDtP/zA7j/4QO5/9wDvv/cA8D/4QPM/9wDzv/cA8//3APV//MD1//zA9n/1gPb/9wD3f/WA+H/4QPj/+ED5f/hA+n/8wPs/9wECP/cBAr/3AQM/9wEDv/cBBD/3AQS/9wEFP/cBBb/3AQc/9YEHv/WBCD/1gQi/9YEJP/WBCb/1gQo/9YEKv/cBCz/3AQu/9wEMP/WBDL/3AQ0/90ENv/dBDj/3QQ6/90EPP/dBD7/3QRA/90EQv/hBET/4QRG/+EESv/zBEz/8wRW//MEY//zBGX/8wRn//MAcQAG/9oAC//aAEf/8ABI//AASf/wAEv/8ABV//AAWf/vAFr/3ABd/9wAk//wAJj/8ACa/+8Auv/wALz/3ADH//AAyP/wAMr/7wD2//ABAv/wARn/3AEd//ABIf/wATn/8AFL//ABTP/wAVb/8AFs/9oBbf/aAW//2gFw/9oBcf/aAm7/8AJv//ACcP/wAnH/8AJy//ACff/vAn7/7wJ//+8CgP/vAoH/3AKC/9wCiv/wAoz/8AKO//ACkP/wApL/8AKU//AClv/wApj/8AKa//ACnP/wAp7/8AKg//ACov/wAqT/8ALi/+8C5P/vAub/7wLo/+8C6v/vAuz/7wLw/9wDa//wA2//7wNz/9wDdv/vA3j/7wOR//ADlf/wA5b/3AOY//ADn//cA6f/3AOo/9oDqf/aA6z/2gOz//ADuP/cA7n/8AO+//ADwP/cA8z/8APO//ADz//wA9v/8APh/9wD4//cA+X/3APs//AECP/wBAr/8AQM//AEDv/wBBD/8AQS//AEFP/wBBb/8AQq//AELP/wBC7/8AQy//AENP/vBDb/7wQ4/+8EOv/vBDz/7wQ+/+8EQP/vBEL/3ARE/9wERv/cADQABv+gAAv/oABZ//EAWv/FAF3/xQCa//EAvP/FAMr/8QEZ/8UBbP+gAW3/oAFv/6ABcP+gAXH/oAJ9//ECfv/xAn//8QKA//ECgf/FAoL/xQLi//EC5P/xAub/8QLo//EC6v/xAuz/8QLw/8UDb//xA3P/xQN2//EDeP/xA5b/xQOf/8UDp//FA6j/oAOp/6ADrP+gA7j/xQPA/8UD4f/FA+P/xQPl/8UENP/xBDb/8QQ4//EEOv/xBDz/8QQ+//EEQP/xBEL/xQRE/8UERv/FAD0AR//nAEj/5wBJ/+cAS//nAFX/5wCT/+cAmP/nALr/5wDH/+cAyP/nAPb/5wEC/+cBHf/nASH/5wE5/+cBS//nAUz/5wFW/+cCbv/nAm//5wJw/+cCcf/nAnL/5wKK/+cCjP/nAo7/5wKQ/+cCkv/nApT/5wKW/+cCmP/nApr/5wKc/+cCnv/nAqD/5wKi/+cCpP/nA2v/5wOR/+cDlf/nA5j/5wOz/+cDuf/nA77/5wPM/+cDzv/nA8//5wPb/+cD7P/nBAj/5wQK/+cEDP/nBA7/5wQQ/+cEEv/nBBT/5wQW/+cEKv/nBCz/5wQu/+cEMv/nAHEABgAMAAsADABH/+gASP/oAEn/6ABL/+gAU//qAFX/6ABaAAsAXQALAJP/6ACY/+gAuv/oALwACwDH/+gAyP/oAPb/6AEC/+gBF//qARkACwEd/+gBIf/oATn/6AFL/+gBTP/oAVb/6AFsAAwBbQAMAW8ADAFwAAwBcQAMAm7/6AJv/+gCcP/oAnH/6AJy/+gCeP/qAnn/6gJ6/+oCe//qAnz/6gKBAAsCggALAor/6AKM/+gCjv/oApD/6AKS/+gClP/oApb/6AKY/+gCmv/oApz/6AKe/+gCoP/oAqL/6AKk/+gCxv/qAsj/6gLK/+oC8AALA2v/6ANx/+oDcwALA3f/6gOR/+gDk//qA5X/6AOWAAsDmP/oA58ACwOnAAsDqAAMA6kADAOsAAwDs//oA7gACwO5/+gDvv/oA8AACwPM/+gDzv/oA8//6APZ/+oD2//oA93/6gPhAAsD4wALA+UACwPs/+gECP/oBAr/6AQM/+gEDv/oBBD/6AQS/+gEFP/oBBb/6AQc/+oEHv/qBCD/6gQi/+oEJP/qBCb/6gQo/+oEKv/oBCz/6AQu/+gEMP/qBDL/6ARCAAsERAALBEYACwAMAFz/7QBe/+0A7f/tAvP/7QL1/+0C9//tA5f/7QPD/+0D0f/tA+v/7QRQ/+0EWP/tAAwAXP/yAF7/8gDt//IC8//yAvX/8gL3//IDl//yA8P/8gPR//ID6//yBFD/8gRY//IAHwBa//QAXP/yAF3/9ABe//MAvP/0AO3/8gEZ//QCgf/0AoL/9ALw//QC8//zAvX/8wL3//MDc//0A5b/9AOX//IDn//0A6f/9AO4//QDwP/0A8P/8gPR//ID4f/0A+P/9APl//QD6//yBEL/9ARE//QERv/0BFD/8gRY//IAeQAG/8oAC//KADj/0gA6/9QAPP/0AD3/0wBR/9EAUv/RAFT/0QBa/+YAXP/vAF3/5gC8/+YAwP/RANH/0gDV/9IA2f/0AN3/7QDg/+EA6//RAO3/7wDv/9EA8P/RAPL/0QDz/9EA9P/RAPf/0QD5/9EA+v/RAP3/0QD//9EBBP/RARj/1AEZ/+YBMv/SATX/0QE6/9IBRP/RAUn/0QFs/8oBbf/KAW//ygFw/8oBcf/KAmb/0wJ3/9ECgf/mAoL/5gK//9ECwf/RAsP/0QLE/9EC2//SAt3/0gLf/9IC7//TAvD/5gLx/9MDWP/TA2f/0wNo//QDav/TA23/0QNz/+YDgv/tA47/0gOP//QDkv/RA5T/0QOW/+YDl//vA5n/0QOe/9EDn//mA6b/0wOn/+YDqP/KA6n/ygOs/8oDrv/RA7T/0QO3/9QDuP/mA7//0wPA/+YDwv/0A8P/7wPQ//QD0f/vA9X/0QPX/9ED4P/tA+H/5gPi/+0D4//mA+T/7QPl/+YD5v/hA+n/0QPq//QD6//vBEH/0wRC/+YEQ//TBET/5gRF/9MERv/mBEr/0QRM/9EETf/SBE//9ARQ/+8EUf/hBFP/4QRW/9EEV//0BFj/7wRj/9EEZf/RBGf/0QRq/9MAHQA4/74AWv/vAF3/7wC8/+8A0f++ANX/vgEZ/+8BMv++ATr/vgKB/+8Cgv/vAtv/vgLd/74C3/++AvD/7wNz/+8Djv++A5b/7wOf/+8Dp//vA7j/7wPA/+8D4f/vA+P/7wPl/+8EQv/vBET/7wRG/+8ETf++ADQAOP/mADr/5wA8//IAPf/nAFz/8QDR/+YA1f/mANn/8gDd/+4A4P/oAO3/8QEY/+cBMv/mATr/5gJm/+cC2//mAt3/5gLf/+YC7//nAvH/5wNY/+cDZ//nA2j/8gNq/+cDgv/uA47/5gOP//IDl//xA6b/5wO3/+cDv//nA8L/8gPD//ED0P/yA9H/8QPg/+4D4v/uA+T/7gPm/+gD6v/yA+v/8QRB/+cEQ//nBEX/5wRN/+YET//yBFD/8QRR/+gEU//oBFf/8gRY//EEav/nAIgAJQAQACf/6AAr/+gAM//oADX/6AA4/+AAOv/gAD3/3wCD/+gAkv/oAJf/6ACxABAAsv/oALMAEADR/+AA0v/oANMAEADV/+AA3AAQAOD/4QDxABAA+P/gAQMAEAEH/+gBDAAQARb/6AEY/+ABGv/oARz/6AEe/+gBIP/oATL/4AE4/+gBOv/gAVEAEAFV/+gCKP/oAin/6AIr/+gCLP/oAkwAEAJNABACTgAQAk8AEAJQABACUQAQAlIAEAJT/+gCXf/oAl7/6AJf/+gCYP/oAmH/6AJm/98CgwAQAoUAEAKHABACif/oAov/6AKN/+gCj//oAp3/6AKf/+gCof/oAqP/6ALF/+gCx//oAsn/6ALb/+AC3f/gAt//4ALv/98C8f/fAvr/6ANTABADV//oA1j/3wNbABADZP/oA2f/3wNq/98DgwAQA4r/6AON/+gDjv/gA6b/3wOvABADt//gA7r/6AO9/+gDv//fA8UAEAPHABAD2P/oA9r/6APc/+gD5v/hA+f/4APtABAD7gAQA+8AEAPxABAD8wAQA/UAEAP3ABAD+QAQA/sAEAP9ABAD/wAQBAEAEAQDABAEBQAQBBv/6AQd/+gEH//oBCH/6AQj/+gEJf/oBCf/6AQp/+gEK//oBC3/6AQv/+gEMf/oBEH/3wRD/98ERf/fBE3/4ARR/+EEUv/gBFP/4QRU/+AEaAAQBGkAEARq/98Eqv/oAC0AOP/xADr/9AA8//QAPf/wANH/8QDT//UA1f/xANn/9ADc//UA3f/zARj/9AEy//EBOv/xAVH/9QJm//AC2//xAt3/8QLf//EC7//wAvH/8ANY//ADZ//wA2j/9ANq//ADgv/zA47/8QOP//QDpv/wA7f/9AO///ADwv/0A9D/9APg//MD4v/zA+T/8wPq//QD7f/1BEH/8ARD//AERf/wBE3/8QRP//QEV//0BGj/9QRq//AAWQAlAA8AOP/mADr/5gA8AA4APf/mALEADwCzAA8A0f/mANMADgDV/+YA2QAOANwADgDdAAsA4P/lAPEADwD4/+gBAwAPAQwADwEY/+YBMv/mATr/5gFRAA4CTAAPAk0ADwJOAA8CTwAPAlAADwJRAA8CUgAPAmb/5gKDAA8ChQAPAocADwLb/+YC3f/mAt//5gLv/+YC8f/mA1MADwNY/+YDWwAPA2f/5gNoAA4Dav/mA4IACwODAA8Djv/mA48ADgOm/+YDrwAPA7f/5gO//+YDwgAOA8UADwPHAA8D0AAOA+AACwPiAAsD5AALA+b/5QPn/+gD6gAO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ABADogOiABADpAOkABADpgOmAA8DpwOnABkDqAOpAB0DrAOsAB0DrQOtAAIDrgOuABcDsAOwABMDsQOxAAUDswOzABYDtwO3AA0DuAO4ABkDvQO9AAQDvgO+ABQDvwO/AA8DwAPAABkDwQPBAAIDwgPCAA4DwwPDABsDxAPEAAIDxgPGABMDyAPIABMDywPLAAUDzAPMABYDzgPPABYD0APQAA4D0QPRABsD2APYAAMD2QPZABgD3QPdABgD3wPfABUD4APgABID4QPhABkD4gPiABID4wPjABkD5APkABID5QPlABkD6gPqAA4D6wPrABsD8APwABMD8gPyABMD9AP0ABMD9gP2ABMD+AP4ABMD+gP6ABMD/AP8ABMD/gP+ABMEAAQAABMEAgQCABMEBAQEABMEBgQGABMEBwQHAAUECAQIABYECQQJAAUECgQKABYECwQLAAUEDAQMABYEDQQNAAUEDgQOABYEDwQPAAUEEAQQABYEEQQRAAUEEgQSABYEEwQTAAUEFAQUABYEFQQVAAUEFgQWABYEFwQXAAIEGQQZAAIEGwQbAAMEHAQcABgEHQQdAAMEHgQeABgEHwQfAAMEIAQgABgEIQQhAAMEIgQiABgEIwQjAAMEJAQkABgEJQQlAAMEJgQmABgEJwQnAAMEKAQoABgEMAQwABgEMwQzAAwENQQ1AAwEQQRBAA8EQgRCABkEQwRDAA8ERAREABkERQRFAA8ERgRGABkESQRJAAkESwRLAAIETQRNAAYETwRPAA4EUARQABsEVQRVAAcEVgRWAAgEVwRXAA4EWARYABsEWwRbABcEXQRdAB8EXgReAAcEYARgAAkEZARkAAIEZgRmAAIEagRqAA8EqgSqAAMAAgFtAAYABgAHAAsACwAHABAAEAATABEAEQAXABIAEgATACUAJQARACcAJwAFACsAKwAFAC4ALgAcADMAMwAFADUANQAFADcANwAZADgAOAAKADkAOQAGADoAOgANADsAOwAJADwAPAASAD0APQAOAD4APgAUAEUARQAaAEcASQAVAEsASwAVAFEAUgAYAFMAUwAIAFQAVAAYAFUAVQAVAFcAVwAbAFkAWQALAFoAWgACAFwAXAAWAF0AXQACAF4AXgAMAIMAgwAFAJIAkgAFAJMAkwAVAJcAlwAFAJgAmAAVAJoAmgALALEAsQARALIAsgAFALMAswARALoAugAVALwAvAACAMAAwAAYAMcAyAAVAMoAygALANEA0QAKANIA0gAFANMA0wABANUA1QAKANkA2QASANwA3AABAN0A3QAQAOAA4AAPAOsA6wAYAO0A7QAWAO8A8AAYAPEA8QAEAPIA9AAYAPYA9gAVAPcA9wAYAPgA+AADAPkA+gAYAP0A/QAYAP8A/wAYAQIBAgAVAQMBAwAEAQQBBAAYAQcBBwAFAQwBDAARARYBFgAFARcBFwAIARgBGAANARkBGQACARoBGgAFARwBHAAFAR0BHQAVAR4BHgAFASABIAAFASEBIQAVATIBMgAKATUBNQAYATgBOAAFATkBOQAVAToBOgAKAUQBRAAYAUkBSQAYAUsBTAAVAVEBUQABAVUBVQAFAVYBVgAVAWkBagAXAWwBbQAHAW4BbgATAW8BcQAHAXIBcgATAXYBdwATAigCKQAFAisCLAAFAkYCRgAXAkwCUgARAlMCUwAFAl0CYQAFAmICZQAGAmYCZgAOAmcCbQAaAm4CcgAVAncCdwAYAngCfAAIAn0CgAALAoECggACAoMCgwARAoQChAAaAoUChQARAoYChgAaAocChwARAogCiAAaAokCiQAFAooCigAVAosCiwAFAowCjAAVAo0CjQAFAo4CjgAVAo8CjwAFApACkAAVApICkgAVApQClAAVApYClgAVApgCmAAVApoCmgAVApwCnAAVAp0CnQAFAp4CngAVAp8CnwAFAqACoAAVAqECoQAFAqICogAVAqMCowAFAqQCpAAVArICsgAcAr8CvwAYAsECwQAYAsMCxAAYAsUCxQAFAsYCxgAIAscCxwAFAsgCyAAIAskCyQAFAsoCygAIAtEC0QAZAtIC0gAbAtMC0wAZAtQC1AAbAtUC1QAZAtYC1gAbAtcC1wAZAtgC2AAbAtkC2QAZAtoC2gAbAtsC2wAKAt0C3QAKAt8C3wAKAuEC4QAGAuIC4gALAuMC4wAGAuQC5AALAuUC5QAGAuYC5gALAucC5wAGAugC6AALAukC6QAGAuoC6gALAusC6wAGAuwC7AALAu0C7QAJAu8C7wAOAvAC8AACAvEC8QAOAvIC8gAUAvMC8wAMAvQC9AAUAvUC9QAMAvYC9gAUAvcC9wAMAvoC+gAFA1MDUwARA1cDVwAFA1gDWAAOA1sDWwARA14DXgAUA2QDZAAFA2cDZwAOA2gDaAASA2oDagAOA2sDawAVA20DbQAYA28DbwALA3EDcQAIA3MDcwACA3YDdgALA3cDdwAIA3gDeAALA38DfwAcA4IDggAQA4MDgwARA4oDigAFA40DjQAFA44DjgAKA48DjwASA5ADkAAaA5EDkQAVA5IDkgAYA5MDkwAIA5QDlAAYA5UDlQAVA5YDlgACA5cDlwAWA5gDmAAVA5kDmQAYA5oDmgAbA54DngAYA58DnwACA6ADoAAJA6IDogAJA6QDpAAJA6YDpgAOA6cDpwACA6gDqQAHA6wDrAAHA64DrgAYA68DrwARA7ADsAAaA7MDswAVA7QDtAAYA7cDtwANA7gDuAACA7kDuQAVA7oDugAFA70DvQAFA74DvgAVA78DvwAOA8ADwAACA8IDwgASA8MDwwAWA8UDxQARA8YDxgAaA8cDxwARA8gDyAAaA8wDzAAVA84DzwAVA9AD0AASA9ED0QAWA9UD1QAYA9cD1wAYA9gD2AAFA9kD2QAIA9oD2gAFA9sD2wAVA9wD3AAFA90D3QAIA+AD4AAQA+ED4QACA+ID4gAQA+MD4wACA+QD5AAQA+UD5QACA+YD5gAPA+cD5wADA+kD6QAYA+oD6gASA+sD6wAWA+wD7AAVA+0D7QABA+4D7gAEA+8D7wARA/AD8AAaA/ED8QARA/ID8gAaA/MD8wARA/QD9AAaA/UD9QARA/YD9gAaA/cD9wARA/gD+AAaA/kD+QARA/oD+gAaA/sD+wARA/wD/AAaA/0D/QARA/4D/gAaA/8D/wARBAAEAAAaBAEEAQARBAIEAgAaBAMEAwARBAQEBAAaBAUEBQARBAYEBgAaBAgECAAVBAoECgAVBAwEDAAVBA4EDgAVBBAEEAAVBBIEEgAVBBQEFAAVBBYEFgAVBBsEGwAFBBwEHAAIBB0EHQAFBB4EHgAIBB8EHwAFBCAEIAAIBCEEIQAFBCIEIgAIBCMEIwAFBCQEJAAIBCUEJQAFBCYEJgAIBCcEJwAFBCgEKAAIBCkEKQAFBCoEKgAVBCsEKwAFBCwELAAVBC0ELQAFBC4ELgAVBC8ELwAFBDAEMAAIBDEEMQAFBDIEMgAVBDMEMwAGBDQENAALBDUENQAGBDYENgALBDgEOAALBDoEOgALBDwEPAALBD4EPgALBEAEQAALBEEEQQAOBEIEQgACBEMEQwAOBEQERAACBEUERQAOBEYERgACBEoESgAYBEwETAAYBE0ETQAKBE8ETwASBFAEUAAWBFEEUQAPBFIEUgADBFMEUwAPBFQEVAADBFYEVgAYBFcEVwASBFgEWAAWBGMEYwAYBGUEZQAYBGcEZwAYBGgEaAABBGkEaQAEBGoEagAOBHAEcAAXBKoEqgAFAAEAAAAKAgYG8AAEREZMVAAaY3lybABIZ3JlawB2bGF0bgCkAAQAAAAA//8AEgAAAAoAFAAeACgANABBAEsAVQBfAGkAcwB9AIcAkQCbAKUArwAEAAAAAP//ABIAAQALABUAHwApADUAQgBMAFYAYABqAHQAfgCIAJIAnACmALAABAAAAAD//wASAAIADAAWACAAKgA2AEMATQBXAGEAawB1AH8AiQCTAJ0ApwCxACgABkFaRSAAVENSVCAAfk1PTCAAqE5BViAA1FJPTSABAFRVUiABLAAA//8AEwADAA0AFwAhACsAMgA3AEQATgBYAGIAbAB2AIAAigCUAJ4AqACyAAD//wASAAQADgAYACIALAA4AEUATwBZAGMAbQB3AIEAiwCVAJ8AqQCzAAD//wASAAUADwAZACMALQA5AEYAUABaAGQAbgB4AIIAjACWAKAAqgC0AAD//wATAAYAEAAaACQALgA6AD4ARwBRAFsAZQBvAHkAgwCNAJcAoQCrALUAAP//ABMABwARABsAJQAvADsAPwBIAFIAXABmAHAAegCEAI4AmACiAKwAtgAA//8AEwAIABIAHAAmADAAPABAAEkAUwBdAGcAcQB7AIUAjwCZAKMArQC3AAD//wATAAkAEwAdACcAMQAzAD0ASgBUAF4AaAByAHwAhgCQAJoApACuALgAuWMyc2MEWGMyc2MEWGMyc2MEWGMyc2MEWGMyc2MEWGMyc2MEWGMyc2MEWGMyc2MEWGMyc2MEWGMyc2MEWGNjbXAEXmNjbXAEXmNjbXAEXmNjbXAEXmNjbXAEXmNjbXAEXmNjbXAEXmNjbXAEXmNjbXAEXmNjbXAEXmRsaWcEZmRsaWcEZmRsaWcEZmRsaWcEZmRsaWcEZmRsaWcEZmRsaWcEZmRsaWcEZmRsaWcEZmRsaWcEZmRub20EbGRub20EbGRub20EbGRub20EbGRub20EbGRub20EbGRub20EbGRub20EbGRub20EbGRub20EbGZyYWMEcmZyYWMEcmZyYWMEcmZyYWMEcmZyYWMEcmZyYWMEcmZyYWMEcmZyYWMEcmZyYWMEcmZyYWMEcmxpZ2EEfGxpZ2EEhGxudW0EimxudW0EimxudW0EimxudW0EimxudW0EimxudW0EimxudW0EimxudW0EimxudW0EimxudW0EimxvY2wEkGxvY2wElmxvY2wEnG51bXIEom51bXIEom51bXIEom51bXIEom51bXIEom51bXIEom51bXIEom51bXIEom51bXIEom51bXIEom9udW0EqG9udW0EqG9udW0EqG9udW0EqG9udW0EqG9udW0EqG9udW0EqG9udW0EqG9udW0EqG9udW0EqHBudW0ErnBudW0ErnBudW0ErnBudW0ErnBudW0ErnBudW0ErnBudW0ErnBudW0ErnBudW0ErnBudW0ErnNtY3AEtHNtY3AEtHNtY3AEtHNtY3AEtHNtY3AEtHNtY3AEtHNtY3AEtHNtY3AEtHNtY3AEtHNtY3AEtHNzMDEEunNzMDEEunNzMDEEunNzMDEEunNzMDEEunNzMDEEunNzMDEEunNzMDEEunNzMDEEunNzMDEEunNzMDIEwHNzMDIEwHNzMDIEwHNzMDIEwHNzMDIEwHNzMDIEwHNzMDIEwHNzMDIEwHNzMDIEwHNzMDIEwHNzMDMExnNzMDMExnNzMDMExnNzMDMExnNzMDMExnNzMDMExnNzMDMExnNzMDMExnNzMDMExnNzMDMExnNzMDQEzHNzMDQEzHNzMDQEzHNzMDQEzHNzMDQEzHNzMDQEzHNzMDQEzHNzMDQEzHNzMDQEzHNzMDQEzHNzMDUE0nNzMDUE0nNzMDUE0nNzMDUE0nNzMDUE0nNzMDUE0nNzMDUE0nNzMDUE0nNzMDUE0nNzMDUE0nNzMDYE2HNzMDYE2HNzMDYE2HNzMDYE2HNzMDYE2HNzMDYE2HNzMDYE2HNzMDYE2HNzMDYE2HNzMDYE2HNzMDcE3nNzMDcE3nNzMDcE3nNzMDcE3nNzMDcE3nNzMDcE3nNzMDcE3nNzMDcE3nNzMDcE3nNzMDcE3nRudW0E5HRudW0E5HRudW0E5HRudW0E5HRudW0E5HRudW0E5HRudW0E5HRudW0E5HRudW0E5HRudW0E5AAAAAEAAAAAAAIAAgADAAAAAQAHAAAAAQAYAAAAAwAVABYAFwAAAAIACAAJAAAAAQAJAAAAAQAUAAAAAQAEAAAAAQAGAAAAAQAFAAAAAQAZAAAAAQARAAAAAQATAAAAAQABAAAAAQAKAAAAAQALAAAAAQAMAAAAAQANAAAAAQAOAAAAAQAPAAAAAQAQAAAAAQASABsAOAPGBrQHYA3wDfAOBg4oDl4OhA6yDsYO2g7uDwAPGg9cD3oPmA/KD/wQLhBCEHoQbBB6EKYAAQAAAAEACAACAcQA3wHnAboBuwG8Ab0BvgG/AcABwQHCAcMBxAHFAcYBxwHIAckBygHLAcwBzQHOAc8B0AHRAdIB0wHoAekCRAI7AeoB6wHsAe0B7gHvAfAB8QHyAfMB9AH1AfYB9wH4AfkB+gH7AfwB/QH+AgACAQTdAgICAwIEAgUCBgIHAggCCQIKAgsCLwIPAhACEQIUAhUCFgIXAhgCGQIbAhwCHgIdAvwC/QL+Av8DAAMBAwIDAwMEAwUDBgMHAwgDCQMKAwsDDAMNAw4DDwMQAxEDEgMTAxQDFQMWAxcDGAMZAxoDGwMcAx0DHgMfAyADIQMiAyMDJAMlAyYDJwMoAykDKgMrAywDLQMuAy8DMAMxAzIDMwM0AzUDNgM3AzgDOQM6AzsDPAM9Az4DPwNAA0EDQgNDA0QDRgNFA0cDSANJA0oDSwNMA00DTgNPA1ADUQNSBKsErAStBK4ErwSwBLEEsgSzBLQEtQS2BLcEuAS5BLoEuwS8BL0EvgS/BMAEwQTCBMMExATFBMYB/wTHBMgEyQTKBMsEzATNBM4EzwTQBNEE0gTTBNQE1QTWBNgE2QTbAhoE3AIOBNcCEwINBNoCDAISAAEA3wAIACUAJgAnACgAKQAqACsALAAtAC4ALwAwADEAMgAzADQANQA2ADcAOAA5ADoAOwA8AD0APgBlAGcAhQCSALAAsQCyALMAtAC1ALYAtwC4ALkA0QDSANMA1ADVANYA1wDYANkA2gDbANwA3QDeAN8A4ADhAOIA4wDkAOUA5gDnAOgBLAEwATIBOAE6ATwBPgE/AUUBRgF/AYUBigGNAkcCSAJKAkwCTQJOAk8CUAJRAlICUwJUAlUCVgJXAlgCWQJaAlsCXAJdAl4CXwJgAmECYgJjAmQCZQJmAoMChQKHAokCiwKNAo8CkQKTApUClwKZApsCnQKfAqECowKlAqcCqQKrAq0CrwKyArQCtgK4AroCvAK+AsACwgLFAscCyQLLAs0CzwLRAtMC1QLZAtsC3QLfAuEC4wLlAucC6QLrAu0C7wLxAvIC9AL2A1MDVANVA1YDVwNYA1kDWwNcA10DXgNfA2ADYQNiA2QDZQNmA2cDaANpA2oDegN7A3wDfQN+A38DgAOBA4IDgwOEA4UDhgOHA4gDiQOKA4sDjAONA44DjwO7A70DvwPUA9oD4ARJBEsETwRXBFkEXgRqAAEAAAABAAgAAgF0ALcBugG7AbwBvQG+Ab8BwAHBAcIBwwHEAcUBxgHHAcgByQHKAcsBzAHNAc4BzwHQAdEB0gHTAv0DMAI7AfoEygTLAfsB/AH9Af4B/wIABM4EzwTRBNQE3QICAgMCBAIFAgYCBwIIAgkCCgILAfQB9QH2AfcB+AH5Ai8CDwIQAhECFAIVAhcCGQL+Av8DAAMBAwIDAwMEAwUDBgMHAwgDCQMKAwsDDAMNAw4DDwMQAxEDEgMTAxQDFQMWAxcDGAMZA08DGgMbAxwDHQMeAx8DIAMhAyIDIwMkAyUDJgMnAygDKQMqAysDLAMtAy4DLwMxAzIDMwM0AzUDNgM3AzgDOQM6AzsDPAM9Az4DPwNAA0EDQgNDA0QDRgNFA0cDSANJA0oDSwNMA00DTgNQA1EDUgTJBMwEzQTQBNIE0wIBBNUEwQTCBMMExATFBMYExwTIBNYE2ATZAhgE2wIaBNwC/AIOBNcCEwINBNoCFgIMAhIAAQC3AEUARgBHAEgASQBKAEsATABNAE4ATwBQAFEAUgBTAFQAVQBWAFcAWABZAFoAWwBcAF0AXgCHAIwAkwDpAOoA6wDsAO0A7gDvAPAA8QDyAPMA9AD1APYA9wD4APkA+gD7APwA/QD+AP8BAAEBAQIBAwEEAQUBBgEtATEBMwE5ATsBPQFAAUcCSwJnAmgCaQJqAmsCbAJtAm4CbwJwAnECcgJzAnQCdQJ2AncCeAJ5AnoCewJ8An0CfgJ/AoACgQKCAoQChgKIAooCjAKOApACkgKUApYCmAKaApwCngKgAqICpAKmAqgCqgKsAq4CswK1ArcCuQK7Ar0CvwLBAsMCxgLIAsoCzALOAtAC0gLUAtYC2gLcAt4C4ALiAuQC5gLoAuoC7ALuAvAC8wL1AvcDkAORA5IDkwOUA5UDlgOXA5gDmQOaA5sDnAOdA54DnwO8A74DwAPOA9UD2wPhBEcESgRMBFAEWARaBFsEXwRrAAYAAAAGABIAKgBCAFoAcgCKAAMAAAABABIAAQCQAAEAAAAaAAEAAQBNAAMAAAABABIAAQB4AAEAAAAaAAEAAQBOAAMAAAABABIAAQBgAAEAAAAaAAEAAQKuAAMAAAABABIAAQBIAAEAAAAaAAEAAQObAAMAAAABABIAAQAwAAEAAAAaAAEAAQOdAAMAAAABABIAAQAYAAEAAAAaAAEAAQQaAAIAAQCnAKsAAAAEAAAAAQAIAAEGHgA2AHIApACuALgAygD8AQ4BGAFKAWQBfgGQAboB7AH2AhgCMgJEAnYCiAKiAswC3gMQAxoDJAM2A2gDcgN8A4YDoAO6A8wD9gQoBDIEVARuBIAEsgTEBN4FCAUaBSQFLgU4BUIFbAWWBcAF6gYUAAYADgAUABoAIAAmACwCTAACAKcCTQACAKgCTwACAKkD8QACAKoEewACAKsD7wACAKwAAQAEBIgAAgCsAAEABAKJAAIAqAACAAYADASKAAIArASMAAIBogAGAA4AFAAaACAAJgAsAlQAAgCnAlUAAgCoBAsAAgCpBAkAAgCqBH0AAgCrBAcAAgCsAAIABgAMBHcAAgCoAqMAAgGiAAEABASOAAIArAAGAA4AFAAaACAAJgAsAlgAAgCnAlkAAgCoAqcAAgCpBBcAAgCqBH8AAgCrBBkAAgCsAAMACAAOABQEkAACAKgEkgACAKwCtAACAaIAAwAIAA4AFAK2AAIAqASUAAIArAK4AAIBogACAAYADAOtAAIAqASWAAIArAAFAAwAEgAYAB4AJAR5AAIApwK+AAIAqAJcAAIAqQSYAAIArALAAAIBogAGAA4AFAAaACAAJgAsAl0AAgCnAl4AAgCoAmAAAgCpBB0AAgCqBIEAAgCrBBsAAgCsAAEABASaAAIAqAAEAAoAEAAWABwCywACAKgEgwACAKsEnAACAKwCzQACAaIAAwAIAA4AFALRAAIAqASeAAIArALXAAIBogACAAYADASgAAIArALbAAIBogAGAA4AFAAaACAAJgAsAmIAAgCnAmMAAgCoAuEAAgCpBDUAAgCqBIUAAgCrBDMAAgCsAAIABgAMBKIAAgCpBKQAAgCsAAMACAAOABQDoAACAKcDogACAKgEpgACAKwABQAMABIAGAAeACQDpgACAKcCZgACAKgERQACAKkEQwACAKoEQQACAKwAAgAGAAwC8gACAKgEqAACAKwABgAOABQAGgAgACYALAJnAAIApwJoAAIAqAJqAAIAqQPyAAIAqgR8AAIAqwPwAAIArAABAAQEiQACAKwAAQAEAooAAgCoAAIABgAMBIsAAgCsBI0AAgGiAAYADgAUABoAIAAmACwCbwACAKcCcAACAKgEDAACAKkECgACAKoEfgACAKsECAACAKwAAQAEBHgAAgCoAAEABASPAAIArAABAAQEGgACAKwAAwAIAA4AFASRAAIAqASTAAIArAK1AAIBogADAAgADgAUArcAAgCoBJUAAgCsArkAAgGiAAIABgAMA64AAgCoBJcAAgCsAAUADAASABgAHgAkBHoAAgCnAr8AAgCoAncAAgCpBJkAAgCsAsEAAgGiAAYADgAUABoAIAAmACwCeAACAKcCeQACAKgCewACAKkEHgACAKoEggACAKsEHAACAKwAAQAEBJsAAgCoAAQACgAQABYAHALMAAIAqASEAAIAqwSdAAIArALOAAIBogADAAgADgAUAtIAAgCoBJ8AAgCsAtgAAgGiAAIABgAMBKEAAgCsAtwAAgGiAAYADgAUABoAIAAmACwCfQACAKcCfgACAKgC4gACAKkENgACAKoEhgACAKsENAACAKwAAgAGAAwEowACAKkEpQACAKwAAwAIAA4AFAOhAAIApwOjAAIAqASnAAIArAAFAAwAEgAYAB4AJAOnAAIApwKBAAIAqARGAAIAqQREAAIAqgRCAAIArAACAAYADALzAAIAqASpAAIArAABAAQC+AACAKgAAQAEAvoAAgCoAAEABAL5AAIAqAABAAQC+wACAKgABQAMABIAGAAeACQCcwACAKcCdAACAKgCqAACAKkEGAACAKoEgAACAKsABQAMABIAGAAeACQEKwACAKcEKQACAKgELwACAKkELQACAKoEMQACAKwABQAMABIAGAAeACQELAACAKcEKgACAKgEMAACAKkELgACAKoEMgACAKwABQAMABIAGAAeACQEOQACAKcENwACAKgEPQACAKkEOwACAKoEPwACAKwABQAMABIAGAAeACQEOgACAKcEOAACAKgEPgACAKkEPAACAKoEQAACAKwAAQAEBIcAAgCoAAIAEQAlACkAAAArAC0ABQAvADQACAA2ADsADgA9AD4AFABFAEkAFgBLAE0AGwBPAFQAHgBWAFsAJABdAF4AKgCBAIEALACDAIMALQCGAIYALgCJAIkALwCMAIwAMACXAJoAMQDPAM8ANQABAAAAAQAIAAEABgACAAEAAgLVAtYAAQAAAAEACAACAA4ABATeBN8E4AThAAEABAKHAogCmQKaAAQAAAABAAgAAQAmAAIACgAcAAIABgAMAaMAAgBKAagAAgBYAAEABAGpAAIAWAABAAIASgBXAAQAAAABAAgAAQBEAAIACgAUAAEABAGkAAIATQABAAQBpgACAE0ABAAAAAEACAABAB4AAgAKABQAAQAEAaUAAgBQAAEABAGnAAIAUAABAAIASgGjAAEAAAABAAgAAQAGAZUAAQABAEsAAQAAAAEACAABAAYBJwABAAEAugABAAAAAQAIAAEABgGsAAEAAQA2AAEAAAABAAgAAgAcAAIB4wHkAAEAAAABAAgAAgAKAAIB5QHmAAEAAgAvAE8AAQAAAAEACAACAB4ADAIoAioCKQIrAiwCHwIgAiECIgGuAiQCJQABAAwAJwAoACsAMwA1AEYARwBIAEsAUwBUAFUAAQAAAAEACAACAAwAAwImAicCJwABAAMASQBLAiIAAQAAAAEACAACAGYACAI9Ai0CLgIwAjECOQI6AjwAAQAAAAEACAACABYACAAbABUAFgAXABgAGQAdABQAAQAIAa0CIwRxBHIEcwR0BHUEdgABAAAAAQAIAAIAFgAIBHYCIwRxBHIEcwR0Aa0EdQABAAgAFAAVABYAFwAYABkAGwAdAAEAAAABAAgAAgAWAAgAFQAWABcAGAAZABsAHQAUAAEACAItAi4CMAIxAjkCOgI8Aj0AAQAAAAEACAABAAYBaQABAAEAEwAGAAAAAQAIAAMAAQASAAEAUgAAAAEAAAAaAAIAAgF8AXwAAAHUAd0AAQABAAAAAQAIAAEAKAHAAAEAAAABAAgAAgAaAAoCMgB6AHMAdAIzAjQCNQI2AjcCOAACAAEAFAAdAAAAAQAAAAEACAACACYAEAHUAdUB1gHXAdgB2QHaAdsB3AHdAkACPgJBAkICPwJDAAEAEAAUABUAFgAXABgAGQAaABsAHAAdAE0ATgKuA5sDnQQa"
 };
 
-/*! DataTables 1.11.5
- * ©2008-2021 SpryMedia Ltd - datatables.net/license
+/*! DataTables 1.13.1
+ * ©2008-2022 SpryMedia Ltd - datatables.net/license
  */
 
 /**
  * @summary     DataTables
  * @description Paginate, search and order HTML tables
- * @version     1.11.5
- * @file        jquery.dataTables.js
+ * @version     1.13.1
  * @author      SpryMedia Ltd
  * @contact     www.datatables.net
- * @copyright   Copyright 2008-2021 SpryMedia Ltd.
+ * @copyright   SpryMedia Ltd.
  *
  * This source file is free software, available under the following license:
  *   MIT license - http://datatables.net/license
@@ -60709,7 +51552,7 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 					success: function ( json ) {
 						_fnCamelToHungarian( defaults.oLanguage, json );
 						_fnLanguageCompat( json );
-						$.extend( true, oLanguage, json );
+						$.extend( true, oLanguage, json, oSettings.oInit.oLanguage );
 			
 						_fnCallbackFire( oSettings, null, 'i18n', [oSettings]);
 						_fnInitialise( oSettings );
@@ -60794,6 +51637,10 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 			
 				$( rowOne[0] ).children('th, td').each( function (i, cell) {
 					var col = oSettings.aoColumns[i];
+			
+					if (! col) {
+						_fnLog( oSettings, 0, 'Incorrect column count', 18 );
+					}
 			
 					if ( col.mData === i ) {
 						var sort = a( cell, 'sort' ) || a( cell, 'order' );
@@ -61942,8 +52789,16 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 				th.addClass( oOptions.sClass );
 			}
 	
+			var origClass = oCol.sClass;
+	
 			$.extend( oCol, oOptions );
 			_fnMap( oCol, oOptions, "sWidth", "sWidthOrig" );
+	
+			// Merge class from previously defined classes with this one, rather than just
+			// overwriting it in the extend above
+			if (origClass !== oCol.sClass) {
+				oCol.sClass = origClass + ' ' + oCol.sClass;
+			}
 	
 			/* iDataSort to be applied (backwards compatibility), but aDataSort will take
 			 * priority if defined
@@ -62217,9 +53072,11 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 				def = aoColDefs[i];
 	
 				/* Each definition can target multiple columns, as it is an array */
-				var aTargets = def.targets !== undefined ?
-					def.targets :
-					def.aTargets;
+				var aTargets = def.target !== undefined
+					? def.target
+					: def.targets !== undefined
+						? def.targets
+						: def.aTargets;
 	
 				if ( ! Array.isArray( aTargets ) )
 				{
@@ -62789,6 +53646,11 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 				create = nTrIn ? false : true;
 	
 				nTd = create ? document.createElement( oCol.sCellType ) : anTds[i];
+	
+				if (! nTd) {
+					_fnLog( oSettings, 0, 'Incorrect column count', 18 );
+				}
+	
 				nTd._DT_CellIndex = {
 					row: iRow,
 					column: i
@@ -62939,10 +53801,16 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 	
 			for ( i=0, ien=cells.length ; i<ien ; i++ ) {
 				column = columns[i];
-				column.nTf = cells[i].cell;
 	
-				if ( column.sClass ) {
-					$(column.nTf).addClass( column.sClass );
+				if (column) {
+					column.nTf = cells[i].cell;
+		
+					if ( column.sClass ) {
+						$(column.nTf).addClass( column.sClass );
+					}
+				}
+				else {
+					_fnLog( oSettings, 0, 'Incorrect column count', 18 );
 				}
 			}
 		}
@@ -64702,6 +55570,10 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 				_fnDraw( settings );
 			}
 		}
+		else {
+			// No change event - paging was called, but no change
+			_fnCallbackFire( settings, null, 'page-nc', [settings] );
+		}
 	
 		return changed;
 	}
@@ -64721,6 +55593,7 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 				'class': settings.oClasses.sProcessing
 			} )
 			.html( settings.oLanguage.sProcessing )
+			.append('<div><div></div><div></div><div></div><div></div></div>')
 			.insertBefore( settings.nTable )[0];
 	}
 	
@@ -64970,6 +55843,7 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 			footerCopy = footer.clone().prependTo( table );
 			footerTrgEls = footer.find('tr'); // the original tfoot is in its own table and must be sized
 			footerSrcEls = footerCopy.find('tr');
+			footerCopy.find('[id]').removeAttr('id');
 		}
 	
 		// Clone the current header and footer elements and then place it into the inner table
@@ -64977,6 +55851,7 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 		headerTrgEls = header.find('tr'); // original header is in its own table
 		headerSrcEls = headerCopy.find('tr');
 		headerCopy.find('th, td').removeAttr('tabindex');
+		headerCopy.find('[id]').removeAttr('id');
 	
 	
 		/*
@@ -66103,6 +56978,17 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 		// Store the saved state so it might be accessed at any time
 		settings.oLoadedState = $.extend( true, {}, s );
 	
+		// Page Length
+		if ( s.length !== undefined ) {
+			// If already initialised just set the value directly so that the select element is also updated
+			if (api) {
+				api.page.len(s.length)
+			}
+			else {
+				settings._iDisplayLength   = s.length;
+			}
+		}
+	
 		// Restore key features - todo - for 1.11 this needs to be done by
 		// subscribed events
 		if ( s.start !== undefined ) {
@@ -66111,12 +56997,8 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 				settings.iInitDisplayStart = s.start;
 			}
 			else {
-				_fnPageChange(settings, s.start/s.length);
-	
+				_fnPageChange(settings, s.start/settings._iDisplayLength);
 			}
-		}
-		if ( s.length !== undefined ) {
-			settings._iDisplayLength   = s.length;
 		}
 	
 		// Order
@@ -66850,8 +57732,10 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 	
 		pluck: function ( prop )
 		{
+			let fn = DataTable.util.get(prop);
+	
 			return this.map( function ( el ) {
-				return el[ prop ];
+				return fn(el);
 			} );
 		},
 	
@@ -67945,8 +58829,12 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 	
 	$(document).on('plugin-init.dt', function (e, context) {
 		var api = new _Api( context );
+		
+		const namespace = 'on-plugin-init';
+		const stateSaveParamsEvent = `stateSaveParams.${namespace}`;
+		const destroyEvent = `destroy.${namespace}`;
 	
-		api.on( 'stateSaveParams', function ( e, settings, d ) {
+		api.on( stateSaveParamsEvent, function ( e, settings, d ) {
 			// This could be more compact with the API, but it is a lot faster as a simple
 			// internal loop
 			var idFn = settings.rowIdFn;
@@ -67960,7 +58848,11 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 			}
 	
 			d.childRows = ids;
-		})
+		});
+	
+		api.on( destroyEvent, function () {
+			api.off(`${stateSaveParamsEvent} ${destroyEvent}`);
+		});
 	
 		var loaded = api.state.loaded();
 	
@@ -68080,7 +58972,7 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 		var api = new _Api( settings );
 		var namespace = '.dt.DT_details';
 		var drawEvent = 'draw'+namespace;
-		var colvisEvent = 'column-visibility'+namespace;
+		var colvisEvent = 'column-sizing'+namespace;
 		var destroyEvent = 'destroy'+namespace;
 		var data = settings.aoData;
 	
@@ -69132,7 +60024,6 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 		remove = remove || false;
 	
 		return this.iterator( 'table', function ( settings ) {
-			var orig      = settings.nTableWrapper.parentNode;
 			var classes   = settings.oClasses;
 			var table     = settings.nTable;
 			var tbody     = settings.nTBody;
@@ -69186,6 +60077,8 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 			// Add the TR elements back into the table in their original order
 			jqTbody.children().detach();
 			jqTbody.append( rows );
+	
+			var orig = settings.nTableWrapper.parentNode;
 	
 			// Remove the DataTables generated nodes, events and classes
 			var removedMethod = remove ? 'remove' : 'detach';
@@ -69280,7 +60173,7 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 	 *  @type string
 	 *  @default Version number
 	 */
-	DataTable.version = "1.11.5";
+	DataTable.version = "1.13.1";
 	
 	/**
 	 * Private data store, containing all of the settings objects that are
@@ -69351,5632 +60244,5852 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 		"return": false
 	};
 	
-		
-		
-		
+	
+	
+	
+	/**
+	 * Template object for the way in which DataTables holds information about
+	 * each individual row. This is the object format used for the settings
+	 * aoData array.
+	 *  @namespace
+	 */
+	DataTable.models.oRow = {
 		/**
-		 * Template object for the way in which DataTables holds information about
-		 * each individual row. This is the object format used for the settings
-		 * aoData array.
-		 *  @namespace
+		 * TR element for the row
+		 *  @type node
+		 *  @default null
 		 */
-		DataTable.models.oRow = {
-			/**
-			 * TR element for the row
-			 *  @type node
-			 *  @default null
-			 */
-			"nTr": null,
-		
-			/**
-			 * Array of TD elements for each row. This is null until the row has been
-			 * created.
-			 *  @type array nodes
-			 *  @default []
-			 */
-			"anCells": null,
-		
-			/**
-			 * Data object from the original data source for the row. This is either
-			 * an array if using the traditional form of DataTables, or an object if
-			 * using mData options. The exact type will depend on the passed in
-			 * data from the data source, or will be an array if using DOM a data
-			 * source.
-			 *  @type array|object
-			 *  @default []
-			 */
-			"_aData": [],
-		
-			/**
-			 * Sorting data cache - this array is ostensibly the same length as the
-			 * number of columns (although each index is generated only as it is
-			 * needed), and holds the data that is used for sorting each column in the
-			 * row. We do this cache generation at the start of the sort in order that
-			 * the formatting of the sort data need be done only once for each cell
-			 * per sort. This array should not be read from or written to by anything
-			 * other than the master sorting methods.
-			 *  @type array
-			 *  @default null
-			 *  @private
-			 */
-			"_aSortData": null,
-		
-			/**
-			 * Per cell filtering data cache. As per the sort data cache, used to
-			 * increase the performance of the filtering in DataTables
-			 *  @type array
-			 *  @default null
-			 *  @private
-			 */
-			"_aFilterData": null,
-		
-			/**
-			 * Filtering data cache. This is the same as the cell filtering cache, but
-			 * in this case a string rather than an array. This is easily computed with
-			 * a join on `_aFilterData`, but is provided as a cache so the join isn't
-			 * needed on every search (memory traded for performance)
-			 *  @type array
-			 *  @default null
-			 *  @private
-			 */
-			"_sFilterRow": null,
-		
-			/**
-			 * Cache of the class name that DataTables has applied to the row, so we
-			 * can quickly look at this variable rather than needing to do a DOM check
-			 * on className for the nTr property.
-			 *  @type string
-			 *  @default <i>Empty string</i>
-			 *  @private
-			 */
-			"_sRowStripe": "",
-		
-			/**
-			 * Denote if the original data source was from the DOM, or the data source
-			 * object. This is used for invalidating data, so DataTables can
-			 * automatically read data from the original source, unless uninstructed
-			 * otherwise.
-			 *  @type string
-			 *  @default null
-			 *  @private
-			 */
-			"src": null,
-		
-			/**
-			 * Index in the aoData array. This saves an indexOf lookup when we have the
-			 * object, but want to know the index
-			 *  @type integer
-			 *  @default -1
-			 *  @private
-			 */
-			"idx": -1
-		};
-		
-		
+		"nTr": null,
+	
 		/**
-		 * Template object for the column information object in DataTables. This object
-		 * is held in the settings aoColumns array and contains all the information that
-		 * DataTables needs about each individual column.
-		 *
-		 * Note that this object is related to {@link DataTable.defaults.column}
-		 * but this one is the internal data store for DataTables's cache of columns.
-		 * It should NOT be manipulated outside of DataTables. Any configuration should
-		 * be done through the initialisation options.
-		 *  @namespace
+		 * Array of TD elements for each row. This is null until the row has been
+		 * created.
+		 *  @type array nodes
+		 *  @default []
 		 */
-		DataTable.models.oColumn = {
-			/**
-			 * Column index. This could be worked out on-the-fly with $.inArray, but it
-			 * is faster to just hold it as a variable
-			 *  @type integer
-			 *  @default null
-			 */
-			"idx": null,
-		
-			/**
-			 * A list of the columns that sorting should occur on when this column
-			 * is sorted. That this property is an array allows multi-column sorting
-			 * to be defined for a column (for example first name / last name columns
-			 * would benefit from this). The values are integers pointing to the
-			 * columns to be sorted on (typically it will be a single integer pointing
-			 * at itself, but that doesn't need to be the case).
-			 *  @type array
-			 */
-			"aDataSort": null,
-		
-			/**
-			 * Define the sorting directions that are applied to the column, in sequence
-			 * as the column is repeatedly sorted upon - i.e. the first value is used
-			 * as the sorting direction when the column if first sorted (clicked on).
-			 * Sort it again (click again) and it will move on to the next index.
-			 * Repeat until loop.
-			 *  @type array
-			 */
-			"asSorting": null,
-		
-			/**
-			 * Flag to indicate if the column is searchable, and thus should be included
-			 * in the filtering or not.
-			 *  @type boolean
-			 */
-			"bSearchable": null,
-		
-			/**
-			 * Flag to indicate if the column is sortable or not.
-			 *  @type boolean
-			 */
-			"bSortable": null,
-		
-			/**
-			 * Flag to indicate if the column is currently visible in the table or not
-			 *  @type boolean
-			 */
-			"bVisible": null,
-		
-			/**
-			 * Store for manual type assignment using the `column.type` option. This
-			 * is held in store so we can manipulate the column's `sType` property.
-			 *  @type string
-			 *  @default null
-			 *  @private
-			 */
-			"_sManualType": null,
-		
-			/**
-			 * Flag to indicate if HTML5 data attributes should be used as the data
-			 * source for filtering or sorting. True is either are.
-			 *  @type boolean
-			 *  @default false
-			 *  @private
-			 */
-			"_bAttrSrc": false,
-		
-			/**
-			 * Developer definable function that is called whenever a cell is created (Ajax source,
-			 * etc) or processed for input (DOM source). This can be used as a compliment to mRender
-			 * allowing you to modify the DOM element (add background colour for example) when the
-			 * element is available.
-			 *  @type function
-			 *  @param {element} nTd The TD node that has been created
-			 *  @param {*} sData The Data for the cell
-			 *  @param {array|object} oData The data for the whole row
-			 *  @param {int} iRow The row index for the aoData data store
-			 *  @default null
-			 */
-			"fnCreatedCell": null,
-		
-			/**
-			 * Function to get data from a cell in a column. You should <b>never</b>
-			 * access data directly through _aData internally in DataTables - always use
-			 * the method attached to this property. It allows mData to function as
-			 * required. This function is automatically assigned by the column
-			 * initialisation method
-			 *  @type function
-			 *  @param {array|object} oData The data array/object for the array
-			 *    (i.e. aoData[]._aData)
-			 *  @param {string} sSpecific The specific data type you want to get -
-			 *    'display', 'type' 'filter' 'sort'
-			 *  @returns {*} The data for the cell from the given row's data
-			 *  @default null
-			 */
-			"fnGetData": null,
-		
-			/**
-			 * Function to set data for a cell in the column. You should <b>never</b>
-			 * set the data directly to _aData internally in DataTables - always use
-			 * this method. It allows mData to function as required. This function
-			 * is automatically assigned by the column initialisation method
-			 *  @type function
-			 *  @param {array|object} oData The data array/object for the array
-			 *    (i.e. aoData[]._aData)
-			 *  @param {*} sValue Value to set
-			 *  @default null
-			 */
-			"fnSetData": null,
-		
-			/**
-			 * Property to read the value for the cells in the column from the data
-			 * source array / object. If null, then the default content is used, if a
-			 * function is given then the return from the function is used.
-			 *  @type function|int|string|null
-			 *  @default null
-			 */
-			"mData": null,
-		
-			/**
-			 * Partner property to mData which is used (only when defined) to get
-			 * the data - i.e. it is basically the same as mData, but without the
-			 * 'set' option, and also the data fed to it is the result from mData.
-			 * This is the rendering method to match the data method of mData.
-			 *  @type function|int|string|null
-			 *  @default null
-			 */
-			"mRender": null,
-		
-			/**
-			 * Unique header TH/TD element for this column - this is what the sorting
-			 * listener is attached to (if sorting is enabled.)
-			 *  @type node
-			 *  @default null
-			 */
-			"nTh": null,
-		
-			/**
-			 * Unique footer TH/TD element for this column (if there is one). Not used
-			 * in DataTables as such, but can be used for plug-ins to reference the
-			 * footer for each column.
-			 *  @type node
-			 *  @default null
-			 */
-			"nTf": null,
-		
-			/**
-			 * The class to apply to all TD elements in the table's TBODY for the column
-			 *  @type string
-			 *  @default null
-			 */
-			"sClass": null,
-		
-			/**
-			 * When DataTables calculates the column widths to assign to each column,
-			 * it finds the longest string in each column and then constructs a
-			 * temporary table and reads the widths from that. The problem with this
-			 * is that "mmm" is much wider then "iiii", but the latter is a longer
-			 * string - thus the calculation can go wrong (doing it properly and putting
-			 * it into an DOM object and measuring that is horribly(!) slow). Thus as
-			 * a "work around" we provide this option. It will append its value to the
-			 * text that is found to be the longest string for the column - i.e. padding.
-			 *  @type string
-			 */
-			"sContentPadding": null,
-		
-			/**
-			 * Allows a default value to be given for a column's data, and will be used
-			 * whenever a null data source is encountered (this can be because mData
-			 * is set to null, or because the data source itself is null).
-			 *  @type string
-			 *  @default null
-			 */
-			"sDefaultContent": null,
-		
-			/**
-			 * Name for the column, allowing reference to the column by name as well as
-			 * by index (needs a lookup to work by name).
-			 *  @type string
-			 */
-			"sName": null,
-		
-			/**
-			 * Custom sorting data type - defines which of the available plug-ins in
-			 * afnSortData the custom sorting will use - if any is defined.
-			 *  @type string
-			 *  @default std
-			 */
-			"sSortDataType": 'std',
-		
-			/**
-			 * Class to be applied to the header element when sorting on this column
-			 *  @type string
-			 *  @default null
-			 */
-			"sSortingClass": null,
-		
-			/**
-			 * Class to be applied to the header element when sorting on this column -
-			 * when jQuery UI theming is used.
-			 *  @type string
-			 *  @default null
-			 */
-			"sSortingClassJUI": null,
-		
-			/**
-			 * Title of the column - what is seen in the TH element (nTh).
-			 *  @type string
-			 */
-			"sTitle": null,
-		
-			/**
-			 * Column sorting and filtering type
-			 *  @type string
-			 *  @default null
-			 */
-			"sType": null,
-		
-			/**
-			 * Width of the column
-			 *  @type string
-			 *  @default null
-			 */
-			"sWidth": null,
-		
-			/**
-			 * Width of the column when it was first "encountered"
-			 *  @type string
-			 *  @default null
-			 */
-			"sWidthOrig": null
-		};
-		
-		
-		/*
-		 * Developer note: The properties of the object below are given in Hungarian
-		 * notation, that was used as the interface for DataTables prior to v1.10, however
-		 * from v1.10 onwards the primary interface is camel case. In order to avoid
-		 * breaking backwards compatibility utterly with this change, the Hungarian
-		 * version is still, internally the primary interface, but is is not documented
-		 * - hence the @name tags in each doc comment. This allows a Javascript function
-		 * to create a map from Hungarian notation to camel case (going the other direction
-		 * would require each property to be listed, which would add around 3K to the size
-		 * of DataTables, while this method is about a 0.5K hit).
-		 *
-		 * Ultimately this does pave the way for Hungarian notation to be dropped
-		 * completely, but that is a massive amount of work and will break current
-		 * installs (therefore is on-hold until v2).
-		 */
-		
+		"anCells": null,
+	
 		/**
-		 * Initialisation options that can be given to DataTables at initialisation
-		 * time.
-		 *  @namespace
+		 * Data object from the original data source for the row. This is either
+		 * an array if using the traditional form of DataTables, or an object if
+		 * using mData options. The exact type will depend on the passed in
+		 * data from the data source, or will be an array if using DOM a data
+		 * source.
+		 *  @type array|object
+		 *  @default []
 		 */
-		DataTable.defaults = {
-			/**
-			 * An array of data to use for the table, passed in at initialisation which
-			 * will be used in preference to any data which is already in the DOM. This is
-			 * particularly useful for constructing tables purely in Javascript, for
-			 * example with a custom Ajax call.
-			 *  @type array
-			 *  @default null
-			 *
-			 *  @dtopt Option
-			 *  @name DataTable.defaults.data
-			 *
-			 *  @example
-			 *    // Using a 2D array data source
-			 *    $(document).ready( function () {
-			 *      $('#example').dataTable( {
-			 *        "data": [
-			 *          ['Trident', 'Internet Explorer 4.0', 'Win 95+', 4, 'X'],
-			 *          ['Trident', 'Internet Explorer 5.0', 'Win 95+', 5, 'C'],
-			 *        ],
-			 *        "columns": [
-			 *          { "title": "Engine" },
-			 *          { "title": "Browser" },
-			 *          { "title": "Platform" },
-			 *          { "title": "Version" },
-			 *          { "title": "Grade" }
-			 *        ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using an array of objects as a data source (`data`)
-			 *    $(document).ready( function () {
-			 *      $('#example').dataTable( {
-			 *        "data": [
-			 *          {
-			 *            "engine":   "Trident",
-			 *            "browser":  "Internet Explorer 4.0",
-			 *            "platform": "Win 95+",
-			 *            "version":  4,
-			 *            "grade":    "X"
-			 *          },
-			 *          {
-			 *            "engine":   "Trident",
-			 *            "browser":  "Internet Explorer 5.0",
-			 *            "platform": "Win 95+",
-			 *            "version":  5,
-			 *            "grade":    "C"
-			 *          }
-			 *        ],
-			 *        "columns": [
-			 *          { "title": "Engine",   "data": "engine" },
-			 *          { "title": "Browser",  "data": "browser" },
-			 *          { "title": "Platform", "data": "platform" },
-			 *          { "title": "Version",  "data": "version" },
-			 *          { "title": "Grade",    "data": "grade" }
-			 *        ]
-			 *      } );
-			 *    } );
-			 */
-			"aaData": null,
-		
-		
-			/**
-			 * If ordering is enabled, then DataTables will perform a first pass sort on
-			 * initialisation. You can define which column(s) the sort is performed
-			 * upon, and the sorting direction, with this variable. The `sorting` array
-			 * should contain an array for each column to be sorted initially containing
-			 * the column's index and a direction string ('asc' or 'desc').
-			 *  @type array
-			 *  @default [[0,'asc']]
-			 *
-			 *  @dtopt Option
-			 *  @name DataTable.defaults.order
-			 *
-			 *  @example
-			 *    // Sort by 3rd column first, and then 4th column
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "order": [[2,'asc'], [3,'desc']]
-			 *      } );
-			 *    } );
-			 *
-			 *    // No initial sorting
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "order": []
-			 *      } );
-			 *    } );
-			 */
-			"aaSorting": [[0,'asc']],
-		
-		
-			/**
-			 * This parameter is basically identical to the `sorting` parameter, but
-			 * cannot be overridden by user interaction with the table. What this means
-			 * is that you could have a column (visible or hidden) which the sorting
-			 * will always be forced on first - any sorting after that (from the user)
-			 * will then be performed as required. This can be useful for grouping rows
-			 * together.
-			 *  @type array
-			 *  @default null
-			 *
-			 *  @dtopt Option
-			 *  @name DataTable.defaults.orderFixed
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "orderFixed": [[0,'asc']]
-			 *      } );
-			 *    } )
-			 */
-			"aaSortingFixed": [],
-		
-		
-			/**
-			 * DataTables can be instructed to load data to display in the table from a
-			 * Ajax source. This option defines how that Ajax call is made and where to.
-			 *
-			 * The `ajax` property has three different modes of operation, depending on
-			 * how it is defined. These are:
-			 *
-			 * * `string` - Set the URL from where the data should be loaded from.
-			 * * `object` - Define properties for `jQuery.ajax`.
-			 * * `function` - Custom data get function
-			 *
-			 * `string`
-			 * --------
-			 *
-			 * As a string, the `ajax` property simply defines the URL from which
-			 * DataTables will load data.
-			 *
-			 * `object`
-			 * --------
-			 *
-			 * As an object, the parameters in the object are passed to
-			 * [jQuery.ajax](http://api.jquery.com/jQuery.ajax/) allowing fine control
-			 * of the Ajax request. DataTables has a number of default parameters which
-			 * you can override using this option. Please refer to the jQuery
-			 * documentation for a full description of the options available, although
-			 * the following parameters provide additional options in DataTables or
-			 * require special consideration:
-			 *
-			 * * `data` - As with jQuery, `data` can be provided as an object, but it
-			 *   can also be used as a function to manipulate the data DataTables sends
-			 *   to the server. The function takes a single parameter, an object of
-			 *   parameters with the values that DataTables has readied for sending. An
-			 *   object may be returned which will be merged into the DataTables
-			 *   defaults, or you can add the items to the object that was passed in and
-			 *   not return anything from the function. This supersedes `fnServerParams`
-			 *   from DataTables 1.9-.
-			 *
-			 * * `dataSrc` - By default DataTables will look for the property `data` (or
-			 *   `aaData` for compatibility with DataTables 1.9-) when obtaining data
-			 *   from an Ajax source or for server-side processing - this parameter
-			 *   allows that property to be changed. You can use Javascript dotted
-			 *   object notation to get a data source for multiple levels of nesting, or
-			 *   it my be used as a function. As a function it takes a single parameter,
-			 *   the JSON returned from the server, which can be manipulated as
-			 *   required, with the returned value being that used by DataTables as the
-			 *   data source for the table. This supersedes `sAjaxDataProp` from
-			 *   DataTables 1.9-.
-			 *
-			 * * `success` - Should not be overridden it is used internally in
-			 *   DataTables. To manipulate / transform the data returned by the server
-			 *   use `ajax.dataSrc`, or use `ajax` as a function (see below).
-			 *
-			 * `function`
-			 * ----------
-			 *
-			 * As a function, making the Ajax call is left up to yourself allowing
-			 * complete control of the Ajax request. Indeed, if desired, a method other
-			 * than Ajax could be used to obtain the required data, such as Web storage
-			 * or an AIR database.
-			 *
-			 * The function is given four parameters and no return is required. The
-			 * parameters are:
-			 *
-			 * 1. _object_ - Data to send to the server
-			 * 2. _function_ - Callback function that must be executed when the required
-			 *    data has been obtained. That data should be passed into the callback
-			 *    as the only parameter
-			 * 3. _object_ - DataTables settings object for the table
-			 *
-			 * Note that this supersedes `fnServerData` from DataTables 1.9-.
-			 *
-			 *  @type string|object|function
-			 *  @default null
-			 *
-			 *  @dtopt Option
-			 *  @name DataTable.defaults.ajax
-			 *  @since 1.10.0
-			 *
-			 * @example
-			 *   // Get JSON data from a file via Ajax.
-			 *   // Note DataTables expects data in the form `{ data: [ ...data... ] }` by default).
-			 *   $('#example').dataTable( {
-			 *     "ajax": "data.json"
-			 *   } );
-			 *
-			 * @example
-			 *   // Get JSON data from a file via Ajax, using `dataSrc` to change
-			 *   // `data` to `tableData` (i.e. `{ tableData: [ ...data... ] }`)
-			 *   $('#example').dataTable( {
-			 *     "ajax": {
-			 *       "url": "data.json",
-			 *       "dataSrc": "tableData"
-			 *     }
-			 *   } );
-			 *
-			 * @example
-			 *   // Get JSON data from a file via Ajax, using `dataSrc` to read data
-			 *   // from a plain array rather than an array in an object
-			 *   $('#example').dataTable( {
-			 *     "ajax": {
-			 *       "url": "data.json",
-			 *       "dataSrc": ""
-			 *     }
-			 *   } );
-			 *
-			 * @example
-			 *   // Manipulate the data returned from the server - add a link to data
-			 *   // (note this can, should, be done using `render` for the column - this
-			 *   // is just a simple example of how the data can be manipulated).
-			 *   $('#example').dataTable( {
-			 *     "ajax": {
-			 *       "url": "data.json",
-			 *       "dataSrc": function ( json ) {
-			 *         for ( var i=0, ien=json.length ; i<ien ; i++ ) {
-			 *           json[i][0] = '<a href="/message/'+json[i][0]+'>View message</a>';
-			 *         }
-			 *         return json;
-			 *       }
-			 *     }
-			 *   } );
-			 *
-			 * @example
-			 *   // Add data to the request
-			 *   $('#example').dataTable( {
-			 *     "ajax": {
-			 *       "url": "data.json",
-			 *       "data": function ( d ) {
-			 *         return {
-			 *           "extra_search": $('#extra').val()
-			 *         };
-			 *       }
-			 *     }
-			 *   } );
-			 *
-			 * @example
-			 *   // Send request as POST
-			 *   $('#example').dataTable( {
-			 *     "ajax": {
-			 *       "url": "data.json",
-			 *       "type": "POST"
-			 *     }
-			 *   } );
-			 *
-			 * @example
-			 *   // Get the data from localStorage (could interface with a form for
-			 *   // adding, editing and removing rows).
-			 *   $('#example').dataTable( {
-			 *     "ajax": function (data, callback, settings) {
-			 *       callback(
-			 *         JSON.parse( localStorage.getItem('dataTablesData') )
-			 *       );
-			 *     }
-			 *   } );
-			 */
-			"ajax": null,
-		
-		
-			/**
-			 * This parameter allows you to readily specify the entries in the length drop
-			 * down menu that DataTables shows when pagination is enabled. It can be
-			 * either a 1D array of options which will be used for both the displayed
-			 * option and the value, or a 2D array which will use the array in the first
-			 * position as the value, and the array in the second position as the
-			 * displayed options (useful for language strings such as 'All').
-			 *
-			 * Note that the `pageLength` property will be automatically set to the
-			 * first value given in this array, unless `pageLength` is also provided.
-			 *  @type array
-			 *  @default [ 10, 25, 50, 100 ]
-			 *
-			 *  @dtopt Option
-			 *  @name DataTable.defaults.lengthMenu
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
-			 *      } );
-			 *    } );
-			 */
-			"aLengthMenu": [ 10, 25, 50, 100 ],
-		
-		
-			/**
-			 * The `columns` option in the initialisation parameter allows you to define
-			 * details about the way individual columns behave. For a full list of
-			 * column options that can be set, please see
-			 * {@link DataTable.defaults.column}. Note that if you use `columns` to
-			 * define your columns, you must have an entry in the array for every single
-			 * column that you have in your table (these can be null if you don't which
-			 * to specify any options).
-			 *  @member
-			 *
-			 *  @name DataTable.defaults.column
-			 */
-			"aoColumns": null,
-		
-			/**
-			 * Very similar to `columns`, `columnDefs` allows you to target a specific
-			 * column, multiple columns, or all columns, using the `targets` property of
-			 * each object in the array. This allows great flexibility when creating
-			 * tables, as the `columnDefs` arrays can be of any length, targeting the
-			 * columns you specifically want. `columnDefs` may use any of the column
-			 * options available: {@link DataTable.defaults.column}, but it _must_
-			 * have `targets` defined in each object in the array. Values in the `targets`
-			 * array may be:
-			 *   <ul>
-			 *     <li>a string - class name will be matched on the TH for the column</li>
-			 *     <li>0 or a positive integer - column index counting from the left</li>
-			 *     <li>a negative integer - column index counting from the right</li>
-			 *     <li>the string "_all" - all columns (i.e. assign a default)</li>
-			 *   </ul>
-			 *  @member
-			 *
-			 *  @name DataTable.defaults.columnDefs
-			 */
-			"aoColumnDefs": null,
-		
-		
-			/**
-			 * Basically the same as `search`, this parameter defines the individual column
-			 * filtering state at initialisation time. The array must be of the same size
-			 * as the number of columns, and each element be an object with the parameters
-			 * `search` and `escapeRegex` (the latter is optional). 'null' is also
-			 * accepted and the default will be used.
-			 *  @type array
-			 *  @default []
-			 *
-			 *  @dtopt Option
-			 *  @name DataTable.defaults.searchCols
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "searchCols": [
-			 *          null,
-			 *          { "search": "My filter" },
-			 *          null,
-			 *          { "search": "^[0-9]", "escapeRegex": false }
-			 *        ]
-			 *      } );
-			 *    } )
-			 */
-			"aoSearchCols": [],
-		
-		
-			/**
-			 * An array of CSS classes that should be applied to displayed rows. This
-			 * array may be of any length, and DataTables will apply each class
-			 * sequentially, looping when required.
-			 *  @type array
-			 *  @default null <i>Will take the values determined by the `oClasses.stripe*`
-			 *    options</i>
-			 *
-			 *  @dtopt Option
-			 *  @name DataTable.defaults.stripeClasses
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "stripeClasses": [ 'strip1', 'strip2', 'strip3' ]
-			 *      } );
-			 *    } )
-			 */
-			"asStripeClasses": null,
-		
-		
-			/**
-			 * Enable or disable automatic column width calculation. This can be disabled
-			 * as an optimisation (it takes some time to calculate the widths) if the
-			 * tables widths are passed in using `columns`.
-			 *  @type boolean
-			 *  @default true
-			 *
-			 *  @dtopt Features
-			 *  @name DataTable.defaults.autoWidth
-			 *
-			 *  @example
-			 *    $(document).ready( function () {
-			 *      $('#example').dataTable( {
-			 *        "autoWidth": false
-			 *      } );
-			 *    } );
-			 */
-			"bAutoWidth": true,
-		
-		
-			/**
-			 * Deferred rendering can provide DataTables with a huge speed boost when you
-			 * are using an Ajax or JS data source for the table. This option, when set to
-			 * true, will cause DataTables to defer the creation of the table elements for
-			 * each row until they are needed for a draw - saving a significant amount of
-			 * time.
-			 *  @type boolean
-			 *  @default false
-			 *
-			 *  @dtopt Features
-			 *  @name DataTable.defaults.deferRender
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "ajax": "sources/arrays.txt",
-			 *        "deferRender": true
-			 *      } );
-			 *    } );
-			 */
-			"bDeferRender": false,
-		
-		
-			/**
-			 * Replace a DataTable which matches the given selector and replace it with
-			 * one which has the properties of the new initialisation object passed. If no
-			 * table matches the selector, then the new DataTable will be constructed as
-			 * per normal.
-			 *  @type boolean
-			 *  @default false
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.destroy
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "srollY": "200px",
-			 *        "paginate": false
-			 *      } );
-			 *
-			 *      // Some time later....
-			 *      $('#example').dataTable( {
-			 *        "filter": false,
-			 *        "destroy": true
-			 *      } );
-			 *    } );
-			 */
-			"bDestroy": false,
-		
-		
-			/**
-			 * Enable or disable filtering of data. Filtering in DataTables is "smart" in
-			 * that it allows the end user to input multiple words (space separated) and
-			 * will match a row containing those words, even if not in the order that was
-			 * specified (this allow matching across multiple columns). Note that if you
-			 * wish to use filtering in DataTables this must remain 'true' - to remove the
-			 * default filtering input box and retain filtering abilities, please use
-			 * {@link DataTable.defaults.dom}.
-			 *  @type boolean
-			 *  @default true
-			 *
-			 *  @dtopt Features
-			 *  @name DataTable.defaults.searching
-			 *
-			 *  @example
-			 *    $(document).ready( function () {
-			 *      $('#example').dataTable( {
-			 *        "searching": false
-			 *      } );
-			 *    } );
-			 */
-			"bFilter": true,
-		
-		
-			/**
-			 * Enable or disable the table information display. This shows information
-			 * about the data that is currently visible on the page, including information
-			 * about filtered data if that action is being performed.
-			 *  @type boolean
-			 *  @default true
-			 *
-			 *  @dtopt Features
-			 *  @name DataTable.defaults.info
-			 *
-			 *  @example
-			 *    $(document).ready( function () {
-			 *      $('#example').dataTable( {
-			 *        "info": false
-			 *      } );
-			 *    } );
-			 */
-			"bInfo": true,
-		
-		
-			/**
-			 * Allows the end user to select the size of a formatted page from a select
-			 * menu (sizes are 10, 25, 50 and 100). Requires pagination (`paginate`).
-			 *  @type boolean
-			 *  @default true
-			 *
-			 *  @dtopt Features
-			 *  @name DataTable.defaults.lengthChange
-			 *
-			 *  @example
-			 *    $(document).ready( function () {
-			 *      $('#example').dataTable( {
-			 *        "lengthChange": false
-			 *      } );
-			 *    } );
-			 */
-			"bLengthChange": true,
-		
-		
-			/**
-			 * Enable or disable pagination.
-			 *  @type boolean
-			 *  @default true
-			 *
-			 *  @dtopt Features
-			 *  @name DataTable.defaults.paging
-			 *
-			 *  @example
-			 *    $(document).ready( function () {
-			 *      $('#example').dataTable( {
-			 *        "paging": false
-			 *      } );
-			 *    } );
-			 */
-			"bPaginate": true,
-		
-		
-			/**
-			 * Enable or disable the display of a 'processing' indicator when the table is
-			 * being processed (e.g. a sort). This is particularly useful for tables with
-			 * large amounts of data where it can take a noticeable amount of time to sort
-			 * the entries.
-			 *  @type boolean
-			 *  @default false
-			 *
-			 *  @dtopt Features
-			 *  @name DataTable.defaults.processing
-			 *
-			 *  @example
-			 *    $(document).ready( function () {
-			 *      $('#example').dataTable( {
-			 *        "processing": true
-			 *      } );
-			 *    } );
-			 */
-			"bProcessing": false,
-		
-		
-			/**
-			 * Retrieve the DataTables object for the given selector. Note that if the
-			 * table has already been initialised, this parameter will cause DataTables
-			 * to simply return the object that has already been set up - it will not take
-			 * account of any changes you might have made to the initialisation object
-			 * passed to DataTables (setting this parameter to true is an acknowledgement
-			 * that you understand this). `destroy` can be used to reinitialise a table if
-			 * you need.
-			 *  @type boolean
-			 *  @default false
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.retrieve
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      initTable();
-			 *      tableActions();
-			 *    } );
-			 *
-			 *    function initTable ()
-			 *    {
-			 *      return $('#example').dataTable( {
-			 *        "scrollY": "200px",
-			 *        "paginate": false,
-			 *        "retrieve": true
-			 *      } );
-			 *    }
-			 *
-			 *    function tableActions ()
-			 *    {
-			 *      var table = initTable();
-			 *      // perform API operations with oTable
-			 *    }
-			 */
-			"bRetrieve": false,
-		
-		
-			/**
-			 * When vertical (y) scrolling is enabled, DataTables will force the height of
-			 * the table's viewport to the given height at all times (useful for layout).
-			 * However, this can look odd when filtering data down to a small data set,
-			 * and the footer is left "floating" further down. This parameter (when
-			 * enabled) will cause DataTables to collapse the table's viewport down when
-			 * the result set will fit within the given Y height.
-			 *  @type boolean
-			 *  @default false
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.scrollCollapse
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "scrollY": "200",
-			 *        "scrollCollapse": true
-			 *      } );
-			 *    } );
-			 */
-			"bScrollCollapse": false,
-		
-		
-			/**
-			 * Configure DataTables to use server-side processing. Note that the
-			 * `ajax` parameter must also be given in order to give DataTables a
-			 * source to obtain the required data for each draw.
-			 *  @type boolean
-			 *  @default false
-			 *
-			 *  @dtopt Features
-			 *  @dtopt Server-side
-			 *  @name DataTable.defaults.serverSide
-			 *
-			 *  @example
-			 *    $(document).ready( function () {
-			 *      $('#example').dataTable( {
-			 *        "serverSide": true,
-			 *        "ajax": "xhr.php"
-			 *      } );
-			 *    } );
-			 */
-			"bServerSide": false,
-		
-		
-			/**
-			 * Enable or disable sorting of columns. Sorting of individual columns can be
-			 * disabled by the `sortable` option for each column.
-			 *  @type boolean
-			 *  @default true
-			 *
-			 *  @dtopt Features
-			 *  @name DataTable.defaults.ordering
-			 *
-			 *  @example
-			 *    $(document).ready( function () {
-			 *      $('#example').dataTable( {
-			 *        "ordering": false
-			 *      } );
-			 *    } );
-			 */
-			"bSort": true,
-		
-		
-			/**
-			 * Enable or display DataTables' ability to sort multiple columns at the
-			 * same time (activated by shift-click by the user).
-			 *  @type boolean
-			 *  @default true
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.orderMulti
-			 *
-			 *  @example
-			 *    // Disable multiple column sorting ability
-			 *    $(document).ready( function () {
-			 *      $('#example').dataTable( {
-			 *        "orderMulti": false
-			 *      } );
-			 *    } );
-			 */
-			"bSortMulti": true,
-		
-		
-			/**
-			 * Allows control over whether DataTables should use the top (true) unique
-			 * cell that is found for a single column, or the bottom (false - default).
-			 * This is useful when using complex headers.
-			 *  @type boolean
-			 *  @default false
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.orderCellsTop
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "orderCellsTop": true
-			 *      } );
-			 *    } );
-			 */
-			"bSortCellsTop": false,
-		
-		
-			/**
-			 * Enable or disable the addition of the classes `sorting\_1`, `sorting\_2` and
-			 * `sorting\_3` to the columns which are currently being sorted on. This is
-			 * presented as a feature switch as it can increase processing time (while
-			 * classes are removed and added) so for large data sets you might want to
-			 * turn this off.
-			 *  @type boolean
-			 *  @default true
-			 *
-			 *  @dtopt Features
-			 *  @name DataTable.defaults.orderClasses
-			 *
-			 *  @example
-			 *    $(document).ready( function () {
-			 *      $('#example').dataTable( {
-			 *        "orderClasses": false
-			 *      } );
-			 *    } );
-			 */
-			"bSortClasses": true,
-		
-		
-			/**
-			 * Enable or disable state saving. When enabled HTML5 `localStorage` will be
-			 * used to save table display information such as pagination information,
-			 * display length, filtering and sorting. As such when the end user reloads
-			 * the page the display display will match what thy had previously set up.
-			 *
-			 * Due to the use of `localStorage` the default state saving is not supported
-			 * in IE6 or 7. If state saving is required in those browsers, use
-			 * `stateSaveCallback` to provide a storage solution such as cookies.
-			 *  @type boolean
-			 *  @default false
-			 *
-			 *  @dtopt Features
-			 *  @name DataTable.defaults.stateSave
-			 *
-			 *  @example
-			 *    $(document).ready( function () {
-			 *      $('#example').dataTable( {
-			 *        "stateSave": true
-			 *      } );
-			 *    } );
-			 */
-			"bStateSave": false,
-		
-		
-			/**
-			 * This function is called when a TR element is created (and all TD child
-			 * elements have been inserted), or registered if using a DOM source, allowing
-			 * manipulation of the TR element (adding classes etc).
-			 *  @type function
-			 *  @param {node} row "TR" element for the current row
-			 *  @param {array} data Raw data array for this row
-			 *  @param {int} dataIndex The index of this row in the internal aoData array
-			 *
-			 *  @dtopt Callbacks
-			 *  @name DataTable.defaults.createdRow
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "createdRow": function( row, data, dataIndex ) {
-			 *          // Bold the grade for all 'A' grade browsers
-			 *          if ( data[4] == "A" )
-			 *          {
-			 *            $('td:eq(4)', row).html( '<b>A</b>' );
-			 *          }
-			 *        }
-			 *      } );
-			 *    } );
-			 */
-			"fnCreatedRow": null,
-		
-		
-			/**
-			 * This function is called on every 'draw' event, and allows you to
-			 * dynamically modify any aspect you want about the created DOM.
-			 *  @type function
-			 *  @param {object} settings DataTables settings object
-			 *
-			 *  @dtopt Callbacks
-			 *  @name DataTable.defaults.drawCallback
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "drawCallback": function( settings ) {
-			 *          alert( 'DataTables has redrawn the table' );
-			 *        }
-			 *      } );
-			 *    } );
-			 */
-			"fnDrawCallback": null,
-		
-		
-			/**
-			 * Identical to fnHeaderCallback() but for the table footer this function
-			 * allows you to modify the table footer on every 'draw' event.
-			 *  @type function
-			 *  @param {node} foot "TR" element for the footer
-			 *  @param {array} data Full table data (as derived from the original HTML)
-			 *  @param {int} start Index for the current display starting point in the
-			 *    display array
-			 *  @param {int} end Index for the current display ending point in the
-			 *    display array
-			 *  @param {array int} display Index array to translate the visual position
-			 *    to the full data array
-			 *
-			 *  @dtopt Callbacks
-			 *  @name DataTable.defaults.footerCallback
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "footerCallback": function( tfoot, data, start, end, display ) {
-			 *          tfoot.getElementsByTagName('th')[0].innerHTML = "Starting index is "+start;
-			 *        }
-			 *      } );
-			 *    } )
-			 */
-			"fnFooterCallback": null,
-		
-		
-			/**
-			 * When rendering large numbers in the information element for the table
-			 * (i.e. "Showing 1 to 10 of 57 entries") DataTables will render large numbers
-			 * to have a comma separator for the 'thousands' units (e.g. 1 million is
-			 * rendered as "1,000,000") to help readability for the end user. This
-			 * function will override the default method DataTables uses.
-			 *  @type function
-			 *  @member
-			 *  @param {int} toFormat number to be formatted
-			 *  @returns {string} formatted string for DataTables to show the number
-			 *
-			 *  @dtopt Callbacks
-			 *  @name DataTable.defaults.formatNumber
-			 *
-			 *  @example
-			 *    // Format a number using a single quote for the separator (note that
-			 *    // this can also be done with the language.thousands option)
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "formatNumber": function ( toFormat ) {
-			 *          return toFormat.toString().replace(
-			 *            /\B(?=(\d{3})+(?!\d))/g, "'"
-			 *          );
-			 *        };
-			 *      } );
-			 *    } );
-			 */
-			"fnFormatNumber": function ( toFormat ) {
-				return toFormat.toString().replace(
-					/\B(?=(\d{3})+(?!\d))/g,
-					this.oLanguage.sThousands
-				);
-			},
-		
-		
-			/**
-			 * This function is called on every 'draw' event, and allows you to
-			 * dynamically modify the header row. This can be used to calculate and
-			 * display useful information about the table.
-			 *  @type function
-			 *  @param {node} head "TR" element for the header
-			 *  @param {array} data Full table data (as derived from the original HTML)
-			 *  @param {int} start Index for the current display starting point in the
-			 *    display array
-			 *  @param {int} end Index for the current display ending point in the
-			 *    display array
-			 *  @param {array int} display Index array to translate the visual position
-			 *    to the full data array
-			 *
-			 *  @dtopt Callbacks
-			 *  @name DataTable.defaults.headerCallback
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "fheaderCallback": function( head, data, start, end, display ) {
-			 *          head.getElementsByTagName('th')[0].innerHTML = "Displaying "+(end-start)+" records";
-			 *        }
-			 *      } );
-			 *    } )
-			 */
-			"fnHeaderCallback": null,
-		
-		
-			/**
-			 * The information element can be used to convey information about the current
-			 * state of the table. Although the internationalisation options presented by
-			 * DataTables are quite capable of dealing with most customisations, there may
-			 * be times where you wish to customise the string further. This callback
-			 * allows you to do exactly that.
-			 *  @type function
-			 *  @param {object} oSettings DataTables settings object
-			 *  @param {int} start Starting position in data for the draw
-			 *  @param {int} end End position in data for the draw
-			 *  @param {int} max Total number of rows in the table (regardless of
-			 *    filtering)
-			 *  @param {int} total Total number of rows in the data set, after filtering
-			 *  @param {string} pre The string that DataTables has formatted using it's
-			 *    own rules
-			 *  @returns {string} The string to be displayed in the information element.
-			 *
-			 *  @dtopt Callbacks
-			 *  @name DataTable.defaults.infoCallback
-			 *
-			 *  @example
-			 *    $('#example').dataTable( {
-			 *      "infoCallback": function( settings, start, end, max, total, pre ) {
-			 *        return start +" to "+ end;
-			 *      }
-			 *    } );
-			 */
-			"fnInfoCallback": null,
-		
-		
-			/**
-			 * Called when the table has been initialised. Normally DataTables will
-			 * initialise sequentially and there will be no need for this function,
-			 * however, this does not hold true when using external language information
-			 * since that is obtained using an async XHR call.
-			 *  @type function
-			 *  @param {object} settings DataTables settings object
-			 *  @param {object} json The JSON object request from the server - only
-			 *    present if client-side Ajax sourced data is used
-			 *
-			 *  @dtopt Callbacks
-			 *  @name DataTable.defaults.initComplete
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "initComplete": function(settings, json) {
-			 *          alert( 'DataTables has finished its initialisation.' );
-			 *        }
-			 *      } );
-			 *    } )
-			 */
-			"fnInitComplete": null,
-		
-		
-			/**
-			 * Called at the very start of each table draw and can be used to cancel the
-			 * draw by returning false, any other return (including undefined) results in
-			 * the full draw occurring).
-			 *  @type function
-			 *  @param {object} settings DataTables settings object
-			 *  @returns {boolean} False will cancel the draw, anything else (including no
-			 *    return) will allow it to complete.
-			 *
-			 *  @dtopt Callbacks
-			 *  @name DataTable.defaults.preDrawCallback
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "preDrawCallback": function( settings ) {
-			 *          if ( $('#test').val() == 1 ) {
-			 *            return false;
-			 *          }
-			 *        }
-			 *      } );
-			 *    } );
-			 */
-			"fnPreDrawCallback": null,
-		
-		
-			/**
-			 * This function allows you to 'post process' each row after it have been
-			 * generated for each table draw, but before it is rendered on screen. This
-			 * function might be used for setting the row class name etc.
-			 *  @type function
-			 *  @param {node} row "TR" element for the current row
-			 *  @param {array} data Raw data array for this row
-			 *  @param {int} displayIndex The display index for the current table draw
-			 *  @param {int} displayIndexFull The index of the data in the full list of
-			 *    rows (after filtering)
-			 *
-			 *  @dtopt Callbacks
-			 *  @name DataTable.defaults.rowCallback
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "rowCallback": function( row, data, displayIndex, displayIndexFull ) {
-			 *          // Bold the grade for all 'A' grade browsers
-			 *          if ( data[4] == "A" ) {
-			 *            $('td:eq(4)', row).html( '<b>A</b>' );
-			 *          }
-			 *        }
-			 *      } );
-			 *    } );
-			 */
-			"fnRowCallback": null,
-		
-		
-			/**
-			 * __Deprecated__ The functionality provided by this parameter has now been
-			 * superseded by that provided through `ajax`, which should be used instead.
-			 *
-			 * This parameter allows you to override the default function which obtains
-			 * the data from the server so something more suitable for your application.
-			 * For example you could use POST data, or pull information from a Gears or
-			 * AIR database.
-			 *  @type function
-			 *  @member
-			 *  @param {string} source HTTP source to obtain the data from (`ajax`)
-			 *  @param {array} data A key/value pair object containing the data to send
-			 *    to the server
-			 *  @param {function} callback to be called on completion of the data get
-			 *    process that will draw the data on the page.
-			 *  @param {object} settings DataTables settings object
-			 *
-			 *  @dtopt Callbacks
-			 *  @dtopt Server-side
-			 *  @name DataTable.defaults.serverData
-			 *
-			 *  @deprecated 1.10. Please use `ajax` for this functionality now.
-			 */
-			"fnServerData": null,
-		
-		
-			/**
-			 * __Deprecated__ The functionality provided by this parameter has now been
-			 * superseded by that provided through `ajax`, which should be used instead.
-			 *
-			 *  It is often useful to send extra data to the server when making an Ajax
-			 * request - for example custom filtering information, and this callback
-			 * function makes it trivial to send extra information to the server. The
-			 * passed in parameter is the data set that has been constructed by
-			 * DataTables, and you can add to this or modify it as you require.
-			 *  @type function
-			 *  @param {array} data Data array (array of objects which are name/value
-			 *    pairs) that has been constructed by DataTables and will be sent to the
-			 *    server. In the case of Ajax sourced data with server-side processing
-			 *    this will be an empty array, for server-side processing there will be a
-			 *    significant number of parameters!
-			 *  @returns {undefined} Ensure that you modify the data array passed in,
-			 *    as this is passed by reference.
-			 *
-			 *  @dtopt Callbacks
-			 *  @dtopt Server-side
-			 *  @name DataTable.defaults.serverParams
-			 *
-			 *  @deprecated 1.10. Please use `ajax` for this functionality now.
-			 */
-			"fnServerParams": null,
-		
-		
-			/**
-			 * Load the table state. With this function you can define from where, and how, the
-			 * state of a table is loaded. By default DataTables will load from `localStorage`
-			 * but you might wish to use a server-side database or cookies.
-			 *  @type function
-			 *  @member
-			 *  @param {object} settings DataTables settings object
-			 *  @param {object} callback Callback that can be executed when done. It
-			 *    should be passed the loaded state object.
-			 *  @return {object} The DataTables state object to be loaded
-			 *
-			 *  @dtopt Callbacks
-			 *  @name DataTable.defaults.stateLoadCallback
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "stateSave": true,
-			 *        "stateLoadCallback": function (settings, callback) {
-			 *          $.ajax( {
-			 *            "url": "/state_load",
-			 *            "dataType": "json",
-			 *            "success": function (json) {
-			 *              callback( json );
-			 *            }
-			 *          } );
-			 *        }
-			 *      } );
-			 *    } );
-			 */
-			"fnStateLoadCallback": function ( settings ) {
-				try {
-					return JSON.parse(
-						(settings.iStateDuration === -1 ? sessionStorage : localStorage).getItem(
-							'DataTables_'+settings.sInstance+'_'+location.pathname
-						)
-					);
-				} catch (e) {
-					return {};
-				}
-			},
-		
-		
-			/**
-			 * Callback which allows modification of the saved state prior to loading that state.
-			 * This callback is called when the table is loading state from the stored data, but
-			 * prior to the settings object being modified by the saved state. Note that for
-			 * plug-in authors, you should use the `stateLoadParams` event to load parameters for
-			 * a plug-in.
-			 *  @type function
-			 *  @param {object} settings DataTables settings object
-			 *  @param {object} data The state object that is to be loaded
-			 *
-			 *  @dtopt Callbacks
-			 *  @name DataTable.defaults.stateLoadParams
-			 *
-			 *  @example
-			 *    // Remove a saved filter, so filtering is never loaded
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "stateSave": true,
-			 *        "stateLoadParams": function (settings, data) {
-			 *          data.oSearch.sSearch = "";
-			 *        }
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Disallow state loading by returning false
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "stateSave": true,
-			 *        "stateLoadParams": function (settings, data) {
-			 *          return false;
-			 *        }
-			 *      } );
-			 *    } );
-			 */
-			"fnStateLoadParams": null,
-		
-		
-			/**
-			 * Callback that is called when the state has been loaded from the state saving method
-			 * and the DataTables settings object has been modified as a result of the loaded state.
-			 *  @type function
-			 *  @param {object} settings DataTables settings object
-			 *  @param {object} data The state object that was loaded
-			 *
-			 *  @dtopt Callbacks
-			 *  @name DataTable.defaults.stateLoaded
-			 *
-			 *  @example
-			 *    // Show an alert with the filtering value that was saved
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "stateSave": true,
-			 *        "stateLoaded": function (settings, data) {
-			 *          alert( 'Saved filter was: '+data.oSearch.sSearch );
-			 *        }
-			 *      } );
-			 *    } );
-			 */
-			"fnStateLoaded": null,
-		
-		
-			/**
-			 * Save the table state. This function allows you to define where and how the state
-			 * information for the table is stored By default DataTables will use `localStorage`
-			 * but you might wish to use a server-side database or cookies.
-			 *  @type function
-			 *  @member
-			 *  @param {object} settings DataTables settings object
-			 *  @param {object} data The state object to be saved
-			 *
-			 *  @dtopt Callbacks
-			 *  @name DataTable.defaults.stateSaveCallback
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "stateSave": true,
-			 *        "stateSaveCallback": function (settings, data) {
-			 *          // Send an Ajax request to the server with the state object
-			 *          $.ajax( {
-			 *            "url": "/state_save",
-			 *            "data": data,
-			 *            "dataType": "json",
-			 *            "method": "POST"
-			 *            "success": function () {}
-			 *          } );
-			 *        }
-			 *      } );
-			 *    } );
-			 */
-			"fnStateSaveCallback": function ( settings, data ) {
-				try {
-					(settings.iStateDuration === -1 ? sessionStorage : localStorage).setItem(
-						'DataTables_'+settings.sInstance+'_'+location.pathname,
-						JSON.stringify( data )
-					);
-				} catch (e) {}
-			},
-		
-		
-			/**
-			 * Callback which allows modification of the state to be saved. Called when the table
-			 * has changed state a new state save is required. This method allows modification of
-			 * the state saving object prior to actually doing the save, including addition or
-			 * other state properties or modification. Note that for plug-in authors, you should
-			 * use the `stateSaveParams` event to save parameters for a plug-in.
-			 *  @type function
-			 *  @param {object} settings DataTables settings object
-			 *  @param {object} data The state object to be saved
-			 *
-			 *  @dtopt Callbacks
-			 *  @name DataTable.defaults.stateSaveParams
-			 *
-			 *  @example
-			 *    // Remove a saved filter, so filtering is never saved
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "stateSave": true,
-			 *        "stateSaveParams": function (settings, data) {
-			 *          data.oSearch.sSearch = "";
-			 *        }
-			 *      } );
-			 *    } );
-			 */
-			"fnStateSaveParams": null,
-		
-		
-			/**
-			 * Duration for which the saved state information is considered valid. After this period
-			 * has elapsed the state will be returned to the default.
-			 * Value is given in seconds.
-			 *  @type int
-			 *  @default 7200 <i>(2 hours)</i>
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.stateDuration
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "stateDuration": 60*60*24; // 1 day
-			 *      } );
-			 *    } )
-			 */
-			"iStateDuration": 7200,
-		
-		
-			/**
-			 * When enabled DataTables will not make a request to the server for the first
-			 * page draw - rather it will use the data already on the page (no sorting etc
-			 * will be applied to it), thus saving on an XHR at load time. `deferLoading`
-			 * is used to indicate that deferred loading is required, but it is also used
-			 * to tell DataTables how many records there are in the full table (allowing
-			 * the information element and pagination to be displayed correctly). In the case
-			 * where a filtering is applied to the table on initial load, this can be
-			 * indicated by giving the parameter as an array, where the first element is
-			 * the number of records available after filtering and the second element is the
-			 * number of records without filtering (allowing the table information element
-			 * to be shown correctly).
-			 *  @type int | array
-			 *  @default null
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.deferLoading
-			 *
-			 *  @example
-			 *    // 57 records available in the table, no filtering applied
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "serverSide": true,
-			 *        "ajax": "scripts/server_processing.php",
-			 *        "deferLoading": 57
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // 57 records after filtering, 100 without filtering (an initial filter applied)
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "serverSide": true,
-			 *        "ajax": "scripts/server_processing.php",
-			 *        "deferLoading": [ 57, 100 ],
-			 *        "search": {
-			 *          "search": "my_filter"
-			 *        }
-			 *      } );
-			 *    } );
-			 */
-			"iDeferLoading": null,
-		
-		
-			/**
-			 * Number of rows to display on a single page when using pagination. If
-			 * feature enabled (`lengthChange`) then the end user will be able to override
-			 * this to a custom setting using a pop-up menu.
-			 *  @type int
-			 *  @default 10
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.pageLength
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "pageLength": 50
-			 *      } );
-			 *    } )
-			 */
-			"iDisplayLength": 10,
-		
-		
-			/**
-			 * Define the starting point for data display when using DataTables with
-			 * pagination. Note that this parameter is the number of records, rather than
-			 * the page number, so if you have 10 records per page and want to start on
-			 * the third page, it should be "20".
-			 *  @type int
-			 *  @default 0
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.displayStart
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "displayStart": 20
-			 *      } );
-			 *    } )
-			 */
-			"iDisplayStart": 0,
-		
-		
-			/**
-			 * By default DataTables allows keyboard navigation of the table (sorting, paging,
-			 * and filtering) by adding a `tabindex` attribute to the required elements. This
-			 * allows you to tab through the controls and press the enter key to activate them.
-			 * The tabindex is default 0, meaning that the tab follows the flow of the document.
-			 * You can overrule this using this parameter if you wish. Use a value of -1 to
-			 * disable built-in keyboard navigation.
-			 *  @type int
-			 *  @default 0
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.tabIndex
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "tabIndex": 1
-			 *      } );
-			 *    } );
-			 */
-			"iTabIndex": 0,
-		
-		
-			/**
-			 * Classes that DataTables assigns to the various components and features
-			 * that it adds to the HTML table. This allows classes to be configured
-			 * during initialisation in addition to through the static
-			 * {@link DataTable.ext.oStdClasses} object).
-			 *  @namespace
-			 *  @name DataTable.defaults.classes
-			 */
-			"oClasses": {},
-		
-		
-			/**
-			 * All strings that DataTables uses in the user interface that it creates
-			 * are defined in this object, allowing you to modified them individually or
-			 * completely replace them all as required.
-			 *  @namespace
-			 *  @name DataTable.defaults.language
-			 */
-			"oLanguage": {
-				/**
-				 * Strings that are used for WAI-ARIA labels and controls only (these are not
-				 * actually visible on the page, but will be read by screenreaders, and thus
-				 * must be internationalised as well).
-				 *  @namespace
-				 *  @name DataTable.defaults.language.aria
-				 */
-				"oAria": {
-					/**
-					 * ARIA label that is added to the table headers when the column may be
-					 * sorted ascending by activing the column (click or return when focused).
-					 * Note that the column header is prefixed to this string.
-					 *  @type string
-					 *  @default : activate to sort column ascending
-					 *
-					 *  @dtopt Language
-					 *  @name DataTable.defaults.language.aria.sortAscending
-					 *
-					 *  @example
-					 *    $(document).ready( function() {
-					 *      $('#example').dataTable( {
-					 *        "language": {
-					 *          "aria": {
-					 *            "sortAscending": " - click/return to sort ascending"
-					 *          }
-					 *        }
-					 *      } );
-					 *    } );
-					 */
-					"sSortAscending": ": activate to sort column ascending",
-		
-					/**
-					 * ARIA label that is added to the table headers when the column may be
-					 * sorted descending by activing the column (click or return when focused).
-					 * Note that the column header is prefixed to this string.
-					 *  @type string
-					 *  @default : activate to sort column ascending
-					 *
-					 *  @dtopt Language
-					 *  @name DataTable.defaults.language.aria.sortDescending
-					 *
-					 *  @example
-					 *    $(document).ready( function() {
-					 *      $('#example').dataTable( {
-					 *        "language": {
-					 *          "aria": {
-					 *            "sortDescending": " - click/return to sort descending"
-					 *          }
-					 *        }
-					 *      } );
-					 *    } );
-					 */
-					"sSortDescending": ": activate to sort column descending"
-				},
-		
-				/**
-				 * Pagination string used by DataTables for the built-in pagination
-				 * control types.
-				 *  @namespace
-				 *  @name DataTable.defaults.language.paginate
-				 */
-				"oPaginate": {
-					/**
-					 * Text to use when using the 'full_numbers' type of pagination for the
-					 * button to take the user to the first page.
-					 *  @type string
-					 *  @default First
-					 *
-					 *  @dtopt Language
-					 *  @name DataTable.defaults.language.paginate.first
-					 *
-					 *  @example
-					 *    $(document).ready( function() {
-					 *      $('#example').dataTable( {
-					 *        "language": {
-					 *          "paginate": {
-					 *            "first": "First page"
-					 *          }
-					 *        }
-					 *      } );
-					 *    } );
-					 */
-					"sFirst": "First",
-		
-		
-					/**
-					 * Text to use when using the 'full_numbers' type of pagination for the
-					 * button to take the user to the last page.
-					 *  @type string
-					 *  @default Last
-					 *
-					 *  @dtopt Language
-					 *  @name DataTable.defaults.language.paginate.last
-					 *
-					 *  @example
-					 *    $(document).ready( function() {
-					 *      $('#example').dataTable( {
-					 *        "language": {
-					 *          "paginate": {
-					 *            "last": "Last page"
-					 *          }
-					 *        }
-					 *      } );
-					 *    } );
-					 */
-					"sLast": "Last",
-		
-		
-					/**
-					 * Text to use for the 'next' pagination button (to take the user to the
-					 * next page).
-					 *  @type string
-					 *  @default Next
-					 *
-					 *  @dtopt Language
-					 *  @name DataTable.defaults.language.paginate.next
-					 *
-					 *  @example
-					 *    $(document).ready( function() {
-					 *      $('#example').dataTable( {
-					 *        "language": {
-					 *          "paginate": {
-					 *            "next": "Next page"
-					 *          }
-					 *        }
-					 *      } );
-					 *    } );
-					 */
-					"sNext": "Next",
-		
-		
-					/**
-					 * Text to use for the 'previous' pagination button (to take the user to
-					 * the previous page).
-					 *  @type string
-					 *  @default Previous
-					 *
-					 *  @dtopt Language
-					 *  @name DataTable.defaults.language.paginate.previous
-					 *
-					 *  @example
-					 *    $(document).ready( function() {
-					 *      $('#example').dataTable( {
-					 *        "language": {
-					 *          "paginate": {
-					 *            "previous": "Previous page"
-					 *          }
-					 *        }
-					 *      } );
-					 *    } );
-					 */
-					"sPrevious": "Previous"
-				},
-		
-				/**
-				 * This string is shown in preference to `zeroRecords` when the table is
-				 * empty of data (regardless of filtering). Note that this is an optional
-				 * parameter - if it is not given, the value of `zeroRecords` will be used
-				 * instead (either the default or given value).
-				 *  @type string
-				 *  @default No data available in table
-				 *
-				 *  @dtopt Language
-				 *  @name DataTable.defaults.language.emptyTable
-				 *
-				 *  @example
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "emptyTable": "No data available in table"
-				 *        }
-				 *      } );
-				 *    } );
-				 */
-				"sEmptyTable": "No data available in table",
-		
-		
-				/**
-				 * This string gives information to the end user about the information
-				 * that is current on display on the page. The following tokens can be
-				 * used in the string and will be dynamically replaced as the table
-				 * display updates. This tokens can be placed anywhere in the string, or
-				 * removed as needed by the language requires:
-				 *
-				 * * `\_START\_` - Display index of the first record on the current page
-				 * * `\_END\_` - Display index of the last record on the current page
-				 * * `\_TOTAL\_` - Number of records in the table after filtering
-				 * * `\_MAX\_` - Number of records in the table without filtering
-				 * * `\_PAGE\_` - Current page number
-				 * * `\_PAGES\_` - Total number of pages of data in the table
-				 *
-				 *  @type string
-				 *  @default Showing _START_ to _END_ of _TOTAL_ entries
-				 *
-				 *  @dtopt Language
-				 *  @name DataTable.defaults.language.info
-				 *
-				 *  @example
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "info": "Showing page _PAGE_ of _PAGES_"
-				 *        }
-				 *      } );
-				 *    } );
-				 */
-				"sInfo": "Showing _START_ to _END_ of _TOTAL_ entries",
-		
-		
-				/**
-				 * Display information string for when the table is empty. Typically the
-				 * format of this string should match `info`.
-				 *  @type string
-				 *  @default Showing 0 to 0 of 0 entries
-				 *
-				 *  @dtopt Language
-				 *  @name DataTable.defaults.language.infoEmpty
-				 *
-				 *  @example
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "infoEmpty": "No entries to show"
-				 *        }
-				 *      } );
-				 *    } );
-				 */
-				"sInfoEmpty": "Showing 0 to 0 of 0 entries",
-		
-		
-				/**
-				 * When a user filters the information in a table, this string is appended
-				 * to the information (`info`) to give an idea of how strong the filtering
-				 * is. The variable _MAX_ is dynamically updated.
-				 *  @type string
-				 *  @default (filtered from _MAX_ total entries)
-				 *
-				 *  @dtopt Language
-				 *  @name DataTable.defaults.language.infoFiltered
-				 *
-				 *  @example
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "infoFiltered": " - filtering from _MAX_ records"
-				 *        }
-				 *      } );
-				 *    } );
-				 */
-				"sInfoFiltered": "(filtered from _MAX_ total entries)",
-		
-		
-				/**
-				 * If can be useful to append extra information to the info string at times,
-				 * and this variable does exactly that. This information will be appended to
-				 * the `info` (`infoEmpty` and `infoFiltered` in whatever combination they are
-				 * being used) at all times.
-				 *  @type string
-				 *  @default <i>Empty string</i>
-				 *
-				 *  @dtopt Language
-				 *  @name DataTable.defaults.language.infoPostFix
-				 *
-				 *  @example
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "infoPostFix": "All records shown are derived from real information."
-				 *        }
-				 *      } );
-				 *    } );
-				 */
-				"sInfoPostFix": "",
-		
-		
-				/**
-				 * This decimal place operator is a little different from the other
-				 * language options since DataTables doesn't output floating point
-				 * numbers, so it won't ever use this for display of a number. Rather,
-				 * what this parameter does is modify the sort methods of the table so
-				 * that numbers which are in a format which has a character other than
-				 * a period (`.`) as a decimal place will be sorted numerically.
-				 *
-				 * Note that numbers with different decimal places cannot be shown in
-				 * the same table and still be sortable, the table must be consistent.
-				 * However, multiple different tables on the page can use different
-				 * decimal place characters.
-				 *  @type string
-				 *  @default 
-				 *
-				 *  @dtopt Language
-				 *  @name DataTable.defaults.language.decimal
-				 *
-				 *  @example
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "decimal": ","
-				 *          "thousands": "."
-				 *        }
-				 *      } );
-				 *    } );
-				 */
-				"sDecimal": "",
-		
-		
-				/**
-				 * DataTables has a build in number formatter (`formatNumber`) which is
-				 * used to format large numbers that are used in the table information.
-				 * By default a comma is used, but this can be trivially changed to any
-				 * character you wish with this parameter.
-				 *  @type string
-				 *  @default ,
-				 *
-				 *  @dtopt Language
-				 *  @name DataTable.defaults.language.thousands
-				 *
-				 *  @example
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "thousands": "'"
-				 *        }
-				 *      } );
-				 *    } );
-				 */
-				"sThousands": ",",
-		
-		
-				/**
-				 * Detail the action that will be taken when the drop down menu for the
-				 * pagination length option is changed. The '_MENU_' variable is replaced
-				 * with a default select list of 10, 25, 50 and 100, and can be replaced
-				 * with a custom select box if required.
-				 *  @type string
-				 *  @default Show _MENU_ entries
-				 *
-				 *  @dtopt Language
-				 *  @name DataTable.defaults.language.lengthMenu
-				 *
-				 *  @example
-				 *    // Language change only
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "lengthMenu": "Display _MENU_ records"
-				 *        }
-				 *      } );
-				 *    } );
-				 *
-				 *  @example
-				 *    // Language and options change
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "lengthMenu": 'Display <select>'+
-				 *            '<option value="10">10</option>'+
-				 *            '<option value="20">20</option>'+
-				 *            '<option value="30">30</option>'+
-				 *            '<option value="40">40</option>'+
-				 *            '<option value="50">50</option>'+
-				 *            '<option value="-1">All</option>'+
-				 *            '</select> records'
-				 *        }
-				 *      } );
-				 *    } );
-				 */
-				"sLengthMenu": "Show _MENU_ entries",
-		
-		
-				/**
-				 * When using Ajax sourced data and during the first draw when DataTables is
-				 * gathering the data, this message is shown in an empty row in the table to
-				 * indicate to the end user the the data is being loaded. Note that this
-				 * parameter is not used when loading data by server-side processing, just
-				 * Ajax sourced data with client-side processing.
-				 *  @type string
-				 *  @default Loading...
-				 *
-				 *  @dtopt Language
-				 *  @name DataTable.defaults.language.loadingRecords
-				 *
-				 *  @example
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "loadingRecords": "Please wait - loading..."
-				 *        }
-				 *      } );
-				 *    } );
-				 */
-				"sLoadingRecords": "Loading...",
-		
-		
-				/**
-				 * Text which is displayed when the table is processing a user action
-				 * (usually a sort command or similar).
-				 *  @type string
-				 *  @default Processing...
-				 *
-				 *  @dtopt Language
-				 *  @name DataTable.defaults.language.processing
-				 *
-				 *  @example
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "processing": "DataTables is currently busy"
-				 *        }
-				 *      } );
-				 *    } );
-				 */
-				"sProcessing": "Processing...",
-		
-		
-				/**
-				 * Details the actions that will be taken when the user types into the
-				 * filtering input text box. The variable "_INPUT_", if used in the string,
-				 * is replaced with the HTML text box for the filtering input allowing
-				 * control over where it appears in the string. If "_INPUT_" is not given
-				 * then the input box is appended to the string automatically.
-				 *  @type string
-				 *  @default Search:
-				 *
-				 *  @dtopt Language
-				 *  @name DataTable.defaults.language.search
-				 *
-				 *  @example
-				 *    // Input text box will be appended at the end automatically
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "search": "Filter records:"
-				 *        }
-				 *      } );
-				 *    } );
-				 *
-				 *  @example
-				 *    // Specify where the filter should appear
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "search": "Apply filter _INPUT_ to table"
-				 *        }
-				 *      } );
-				 *    } );
-				 */
-				"sSearch": "Search:",
-		
-		
-				/**
-				 * Assign a `placeholder` attribute to the search `input` element
-				 *  @type string
-				 *  @default 
-				 *
-				 *  @dtopt Language
-				 *  @name DataTable.defaults.language.searchPlaceholder
-				 */
-				"sSearchPlaceholder": "",
-		
-		
-				/**
-				 * All of the language information can be stored in a file on the
-				 * server-side, which DataTables will look up if this parameter is passed.
-				 * It must store the URL of the language file, which is in a JSON format,
-				 * and the object has the same properties as the oLanguage object in the
-				 * initialiser object (i.e. the above parameters). Please refer to one of
-				 * the example language files to see how this works in action.
-				 *  @type string
-				 *  @default <i>Empty string - i.e. disabled</i>
-				 *
-				 *  @dtopt Language
-				 *  @name DataTable.defaults.language.url
-				 *
-				 *  @example
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "url": "http://www.sprymedia.co.uk/dataTables/lang.txt"
-				 *        }
-				 *      } );
-				 *    } );
-				 */
-				"sUrl": "",
-		
-		
-				/**
-				 * Text shown inside the table records when the is no information to be
-				 * displayed after filtering. `emptyTable` is shown when there is simply no
-				 * information in the table at all (regardless of filtering).
-				 *  @type string
-				 *  @default No matching records found
-				 *
-				 *  @dtopt Language
-				 *  @name DataTable.defaults.language.zeroRecords
-				 *
-				 *  @example
-				 *    $(document).ready( function() {
-				 *      $('#example').dataTable( {
-				 *        "language": {
-				 *          "zeroRecords": "No records to display"
-				 *        }
-				 *      } );
-				 *    } );
-				 */
-				"sZeroRecords": "No matching records found"
-			},
-		
-		
-			/**
-			 * This parameter allows you to have define the global filtering state at
-			 * initialisation time. As an object the `search` parameter must be
-			 * defined, but all other parameters are optional. When `regex` is true,
-			 * the search string will be treated as a regular expression, when false
-			 * (default) it will be treated as a straight string. When `smart`
-			 * DataTables will use it's smart filtering methods (to word match at
-			 * any point in the data), when false this will not be done.
-			 *  @namespace
-			 *  @extends DataTable.models.oSearch
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.search
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "search": {"search": "Initial search"}
-			 *      } );
-			 *    } )
-			 */
-			"oSearch": $.extend( {}, DataTable.models.oSearch ),
-		
-		
-			/**
-			 * __Deprecated__ The functionality provided by this parameter has now been
-			 * superseded by that provided through `ajax`, which should be used instead.
-			 *
-			 * By default DataTables will look for the property `data` (or `aaData` for
-			 * compatibility with DataTables 1.9-) when obtaining data from an Ajax
-			 * source or for server-side processing - this parameter allows that
-			 * property to be changed. You can use Javascript dotted object notation to
-			 * get a data source for multiple levels of nesting.
-			 *  @type string
-			 *  @default data
-			 *
-			 *  @dtopt Options
-			 *  @dtopt Server-side
-			 *  @name DataTable.defaults.ajaxDataProp
-			 *
-			 *  @deprecated 1.10. Please use `ajax` for this functionality now.
-			 */
-			"sAjaxDataProp": "data",
-		
-		
-			/**
-			 * __Deprecated__ The functionality provided by this parameter has now been
-			 * superseded by that provided through `ajax`, which should be used instead.
-			 *
-			 * You can instruct DataTables to load data from an external
-			 * source using this parameter (use aData if you want to pass data in you
-			 * already have). Simply provide a url a JSON object can be obtained from.
-			 *  @type string
-			 *  @default null
-			 *
-			 *  @dtopt Options
-			 *  @dtopt Server-side
-			 *  @name DataTable.defaults.ajaxSource
-			 *
-			 *  @deprecated 1.10. Please use `ajax` for this functionality now.
-			 */
-			"sAjaxSource": null,
-		
-		
-			/**
-			 * This initialisation variable allows you to specify exactly where in the
-			 * DOM you want DataTables to inject the various controls it adds to the page
-			 * (for example you might want the pagination controls at the top of the
-			 * table). DIV elements (with or without a custom class) can also be added to
-			 * aid styling. The follow syntax is used:
-			 *   <ul>
-			 *     <li>The following options are allowed:
-			 *       <ul>
-			 *         <li>'l' - Length changing</li>
-			 *         <li>'f' - Filtering input</li>
-			 *         <li>'t' - The table!</li>
-			 *         <li>'i' - Information</li>
-			 *         <li>'p' - Pagination</li>
-			 *         <li>'r' - pRocessing</li>
-			 *       </ul>
-			 *     </li>
-			 *     <li>The following constants are allowed:
-			 *       <ul>
-			 *         <li>'H' - jQueryUI theme "header" classes ('fg-toolbar ui-widget-header ui-corner-tl ui-corner-tr ui-helper-clearfix')</li>
-			 *         <li>'F' - jQueryUI theme "footer" classes ('fg-toolbar ui-widget-header ui-corner-bl ui-corner-br ui-helper-clearfix')</li>
-			 *       </ul>
-			 *     </li>
-			 *     <li>The following syntax is expected:
-			 *       <ul>
-			 *         <li>'&lt;' and '&gt;' - div elements</li>
-			 *         <li>'&lt;"class" and '&gt;' - div with a class</li>
-			 *         <li>'&lt;"#id" and '&gt;' - div with an ID</li>
-			 *       </ul>
-			 *     </li>
-			 *     <li>Examples:
-			 *       <ul>
-			 *         <li>'&lt;"wrapper"flipt&gt;'</li>
-			 *         <li>'&lt;lf&lt;t&gt;ip&gt;'</li>
-			 *       </ul>
-			 *     </li>
-			 *   </ul>
-			 *  @type string
-			 *  @default lfrtip <i>(when `jQueryUI` is false)</i> <b>or</b>
-			 *    <"H"lfr>t<"F"ip> <i>(when `jQueryUI` is true)</i>
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.dom
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "dom": '&lt;"top"i&gt;rt&lt;"bottom"flp&gt;&lt;"clear"&gt;'
-			 *      } );
-			 *    } );
-			 */
-			"sDom": "lfrtip",
-		
-		
-			/**
-			 * Search delay option. This will throttle full table searches that use the
-			 * DataTables provided search input element (it does not effect calls to
-			 * `dt-api search()`, providing a delay before the search is made.
-			 *  @type integer
-			 *  @default 0
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.searchDelay
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "searchDelay": 200
-			 *      } );
-			 *    } )
-			 */
-			"searchDelay": null,
-		
-		
-			/**
-			 * DataTables features six different built-in options for the buttons to
-			 * display for pagination control:
-			 *
-			 * * `numbers` - Page number buttons only
-			 * * `simple` - 'Previous' and 'Next' buttons only
-			 * * 'simple_numbers` - 'Previous' and 'Next' buttons, plus page numbers
-			 * * `full` - 'First', 'Previous', 'Next' and 'Last' buttons
-			 * * `full_numbers` - 'First', 'Previous', 'Next' and 'Last' buttons, plus page numbers
-			 * * `first_last_numbers` - 'First' and 'Last' buttons, plus page numbers
-			 *  
-			 * Further methods can be added using {@link DataTable.ext.oPagination}.
-			 *  @type string
-			 *  @default simple_numbers
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.pagingType
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "pagingType": "full_numbers"
-			 *      } );
-			 *    } )
-			 */
-			"sPaginationType": "simple_numbers",
-		
-		
-			/**
-			 * Enable horizontal scrolling. When a table is too wide to fit into a
-			 * certain layout, or you have a large number of columns in the table, you
-			 * can enable x-scrolling to show the table in a viewport, which can be
-			 * scrolled. This property can be `true` which will allow the table to
-			 * scroll horizontally when needed, or any CSS unit, or a number (in which
-			 * case it will be treated as a pixel measurement). Setting as simply `true`
-			 * is recommended.
-			 *  @type boolean|string
-			 *  @default <i>blank string - i.e. disabled</i>
-			 *
-			 *  @dtopt Features
-			 *  @name DataTable.defaults.scrollX
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "scrollX": true,
-			 *        "scrollCollapse": true
-			 *      } );
-			 *    } );
-			 */
-			"sScrollX": "",
-		
-		
-			/**
-			 * This property can be used to force a DataTable to use more width than it
-			 * might otherwise do when x-scrolling is enabled. For example if you have a
-			 * table which requires to be well spaced, this parameter is useful for
-			 * "over-sizing" the table, and thus forcing scrolling. This property can by
-			 * any CSS unit, or a number (in which case it will be treated as a pixel
-			 * measurement).
-			 *  @type string
-			 *  @default <i>blank string - i.e. disabled</i>
-			 *
-			 *  @dtopt Options
-			 *  @name DataTable.defaults.scrollXInner
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "scrollX": "100%",
-			 *        "scrollXInner": "110%"
-			 *      } );
-			 *    } );
-			 */
-			"sScrollXInner": "",
-		
-		
-			/**
-			 * Enable vertical scrolling. Vertical scrolling will constrain the DataTable
-			 * to the given height, and enable scrolling for any data which overflows the
-			 * current viewport. This can be used as an alternative to paging to display
-			 * a lot of data in a small area (although paging and scrolling can both be
-			 * enabled at the same time). This property can be any CSS unit, or a number
-			 * (in which case it will be treated as a pixel measurement).
-			 *  @type string
-			 *  @default <i>blank string - i.e. disabled</i>
-			 *
-			 *  @dtopt Features
-			 *  @name DataTable.defaults.scrollY
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "scrollY": "200px",
-			 *        "paginate": false
-			 *      } );
-			 *    } );
-			 */
-			"sScrollY": "",
-		
-		
-			/**
-			 * __Deprecated__ The functionality provided by this parameter has now been
-			 * superseded by that provided through `ajax`, which should be used instead.
-			 *
-			 * Set the HTTP method that is used to make the Ajax call for server-side
-			 * processing or Ajax sourced data.
-			 *  @type string
-			 *  @default GET
-			 *
-			 *  @dtopt Options
-			 *  @dtopt Server-side
-			 *  @name DataTable.defaults.serverMethod
-			 *
-			 *  @deprecated 1.10. Please use `ajax` for this functionality now.
-			 */
-			"sServerMethod": "GET",
-		
-		
-			/**
-			 * DataTables makes use of renderers when displaying HTML elements for
-			 * a table. These renderers can be added or modified by plug-ins to
-			 * generate suitable mark-up for a site. For example the Bootstrap
-			 * integration plug-in for DataTables uses a paging button renderer to
-			 * display pagination buttons in the mark-up required by Bootstrap.
-			 *
-			 * For further information about the renderers available see
-			 * DataTable.ext.renderer
-			 *  @type string|object
-			 *  @default null
-			 *
-			 *  @name DataTable.defaults.renderer
-			 *
-			 */
-			"renderer": null,
-		
-		
-			/**
-			 * Set the data property name that DataTables should use to get a row's id
-			 * to set as the `id` property in the node.
-			 *  @type string
-			 *  @default DT_RowId
-			 *
-			 *  @name DataTable.defaults.rowId
-			 */
-			"rowId": "DT_RowId"
-		};
-		
-		_fnHungarianMap( DataTable.defaults );
-		
-		
-		
-		/*
-		 * Developer note - See note in model.defaults.js about the use of Hungarian
-		 * notation and camel case.
-		 */
-		
+		"_aData": [],
+	
 		/**
-		 * Column options that can be given to DataTables at initialisation time.
-		 *  @namespace
+		 * Sorting data cache - this array is ostensibly the same length as the
+		 * number of columns (although each index is generated only as it is
+		 * needed), and holds the data that is used for sorting each column in the
+		 * row. We do this cache generation at the start of the sort in order that
+		 * the formatting of the sort data need be done only once for each cell
+		 * per sort. This array should not be read from or written to by anything
+		 * other than the master sorting methods.
+		 *  @type array
+		 *  @default null
+		 *  @private
 		 */
-		DataTable.defaults.column = {
-			/**
-			 * Define which column(s) an order will occur on for this column. This
-			 * allows a column's ordering to take multiple columns into account when
-			 * doing a sort or use the data from a different column. For example first
-			 * name / last name columns make sense to do a multi-column sort over the
-			 * two columns.
-			 *  @type array|int
-			 *  @default null <i>Takes the value of the column index automatically</i>
-			 *
-			 *  @name DataTable.defaults.column.orderData
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Using `columnDefs`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [
-			 *          { "orderData": [ 0, 1 ], "targets": [ 0 ] },
-			 *          { "orderData": [ 1, 0 ], "targets": [ 1 ] },
-			 *          { "orderData": 2, "targets": [ 2 ] }
-			 *        ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using `columns`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columns": [
-			 *          { "orderData": [ 0, 1 ] },
-			 *          { "orderData": [ 1, 0 ] },
-			 *          { "orderData": 2 },
-			 *          null,
-			 *          null
-			 *        ]
-			 *      } );
-			 *    } );
-			 */
-			"aDataSort": null,
-			"iDataSort": -1,
-		
-		
-			/**
-			 * You can control the default ordering direction, and even alter the
-			 * behaviour of the sort handler (i.e. only allow ascending ordering etc)
-			 * using this parameter.
-			 *  @type array
-			 *  @default [ 'asc', 'desc' ]
-			 *
-			 *  @name DataTable.defaults.column.orderSequence
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Using `columnDefs`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [
-			 *          { "orderSequence": [ "asc" ], "targets": [ 1 ] },
-			 *          { "orderSequence": [ "desc", "asc", "asc" ], "targets": [ 2 ] },
-			 *          { "orderSequence": [ "desc" ], "targets": [ 3 ] }
-			 *        ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using `columns`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columns": [
-			 *          null,
-			 *          { "orderSequence": [ "asc" ] },
-			 *          { "orderSequence": [ "desc", "asc", "asc" ] },
-			 *          { "orderSequence": [ "desc" ] },
-			 *          null
-			 *        ]
-			 *      } );
-			 *    } );
-			 */
-			"asSorting": [ 'asc', 'desc' ],
-		
-		
-			/**
-			 * Enable or disable filtering on the data in this column.
-			 *  @type boolean
-			 *  @default true
-			 *
-			 *  @name DataTable.defaults.column.searchable
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Using `columnDefs`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [
-			 *          { "searchable": false, "targets": [ 0 ] }
-			 *        ] } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using `columns`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columns": [
-			 *          { "searchable": false },
-			 *          null,
-			 *          null,
-			 *          null,
-			 *          null
-			 *        ] } );
-			 *    } );
-			 */
-			"bSearchable": true,
-		
-		
-			/**
-			 * Enable or disable ordering on this column.
-			 *  @type boolean
-			 *  @default true
-			 *
-			 *  @name DataTable.defaults.column.orderable
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Using `columnDefs`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [
-			 *          { "orderable": false, "targets": [ 0 ] }
-			 *        ] } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using `columns`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columns": [
-			 *          { "orderable": false },
-			 *          null,
-			 *          null,
-			 *          null,
-			 *          null
-			 *        ] } );
-			 *    } );
-			 */
-			"bSortable": true,
-		
-		
-			/**
-			 * Enable or disable the display of this column.
-			 *  @type boolean
-			 *  @default true
-			 *
-			 *  @name DataTable.defaults.column.visible
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Using `columnDefs`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [
-			 *          { "visible": false, "targets": [ 0 ] }
-			 *        ] } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using `columns`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columns": [
-			 *          { "visible": false },
-			 *          null,
-			 *          null,
-			 *          null,
-			 *          null
-			 *        ] } );
-			 *    } );
-			 */
-			"bVisible": true,
-		
-		
-			/**
-			 * Developer definable function that is called whenever a cell is created (Ajax source,
-			 * etc) or processed for input (DOM source). This can be used as a compliment to mRender
-			 * allowing you to modify the DOM element (add background colour for example) when the
-			 * element is available.
-			 *  @type function
-			 *  @param {element} td The TD node that has been created
-			 *  @param {*} cellData The Data for the cell
-			 *  @param {array|object} rowData The data for the whole row
-			 *  @param {int} row The row index for the aoData data store
-			 *  @param {int} col The column index for aoColumns
-			 *
-			 *  @name DataTable.defaults.column.createdCell
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [ {
-			 *          "targets": [3],
-			 *          "createdCell": function (td, cellData, rowData, row, col) {
-			 *            if ( cellData == "1.7" ) {
-			 *              $(td).css('color', 'blue')
-			 *            }
-			 *          }
-			 *        } ]
-			 *      });
-			 *    } );
-			 */
-			"fnCreatedCell": null,
-		
-		
-			/**
-			 * This parameter has been replaced by `data` in DataTables to ensure naming
-			 * consistency. `dataProp` can still be used, as there is backwards
-			 * compatibility in DataTables for this option, but it is strongly
-			 * recommended that you use `data` in preference to `dataProp`.
-			 *  @name DataTable.defaults.column.dataProp
-			 */
-		
-		
-			/**
-			 * This property can be used to read data from any data source property,
-			 * including deeply nested objects / properties. `data` can be given in a
-			 * number of different ways which effect its behaviour:
-			 *
-			 * * `integer` - treated as an array index for the data source. This is the
-			 *   default that DataTables uses (incrementally increased for each column).
-			 * * `string` - read an object property from the data source. There are
-			 *   three 'special' options that can be used in the string to alter how
-			 *   DataTables reads the data from the source object:
-			 *    * `.` - Dotted Javascript notation. Just as you use a `.` in
-			 *      Javascript to read from nested objects, so to can the options
-			 *      specified in `data`. For example: `browser.version` or
-			 *      `browser.name`. If your object parameter name contains a period, use
-			 *      `\\` to escape it - i.e. `first\\.name`.
-			 *    * `[]` - Array notation. DataTables can automatically combine data
-			 *      from and array source, joining the data with the characters provided
-			 *      between the two brackets. For example: `name[, ]` would provide a
-			 *      comma-space separated list from the source array. If no characters
-			 *      are provided between the brackets, the original array source is
-			 *      returned.
-			 *    * `()` - Function notation. Adding `()` to the end of a parameter will
-			 *      execute a function of the name given. For example: `browser()` for a
-			 *      simple function on the data source, `browser.version()` for a
-			 *      function in a nested property or even `browser().version` to get an
-			 *      object property if the function called returns an object. Note that
-			 *      function notation is recommended for use in `render` rather than
-			 *      `data` as it is much simpler to use as a renderer.
-			 * * `null` - use the original data source for the row rather than plucking
-			 *   data directly from it. This action has effects on two other
-			 *   initialisation options:
-			 *    * `defaultContent` - When null is given as the `data` option and
-			 *      `defaultContent` is specified for the column, the value defined by
-			 *      `defaultContent` will be used for the cell.
-			 *    * `render` - When null is used for the `data` option and the `render`
-			 *      option is specified for the column, the whole data source for the
-			 *      row is used for the renderer.
-			 * * `function` - the function given will be executed whenever DataTables
-			 *   needs to set or get the data for a cell in the column. The function
-			 *   takes three parameters:
-			 *    * Parameters:
-			 *      * `{array|object}` The data source for the row
-			 *      * `{string}` The type call data requested - this will be 'set' when
-			 *        setting data or 'filter', 'display', 'type', 'sort' or undefined
-			 *        when gathering data. Note that when `undefined` is given for the
-			 *        type DataTables expects to get the raw data for the object back<
-			 *      * `{*}` Data to set when the second parameter is 'set'.
-			 *    * Return:
-			 *      * The return value from the function is not required when 'set' is
-			 *        the type of call, but otherwise the return is what will be used
-			 *        for the data requested.
-			 *
-			 * Note that `data` is a getter and setter option. If you just require
-			 * formatting of data for output, you will likely want to use `render` which
-			 * is simply a getter and thus simpler to use.
-			 *
-			 * Note that prior to DataTables 1.9.2 `data` was called `mDataProp`. The
-			 * name change reflects the flexibility of this property and is consistent
-			 * with the naming of mRender. If 'mDataProp' is given, then it will still
-			 * be used by DataTables, as it automatically maps the old name to the new
-			 * if required.
-			 *
-			 *  @type string|int|function|null
-			 *  @default null <i>Use automatically calculated column index</i>
-			 *
-			 *  @name DataTable.defaults.column.data
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Read table data from objects
-			 *    // JSON structure for each row:
-			 *    //   {
-			 *    //      "engine": {value},
-			 *    //      "browser": {value},
-			 *    //      "platform": {value},
-			 *    //      "version": {value},
-			 *    //      "grade": {value}
-			 *    //   }
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "ajaxSource": "sources/objects.txt",
-			 *        "columns": [
-			 *          { "data": "engine" },
-			 *          { "data": "browser" },
-			 *          { "data": "platform" },
-			 *          { "data": "version" },
-			 *          { "data": "grade" }
-			 *        ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Read information from deeply nested objects
-			 *    // JSON structure for each row:
-			 *    //   {
-			 *    //      "engine": {value},
-			 *    //      "browser": {value},
-			 *    //      "platform": {
-			 *    //         "inner": {value}
-			 *    //      },
-			 *    //      "details": [
-			 *    //         {value}, {value}
-			 *    //      ]
-			 *    //   }
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "ajaxSource": "sources/deep.txt",
-			 *        "columns": [
-			 *          { "data": "engine" },
-			 *          { "data": "browser" },
-			 *          { "data": "platform.inner" },
-			 *          { "data": "details.0" },
-			 *          { "data": "details.1" }
-			 *        ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using `data` as a function to provide different information for
-			 *    // sorting, filtering and display. In this case, currency (price)
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [ {
-			 *          "targets": [ 0 ],
-			 *          "data": function ( source, type, val ) {
-			 *            if (type === 'set') {
-			 *              source.price = val;
-			 *              // Store the computed display and filter values for efficiency
-			 *              source.price_display = val=="" ? "" : "$"+numberFormat(val);
-			 *              source.price_filter  = val=="" ? "" : "$"+numberFormat(val)+" "+val;
-			 *              return;
-			 *            }
-			 *            else if (type === 'display') {
-			 *              return source.price_display;
-			 *            }
-			 *            else if (type === 'filter') {
-			 *              return source.price_filter;
-			 *            }
-			 *            // 'sort', 'type' and undefined all just use the integer
-			 *            return source.price;
-			 *          }
-			 *        } ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using default content
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [ {
-			 *          "targets": [ 0 ],
-			 *          "data": null,
-			 *          "defaultContent": "Click to edit"
-			 *        } ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using array notation - outputting a list from an array
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [ {
-			 *          "targets": [ 0 ],
-			 *          "data": "name[, ]"
-			 *        } ]
-			 *      } );
-			 *    } );
-			 *
-			 */
-			"mData": null,
-		
-		
-			/**
-			 * This property is the rendering partner to `data` and it is suggested that
-			 * when you want to manipulate data for display (including filtering,
-			 * sorting etc) without altering the underlying data for the table, use this
-			 * property. `render` can be considered to be the the read only companion to
-			 * `data` which is read / write (then as such more complex). Like `data`
-			 * this option can be given in a number of different ways to effect its
-			 * behaviour:
-			 *
-			 * * `integer` - treated as an array index for the data source. This is the
-			 *   default that DataTables uses (incrementally increased for each column).
-			 * * `string` - read an object property from the data source. There are
-			 *   three 'special' options that can be used in the string to alter how
-			 *   DataTables reads the data from the source object:
-			 *    * `.` - Dotted Javascript notation. Just as you use a `.` in
-			 *      Javascript to read from nested objects, so to can the options
-			 *      specified in `data`. For example: `browser.version` or
-			 *      `browser.name`. If your object parameter name contains a period, use
-			 *      `\\` to escape it - i.e. `first\\.name`.
-			 *    * `[]` - Array notation. DataTables can automatically combine data
-			 *      from and array source, joining the data with the characters provided
-			 *      between the two brackets. For example: `name[, ]` would provide a
-			 *      comma-space separated list from the source array. If no characters
-			 *      are provided between the brackets, the original array source is
-			 *      returned.
-			 *    * `()` - Function notation. Adding `()` to the end of a parameter will
-			 *      execute a function of the name given. For example: `browser()` for a
-			 *      simple function on the data source, `browser.version()` for a
-			 *      function in a nested property or even `browser().version` to get an
-			 *      object property if the function called returns an object.
-			 * * `object` - use different data for the different data types requested by
-			 *   DataTables ('filter', 'display', 'type' or 'sort'). The property names
-			 *   of the object is the data type the property refers to and the value can
-			 *   defined using an integer, string or function using the same rules as
-			 *   `render` normally does. Note that an `_` option _must_ be specified.
-			 *   This is the default value to use if you haven't specified a value for
-			 *   the data type requested by DataTables.
-			 * * `function` - the function given will be executed whenever DataTables
-			 *   needs to set or get the data for a cell in the column. The function
-			 *   takes three parameters:
-			 *    * Parameters:
-			 *      * {array|object} The data source for the row (based on `data`)
-			 *      * {string} The type call data requested - this will be 'filter',
-			 *        'display', 'type' or 'sort'.
-			 *      * {array|object} The full data source for the row (not based on
-			 *        `data`)
-			 *    * Return:
-			 *      * The return value from the function is what will be used for the
-			 *        data requested.
-			 *
-			 *  @type string|int|function|object|null
-			 *  @default null Use the data source value.
-			 *
-			 *  @name DataTable.defaults.column.render
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Create a comma separated list from an array of objects
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "ajaxSource": "sources/deep.txt",
-			 *        "columns": [
-			 *          { "data": "engine" },
-			 *          { "data": "browser" },
-			 *          {
-			 *            "data": "platform",
-			 *            "render": "[, ].name"
-			 *          }
-			 *        ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Execute a function to obtain data
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [ {
-			 *          "targets": [ 0 ],
-			 *          "data": null, // Use the full data source object for the renderer's source
-			 *          "render": "browserName()"
-			 *        } ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // As an object, extracting different data for the different types
-			 *    // This would be used with a data source such as:
-			 *    //   { "phone": 5552368, "phone_filter": "5552368 555-2368", "phone_display": "555-2368" }
-			 *    // Here the `phone` integer is used for sorting and type detection, while `phone_filter`
-			 *    // (which has both forms) is used for filtering for if a user inputs either format, while
-			 *    // the formatted phone number is the one that is shown in the table.
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [ {
-			 *          "targets": [ 0 ],
-			 *          "data": null, // Use the full data source object for the renderer's source
-			 *          "render": {
-			 *            "_": "phone",
-			 *            "filter": "phone_filter",
-			 *            "display": "phone_display"
-			 *          }
-			 *        } ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Use as a function to create a link from the data source
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [ {
-			 *          "targets": [ 0 ],
-			 *          "data": "download_link",
-			 *          "render": function ( data, type, full ) {
-			 *            return '<a href="'+data+'">Download</a>';
-			 *          }
-			 *        } ]
-			 *      } );
-			 *    } );
-			 */
-			"mRender": null,
-		
-		
-			/**
-			 * Change the cell type created for the column - either TD cells or TH cells. This
-			 * can be useful as TH cells have semantic meaning in the table body, allowing them
-			 * to act as a header for a row (you may wish to add scope='row' to the TH elements).
-			 *  @type string
-			 *  @default td
-			 *
-			 *  @name DataTable.defaults.column.cellType
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Make the first column use TH cells
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [ {
-			 *          "targets": [ 0 ],
-			 *          "cellType": "th"
-			 *        } ]
-			 *      } );
-			 *    } );
-			 */
-			"sCellType": "td",
-		
-		
-			/**
-			 * Class to give to each cell in this column.
-			 *  @type string
-			 *  @default <i>Empty string</i>
-			 *
-			 *  @name DataTable.defaults.column.class
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Using `columnDefs`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [
-			 *          { "class": "my_class", "targets": [ 0 ] }
-			 *        ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using `columns`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columns": [
-			 *          { "class": "my_class" },
-			 *          null,
-			 *          null,
-			 *          null,
-			 *          null
-			 *        ]
-			 *      } );
-			 *    } );
-			 */
-			"sClass": "",
-		
-			/**
-			 * When DataTables calculates the column widths to assign to each column,
-			 * it finds the longest string in each column and then constructs a
-			 * temporary table and reads the widths from that. The problem with this
-			 * is that "mmm" is much wider then "iiii", but the latter is a longer
-			 * string - thus the calculation can go wrong (doing it properly and putting
-			 * it into an DOM object and measuring that is horribly(!) slow). Thus as
-			 * a "work around" we provide this option. It will append its value to the
-			 * text that is found to be the longest string for the column - i.e. padding.
-			 * Generally you shouldn't need this!
-			 *  @type string
-			 *  @default <i>Empty string<i>
-			 *
-			 *  @name DataTable.defaults.column.contentPadding
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Using `columns`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columns": [
-			 *          null,
-			 *          null,
-			 *          null,
-			 *          {
-			 *            "contentPadding": "mmm"
-			 *          }
-			 *        ]
-			 *      } );
-			 *    } );
-			 */
-			"sContentPadding": "",
-		
-		
-			/**
-			 * Allows a default value to be given for a column's data, and will be used
-			 * whenever a null data source is encountered (this can be because `data`
-			 * is set to null, or because the data source itself is null).
-			 *  @type string
-			 *  @default null
-			 *
-			 *  @name DataTable.defaults.column.defaultContent
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Using `columnDefs`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [
-			 *          {
-			 *            "data": null,
-			 *            "defaultContent": "Edit",
-			 *            "targets": [ -1 ]
-			 *          }
-			 *        ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using `columns`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columns": [
-			 *          null,
-			 *          null,
-			 *          null,
-			 *          {
-			 *            "data": null,
-			 *            "defaultContent": "Edit"
-			 *          }
-			 *        ]
-			 *      } );
-			 *    } );
-			 */
-			"sDefaultContent": null,
-		
-		
-			/**
-			 * This parameter is only used in DataTables' server-side processing. It can
-			 * be exceptionally useful to know what columns are being displayed on the
-			 * client side, and to map these to database fields. When defined, the names
-			 * also allow DataTables to reorder information from the server if it comes
-			 * back in an unexpected order (i.e. if you switch your columns around on the
-			 * client-side, your server-side code does not also need updating).
-			 *  @type string
-			 *  @default <i>Empty string</i>
-			 *
-			 *  @name DataTable.defaults.column.name
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Using `columnDefs`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [
-			 *          { "name": "engine", "targets": [ 0 ] },
-			 *          { "name": "browser", "targets": [ 1 ] },
-			 *          { "name": "platform", "targets": [ 2 ] },
-			 *          { "name": "version", "targets": [ 3 ] },
-			 *          { "name": "grade", "targets": [ 4 ] }
-			 *        ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using `columns`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columns": [
-			 *          { "name": "engine" },
-			 *          { "name": "browser" },
-			 *          { "name": "platform" },
-			 *          { "name": "version" },
-			 *          { "name": "grade" }
-			 *        ]
-			 *      } );
-			 *    } );
-			 */
-			"sName": "",
-		
-		
-			/**
-			 * Defines a data source type for the ordering which can be used to read
-			 * real-time information from the table (updating the internally cached
-			 * version) prior to ordering. This allows ordering to occur on user
-			 * editable elements such as form inputs.
-			 *  @type string
-			 *  @default std
-			 *
-			 *  @name DataTable.defaults.column.orderDataType
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Using `columnDefs`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [
-			 *          { "orderDataType": "dom-text", "targets": [ 2, 3 ] },
-			 *          { "type": "numeric", "targets": [ 3 ] },
-			 *          { "orderDataType": "dom-select", "targets": [ 4 ] },
-			 *          { "orderDataType": "dom-checkbox", "targets": [ 5 ] }
-			 *        ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using `columns`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columns": [
-			 *          null,
-			 *          null,
-			 *          { "orderDataType": "dom-text" },
-			 *          { "orderDataType": "dom-text", "type": "numeric" },
-			 *          { "orderDataType": "dom-select" },
-			 *          { "orderDataType": "dom-checkbox" }
-			 *        ]
-			 *      } );
-			 *    } );
-			 */
-			"sSortDataType": "std",
-		
-		
-			/**
-			 * The title of this column.
-			 *  @type string
-			 *  @default null <i>Derived from the 'TH' value for this column in the
-			 *    original HTML table.</i>
-			 *
-			 *  @name DataTable.defaults.column.title
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Using `columnDefs`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [
-			 *          { "title": "My column title", "targets": [ 0 ] }
-			 *        ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using `columns`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columns": [
-			 *          { "title": "My column title" },
-			 *          null,
-			 *          null,
-			 *          null,
-			 *          null
-			 *        ]
-			 *      } );
-			 *    } );
-			 */
-			"sTitle": null,
-		
-		
-			/**
-			 * The type allows you to specify how the data for this column will be
-			 * ordered. Four types (string, numeric, date and html (which will strip
-			 * HTML tags before ordering)) are currently available. Note that only date
-			 * formats understood by Javascript's Date() object will be accepted as type
-			 * date. For example: "Mar 26, 2008 5:03 PM". May take the values: 'string',
-			 * 'numeric', 'date' or 'html' (by default). Further types can be adding
-			 * through plug-ins.
-			 *  @type string
-			 *  @default null <i>Auto-detected from raw data</i>
-			 *
-			 *  @name DataTable.defaults.column.type
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Using `columnDefs`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [
-			 *          { "type": "html", "targets": [ 0 ] }
-			 *        ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using `columns`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columns": [
-			 *          { "type": "html" },
-			 *          null,
-			 *          null,
-			 *          null,
-			 *          null
-			 *        ]
-			 *      } );
-			 *    } );
-			 */
-			"sType": null,
-		
-		
-			/**
-			 * Defining the width of the column, this parameter may take any CSS value
-			 * (3em, 20px etc). DataTables applies 'smart' widths to columns which have not
-			 * been given a specific width through this interface ensuring that the table
-			 * remains readable.
-			 *  @type string
-			 *  @default null <i>Automatic</i>
-			 *
-			 *  @name DataTable.defaults.column.width
-			 *  @dtopt Columns
-			 *
-			 *  @example
-			 *    // Using `columnDefs`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columnDefs": [
-			 *          { "width": "20%", "targets": [ 0 ] }
-			 *        ]
-			 *      } );
-			 *    } );
-			 *
-			 *  @example
-			 *    // Using `columns`
-			 *    $(document).ready( function() {
-			 *      $('#example').dataTable( {
-			 *        "columns": [
-			 *          { "width": "20%" },
-			 *          null,
-			 *          null,
-			 *          null,
-			 *          null
-			 *        ]
-			 *      } );
-			 *    } );
-			 */
-			"sWidth": null
-		};
-		
-		_fnHungarianMap( DataTable.defaults.column );
-		
-		
-		
+		"_aSortData": null,
+	
 		/**
-		 * DataTables settings object - this holds all the information needed for a
-		 * given table, including configuration, data and current application of the
-		 * table options. DataTables does not have a single instance for each DataTable
-		 * with the settings attached to that instance, but rather instances of the
-		 * DataTable "class" are created on-the-fly as needed (typically by a
-		 * $().dataTable() call) and the settings object is then applied to that
-		 * instance.
-		 *
-		 * Note that this object is related to {@link DataTable.defaults} but this
-		 * one is the internal data store for DataTables's cache of columns. It should
-		 * NOT be manipulated outside of DataTables. Any configuration should be done
-		 * through the initialisation options.
-		 *  @namespace
-		 *  @todo Really should attach the settings object to individual instances so we
-		 *    don't need to create new instances on each $().dataTable() call (if the
-		 *    table already exists). It would also save passing oSettings around and
-		 *    into every single function. However, this is a very significant
-		 *    architecture change for DataTables and will almost certainly break
-		 *    backwards compatibility with older installations. This is something that
-		 *    will be done in 2.0.
+		 * Per cell filtering data cache. As per the sort data cache, used to
+		 * increase the performance of the filtering in DataTables
+		 *  @type array
+		 *  @default null
+		 *  @private
 		 */
-		DataTable.models.oSettings = {
-			/**
-			 * Primary features of DataTables and their enablement state.
-			 *  @namespace
-			 */
-			"oFeatures": {
-		
-				/**
-				 * Flag to say if DataTables should automatically try to calculate the
-				 * optimum table and columns widths (true) or not (false).
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type boolean
-				 */
-				"bAutoWidth": null,
-		
-				/**
-				 * Delay the creation of TR and TD elements until they are actually
-				 * needed by a driven page draw. This can give a significant speed
-				 * increase for Ajax source and Javascript source data, but makes no
-				 * difference at all for DOM and server-side processing tables.
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type boolean
-				 */
-				"bDeferRender": null,
-		
-				/**
-				 * Enable filtering on the table or not. Note that if this is disabled
-				 * then there is no filtering at all on the table, including fnFilter.
-				 * To just remove the filtering input use sDom and remove the 'f' option.
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type boolean
-				 */
-				"bFilter": null,
-		
-				/**
-				 * Table information element (the 'Showing x of y records' div) enable
-				 * flag.
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type boolean
-				 */
-				"bInfo": null,
-		
-				/**
-				 * Present a user control allowing the end user to change the page size
-				 * when pagination is enabled.
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type boolean
-				 */
-				"bLengthChange": null,
-		
-				/**
-				 * Pagination enabled or not. Note that if this is disabled then length
-				 * changing must also be disabled.
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type boolean
-				 */
-				"bPaginate": null,
-		
-				/**
-				 * Processing indicator enable flag whenever DataTables is enacting a
-				 * user request - typically an Ajax request for server-side processing.
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type boolean
-				 */
-				"bProcessing": null,
-		
-				/**
-				 * Server-side processing enabled flag - when enabled DataTables will
-				 * get all data from the server for every draw - there is no filtering,
-				 * sorting or paging done on the client-side.
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type boolean
-				 */
-				"bServerSide": null,
-		
-				/**
-				 * Sorting enablement flag.
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type boolean
-				 */
-				"bSort": null,
-		
-				/**
-				 * Multi-column sorting
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type boolean
-				 */
-				"bSortMulti": null,
-		
-				/**
-				 * Apply a class to the columns which are being sorted to provide a
-				 * visual highlight or not. This can slow things down when enabled since
-				 * there is a lot of DOM interaction.
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type boolean
-				 */
-				"bSortClasses": null,
-		
-				/**
-				 * State saving enablement flag.
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type boolean
-				 */
-				"bStateSave": null
-			},
-		
-		
-			/**
-			 * Scrolling settings for a table.
-			 *  @namespace
-			 */
-			"oScroll": {
-				/**
-				 * When the table is shorter in height than sScrollY, collapse the
-				 * table container down to the height of the table (when true).
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type boolean
-				 */
-				"bCollapse": null,
-		
-				/**
-				 * Width of the scrollbar for the web-browser's platform. Calculated
-				 * during table initialisation.
-				 *  @type int
-				 *  @default 0
-				 */
-				"iBarWidth": 0,
-		
-				/**
-				 * Viewport width for horizontal scrolling. Horizontal scrolling is
-				 * disabled if an empty string.
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type string
-				 */
-				"sX": null,
-		
-				/**
-				 * Width to expand the table to when using x-scrolling. Typically you
-				 * should not need to use this.
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type string
-				 *  @deprecated
-				 */
-				"sXInner": null,
-		
-				/**
-				 * Viewport height for vertical scrolling. Vertical scrolling is disabled
-				 * if an empty string.
-				 * Note that this parameter will be set by the initialisation routine. To
-				 * set a default use {@link DataTable.defaults}.
-				 *  @type string
-				 */
-				"sY": null
-			},
-		
-			/**
-			 * Language information for the table.
-			 *  @namespace
-			 *  @extends DataTable.defaults.oLanguage
-			 */
-			"oLanguage": {
-				/**
-				 * Information callback function. See
-				 * {@link DataTable.defaults.fnInfoCallback}
-				 *  @type function
-				 *  @default null
-				 */
-				"fnInfoCallback": null
-			},
-		
-			/**
-			 * Browser support parameters
-			 *  @namespace
-			 */
-			"oBrowser": {
-				/**
-				 * Indicate if the browser incorrectly calculates width:100% inside a
-				 * scrolling element (IE6/7)
-				 *  @type boolean
-				 *  @default false
-				 */
-				"bScrollOversize": false,
-		
-				/**
-				 * Determine if the vertical scrollbar is on the right or left of the
-				 * scrolling container - needed for rtl language layout, although not
-				 * all browsers move the scrollbar (Safari).
-				 *  @type boolean
-				 *  @default false
-				 */
-				"bScrollbarLeft": false,
-		
-				/**
-				 * Flag for if `getBoundingClientRect` is fully supported or not
-				 *  @type boolean
-				 *  @default false
-				 */
-				"bBounding": false,
-		
-				/**
-				 * Browser scrollbar width
-				 *  @type integer
-				 *  @default 0
-				 */
-				"barWidth": 0
-			},
-		
-		
-			"ajax": null,
-		
-		
-			/**
-			 * Array referencing the nodes which are used for the features. The
-			 * parameters of this object match what is allowed by sDom - i.e.
-			 *   <ul>
-			 *     <li>'l' - Length changing</li>
-			 *     <li>'f' - Filtering input</li>
-			 *     <li>'t' - The table!</li>
-			 *     <li>'i' - Information</li>
-			 *     <li>'p' - Pagination</li>
-			 *     <li>'r' - pRocessing</li>
-			 *   </ul>
-			 *  @type array
-			 *  @default []
-			 */
-			"aanFeatures": [],
-		
-			/**
-			 * Store data information - see {@link DataTable.models.oRow} for detailed
-			 * information.
-			 *  @type array
-			 *  @default []
-			 */
-			"aoData": [],
-		
-			/**
-			 * Array of indexes which are in the current display (after filtering etc)
-			 *  @type array
-			 *  @default []
-			 */
-			"aiDisplay": [],
-		
-			/**
-			 * Array of indexes for display - no filtering
-			 *  @type array
-			 *  @default []
-			 */
-			"aiDisplayMaster": [],
-		
-			/**
-			 * Map of row ids to data indexes
-			 *  @type object
-			 *  @default {}
-			 */
-			"aIds": {},
-		
-			/**
-			 * Store information about each column that is in use
-			 *  @type array
-			 *  @default []
-			 */
-			"aoColumns": [],
-		
-			/**
-			 * Store information about the table's header
-			 *  @type array
-			 *  @default []
-			 */
-			"aoHeader": [],
-		
-			/**
-			 * Store information about the table's footer
-			 *  @type array
-			 *  @default []
-			 */
-			"aoFooter": [],
-		
-			/**
-			 * Store the applied global search information in case we want to force a
-			 * research or compare the old search to a new one.
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @namespace
-			 *  @extends DataTable.models.oSearch
-			 */
-			"oPreviousSearch": {},
-		
-			/**
-			 * Store the applied search for each column - see
-			 * {@link DataTable.models.oSearch} for the format that is used for the
-			 * filtering information for each column.
-			 *  @type array
-			 *  @default []
-			 */
-			"aoPreSearchCols": [],
-		
-			/**
-			 * Sorting that is applied to the table. Note that the inner arrays are
-			 * used in the following manner:
-			 * <ul>
-			 *   <li>Index 0 - column number</li>
-			 *   <li>Index 1 - current sorting direction</li>
-			 * </ul>
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @type array
-			 *  @todo These inner arrays should really be objects
-			 */
-			"aaSorting": null,
-		
-			/**
-			 * Sorting that is always applied to the table (i.e. prefixed in front of
-			 * aaSorting).
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @type array
-			 *  @default []
-			 */
-			"aaSortingFixed": [],
-		
-			/**
-			 * Classes to use for the striping of a table.
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @type array
-			 *  @default []
-			 */
-			"asStripeClasses": null,
-		
-			/**
-			 * If restoring a table - we should restore its striping classes as well
-			 *  @type array
-			 *  @default []
-			 */
-			"asDestroyStripes": [],
-		
-			/**
-			 * If restoring a table - we should restore its width
-			 *  @type int
-			 *  @default 0
-			 */
-			"sDestroyWidth": 0,
-		
-			/**
-			 * Callback functions array for every time a row is inserted (i.e. on a draw).
-			 *  @type array
-			 *  @default []
-			 */
-			"aoRowCallback": [],
-		
-			/**
-			 * Callback functions for the header on each draw.
-			 *  @type array
-			 *  @default []
-			 */
-			"aoHeaderCallback": [],
-		
-			/**
-			 * Callback function for the footer on each draw.
-			 *  @type array
-			 *  @default []
-			 */
-			"aoFooterCallback": [],
-		
-			/**
-			 * Array of callback functions for draw callback functions
-			 *  @type array
-			 *  @default []
-			 */
-			"aoDrawCallback": [],
-		
-			/**
-			 * Array of callback functions for row created function
-			 *  @type array
-			 *  @default []
-			 */
-			"aoRowCreatedCallback": [],
-		
-			/**
-			 * Callback functions for just before the table is redrawn. A return of
-			 * false will be used to cancel the draw.
-			 *  @type array
-			 *  @default []
-			 */
-			"aoPreDrawCallback": [],
-		
-			/**
-			 * Callback functions for when the table has been initialised.
-			 *  @type array
-			 *  @default []
-			 */
-			"aoInitComplete": [],
-		
-		
-			/**
-			 * Callbacks for modifying the settings to be stored for state saving, prior to
-			 * saving state.
-			 *  @type array
-			 *  @default []
-			 */
-			"aoStateSaveParams": [],
-		
-			/**
-			 * Callbacks for modifying the settings that have been stored for state saving
-			 * prior to using the stored values to restore the state.
-			 *  @type array
-			 *  @default []
-			 */
-			"aoStateLoadParams": [],
-		
-			/**
-			 * Callbacks for operating on the settings object once the saved state has been
-			 * loaded
-			 *  @type array
-			 *  @default []
-			 */
-			"aoStateLoaded": [],
-		
-			/**
-			 * Cache the table ID for quick access
-			 *  @type string
-			 *  @default <i>Empty string</i>
-			 */
-			"sTableId": "",
-		
-			/**
-			 * The TABLE node for the main table
-			 *  @type node
-			 *  @default null
-			 */
-			"nTable": null,
-		
-			/**
-			 * Permanent ref to the thead element
-			 *  @type node
-			 *  @default null
-			 */
-			"nTHead": null,
-		
-			/**
-			 * Permanent ref to the tfoot element - if it exists
-			 *  @type node
-			 *  @default null
-			 */
-			"nTFoot": null,
-		
-			/**
-			 * Permanent ref to the tbody element
-			 *  @type node
-			 *  @default null
-			 */
-			"nTBody": null,
-		
-			/**
-			 * Cache the wrapper node (contains all DataTables controlled elements)
-			 *  @type node
-			 *  @default null
-			 */
-			"nTableWrapper": null,
-		
-			/**
-			 * Indicate if when using server-side processing the loading of data
-			 * should be deferred until the second draw.
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @type boolean
-			 *  @default false
-			 */
-			"bDeferLoading": false,
-		
-			/**
-			 * Indicate if all required information has been read in
-			 *  @type boolean
-			 *  @default false
-			 */
-			"bInitialised": false,
-		
-			/**
-			 * Information about open rows. Each object in the array has the parameters
-			 * 'nTr' and 'nParent'
-			 *  @type array
-			 *  @default []
-			 */
-			"aoOpenRows": [],
-		
-			/**
-			 * Dictate the positioning of DataTables' control elements - see
-			 * {@link DataTable.model.oInit.sDom}.
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @type string
-			 *  @default null
-			 */
-			"sDom": null,
-		
-			/**
-			 * Search delay (in mS)
-			 *  @type integer
-			 *  @default null
-			 */
-			"searchDelay": null,
-		
-			/**
-			 * Which type of pagination should be used.
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @type string
-			 *  @default two_button
-			 */
-			"sPaginationType": "two_button",
-		
-			/**
-			 * The state duration (for `stateSave`) in seconds.
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @type int
-			 *  @default 0
-			 */
-			"iStateDuration": 0,
-		
-			/**
-			 * Array of callback functions for state saving. Each array element is an
-			 * object with the following parameters:
-			 *   <ul>
-			 *     <li>function:fn - function to call. Takes two parameters, oSettings
-			 *       and the JSON string to save that has been thus far created. Returns
-			 *       a JSON string to be inserted into a json object
-			 *       (i.e. '"param": [ 0, 1, 2]')</li>
-			 *     <li>string:sName - name of callback</li>
-			 *   </ul>
-			 *  @type array
-			 *  @default []
-			 */
-			"aoStateSave": [],
-		
-			/**
-			 * Array of callback functions for state loading. Each array element is an
-			 * object with the following parameters:
-			 *   <ul>
-			 *     <li>function:fn - function to call. Takes two parameters, oSettings
-			 *       and the object stored. May return false to cancel state loading</li>
-			 *     <li>string:sName - name of callback</li>
-			 *   </ul>
-			 *  @type array
-			 *  @default []
-			 */
-			"aoStateLoad": [],
-		
-			/**
-			 * State that was saved. Useful for back reference
-			 *  @type object
-			 *  @default null
-			 */
-			"oSavedState": null,
-		
-			/**
-			 * State that was loaded. Useful for back reference
-			 *  @type object
-			 *  @default null
-			 */
-			"oLoadedState": null,
-		
-			/**
-			 * Source url for AJAX data for the table.
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @type string
-			 *  @default null
-			 */
-			"sAjaxSource": null,
-		
-			/**
-			 * Property from a given object from which to read the table data from. This
-			 * can be an empty string (when not server-side processing), in which case
-			 * it is  assumed an an array is given directly.
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @type string
-			 */
-			"sAjaxDataProp": null,
-		
-			/**
-			 * The last jQuery XHR object that was used for server-side data gathering.
-			 * This can be used for working with the XHR information in one of the
-			 * callbacks
-			 *  @type object
-			 *  @default null
-			 */
-			"jqXHR": null,
-		
-			/**
-			 * JSON returned from the server in the last Ajax request
-			 *  @type object
-			 *  @default undefined
-			 */
-			"json": undefined,
-		
-			/**
-			 * Data submitted as part of the last Ajax request
-			 *  @type object
-			 *  @default undefined
-			 */
-			"oAjaxData": undefined,
-		
-			/**
-			 * Function to get the server-side data.
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @type function
-			 */
-			"fnServerData": null,
-		
-			/**
-			 * Functions which are called prior to sending an Ajax request so extra
-			 * parameters can easily be sent to the server
-			 *  @type array
-			 *  @default []
-			 */
-			"aoServerParams": [],
-		
-			/**
-			 * Send the XHR HTTP method - GET or POST (could be PUT or DELETE if
-			 * required).
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @type string
-			 */
-			"sServerMethod": null,
-		
-			/**
-			 * Format numbers for display.
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @type function
-			 */
-			"fnFormatNumber": null,
-		
-			/**
-			 * List of options that can be used for the user selectable length menu.
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @type array
-			 *  @default []
-			 */
-			"aLengthMenu": null,
-		
-			/**
-			 * Counter for the draws that the table does. Also used as a tracker for
-			 * server-side processing
-			 *  @type int
-			 *  @default 0
-			 */
-			"iDraw": 0,
-		
-			/**
-			 * Indicate if a redraw is being done - useful for Ajax
-			 *  @type boolean
-			 *  @default false
-			 */
-			"bDrawing": false,
-		
-			/**
-			 * Draw index (iDraw) of the last error when parsing the returned data
-			 *  @type int
-			 *  @default -1
-			 */
-			"iDrawError": -1,
-		
-			/**
-			 * Paging display length
-			 *  @type int
-			 *  @default 10
-			 */
-			"_iDisplayLength": 10,
-		
-			/**
-			 * Paging start point - aiDisplay index
-			 *  @type int
-			 *  @default 0
-			 */
-			"_iDisplayStart": 0,
-		
-			/**
-			 * Server-side processing - number of records in the result set
-			 * (i.e. before filtering), Use fnRecordsTotal rather than
-			 * this property to get the value of the number of records, regardless of
-			 * the server-side processing setting.
-			 *  @type int
-			 *  @default 0
-			 *  @private
-			 */
-			"_iRecordsTotal": 0,
-		
-			/**
-			 * Server-side processing - number of records in the current display set
-			 * (i.e. after filtering). Use fnRecordsDisplay rather than
-			 * this property to get the value of the number of records, regardless of
-			 * the server-side processing setting.
-			 *  @type boolean
-			 *  @default 0
-			 *  @private
-			 */
-			"_iRecordsDisplay": 0,
-		
-			/**
-			 * The classes to use for the table
-			 *  @type object
-			 *  @default {}
-			 */
-			"oClasses": {},
-		
-			/**
-			 * Flag attached to the settings object so you can check in the draw
-			 * callback if filtering has been done in the draw. Deprecated in favour of
-			 * events.
-			 *  @type boolean
-			 *  @default false
-			 *  @deprecated
-			 */
-			"bFiltered": false,
-		
-			/**
-			 * Flag attached to the settings object so you can check in the draw
-			 * callback if sorting has been done in the draw. Deprecated in favour of
-			 * events.
-			 *  @type boolean
-			 *  @default false
-			 *  @deprecated
-			 */
-			"bSorted": false,
-		
-			/**
-			 * Indicate that if multiple rows are in the header and there is more than
-			 * one unique cell per column, if the top one (true) or bottom one (false)
-			 * should be used for sorting / title by DataTables.
-			 * Note that this parameter will be set by the initialisation routine. To
-			 * set a default use {@link DataTable.defaults}.
-			 *  @type boolean
-			 */
-			"bSortCellsTop": null,
-		
-			/**
-			 * Initialisation object that is used for the table
-			 *  @type object
-			 *  @default null
-			 */
-			"oInit": null,
-		
-			/**
-			 * Destroy callback functions - for plug-ins to attach themselves to the
-			 * destroy so they can clean up markup and events.
-			 *  @type array
-			 *  @default []
-			 */
-			"aoDestroyCallback": [],
-		
-		
-			/**
-			 * Get the number of records in the current record set, before filtering
-			 *  @type function
-			 */
-			"fnRecordsTotal": function ()
-			{
-				return _fnDataSource( this ) == 'ssp' ?
-					this._iRecordsTotal * 1 :
-					this.aiDisplayMaster.length;
-			},
-		
-			/**
-			 * Get the number of records in the current record set, after filtering
-			 *  @type function
-			 */
-			"fnRecordsDisplay": function ()
-			{
-				return _fnDataSource( this ) == 'ssp' ?
-					this._iRecordsDisplay * 1 :
-					this.aiDisplay.length;
-			},
-		
-			/**
-			 * Get the display end point - aiDisplay index
-			 *  @type function
-			 */
-			"fnDisplayEnd": function ()
-			{
-				var
-					len      = this._iDisplayLength,
-					start    = this._iDisplayStart,
-					calc     = start + len,
-					records  = this.aiDisplay.length,
-					features = this.oFeatures,
-					paginate = features.bPaginate;
-		
-				if ( features.bServerSide ) {
-					return paginate === false || len === -1 ?
-						start + records :
-						Math.min( start+len, this._iRecordsDisplay );
-				}
-				else {
-					return ! paginate || calc>records || len===-1 ?
-						records :
-						calc;
-				}
-			},
-		
-			/**
-			 * The DataTables object for this table
-			 *  @type object
-			 *  @default null
-			 */
-			"oInstance": null,
-		
-			/**
-			 * Unique identifier for each instance of the DataTables object. If there
-			 * is an ID on the table node, then it takes that value, otherwise an
-			 * incrementing internal counter is used.
-			 *  @type string
-			 *  @default null
-			 */
-			"sInstance": null,
-		
-			/**
-			 * tabindex attribute value that is added to DataTables control elements, allowing
-			 * keyboard navigation of the table and its controls.
-			 */
-			"iTabIndex": 0,
-		
-			/**
-			 * DIV container for the footer scrolling table if scrolling
-			 */
-			"nScrollHead": null,
-		
-			/**
-			 * DIV container for the footer scrolling table if scrolling
-			 */
-			"nScrollFoot": null,
-		
-			/**
-			 * Last applied sort
-			 *  @type array
-			 *  @default []
-			 */
-			"aLastSort": [],
-		
-			/**
-			 * Stored plug-in instances
-			 *  @type object
-			 *  @default {}
-			 */
-			"oPlugins": {},
-		
-			/**
-			 * Function used to get a row's id from the row's data
-			 *  @type function
-			 *  @default null
-			 */
-			"rowIdFn": null,
-		
-			/**
-			 * Data location where to store a row's id
-			 *  @type string
-			 *  @default null
-			 */
-			"rowId": null
-		};
-		
+		"_aFilterData": null,
+	
 		/**
-		 * Extension object for DataTables that is used to provide all extension
-		 * options.
-		 *
-		 * Note that the `DataTable.ext` object is available through
-		 * `jQuery.fn.dataTable.ext` where it may be accessed and manipulated. It is
-		 * also aliased to `jQuery.fn.dataTableExt` for historic reasons.
-		 *  @namespace
-		 *  @extends DataTable.models.ext
+		 * Filtering data cache. This is the same as the cell filtering cache, but
+		 * in this case a string rather than an array. This is easily computed with
+		 * a join on `_aFilterData`, but is provided as a cache so the join isn't
+		 * needed on every search (memory traded for performance)
+		 *  @type array
+		 *  @default null
+		 *  @private
 		 */
-		
-		
+		"_sFilterRow": null,
+	
 		/**
-		 * DataTables extensions
-		 * 
-		 * This namespace acts as a collection area for plug-ins that can be used to
-		 * extend DataTables capabilities. Indeed many of the build in methods
-		 * use this method to provide their own capabilities (sorting methods for
-		 * example).
-		 *
-		 * Note that this namespace is aliased to `jQuery.fn.dataTableExt` for legacy
-		 * reasons
-		 *
-		 *  @namespace
+		 * Cache of the class name that DataTables has applied to the row, so we
+		 * can quickly look at this variable rather than needing to do a DOM check
+		 * on className for the nTr property.
+		 *  @type string
+		 *  @default <i>Empty string</i>
+		 *  @private
 		 */
-		DataTable.ext = _ext = {
-			/**
-			 * Buttons. For use with the Buttons extension for DataTables. This is
-			 * defined here so other extensions can define buttons regardless of load
-			 * order. It is _not_ used by DataTables core.
-			 *
-			 *  @type object
-			 *  @default {}
-			 */
-			buttons: {},
-		
-		
-			/**
-			 * Element class names
-			 *
-			 *  @type object
-			 *  @default {}
-			 */
-			classes: {},
-		
-		
-			/**
-			 * DataTables build type (expanded by the download builder)
-			 *
-			 *  @type string
-			 */
-			build:"bs4/jszip-2.5.0/pdfmake-0.1.36/dt-1.11.5/b-2.2.2/b-html5-2.2.2/b-print-2.2.2",
-		
-		
-			/**
-			 * Error reporting.
-			 * 
-			 * How should DataTables report an error. Can take the value 'alert',
-			 * 'throw', 'none' or a function.
-			 *
-			 *  @type string|function
-			 *  @default alert
-			 */
-			errMode: "alert",
-		
-		
-			/**
-			 * Feature plug-ins.
-			 * 
-			 * This is an array of objects which describe the feature plug-ins that are
-			 * available to DataTables. These feature plug-ins are then available for
-			 * use through the `dom` initialisation option.
-			 * 
-			 * Each feature plug-in is described by an object which must have the
-			 * following properties:
-			 * 
-			 * * `fnInit` - function that is used to initialise the plug-in,
-			 * * `cFeature` - a character so the feature can be enabled by the `dom`
-			 *   instillation option. This is case sensitive.
-			 *
-			 * The `fnInit` function has the following input parameters:
-			 *
-			 * 1. `{object}` DataTables settings object: see
-			 *    {@link DataTable.models.oSettings}
-			 *
-			 * And the following return is expected:
-			 * 
-			 * * {node|null} The element which contains your feature. Note that the
-			 *   return may also be void if your plug-in does not require to inject any
-			 *   DOM elements into DataTables control (`dom`) - for example this might
-			 *   be useful when developing a plug-in which allows table control via
-			 *   keyboard entry
-			 *
-			 *  @type array
-			 *
-			 *  @example
-			 *    $.fn.dataTable.ext.features.push( {
-			 *      "fnInit": function( oSettings ) {
-			 *        return new TableTools( { "oDTSettings": oSettings } );
-			 *      },
-			 *      "cFeature": "T"
-			 *    } );
-			 */
-			feature: [],
-		
-		
-			/**
-			 * Row searching.
-			 * 
-			 * This method of searching is complimentary to the default type based
-			 * searching, and a lot more comprehensive as it allows you complete control
-			 * over the searching logic. Each element in this array is a function
-			 * (parameters described below) that is called for every row in the table,
-			 * and your logic decides if it should be included in the searching data set
-			 * or not.
-			 *
-			 * Searching functions have the following input parameters:
-			 *
-			 * 1. `{object}` DataTables settings object: see
-			 *    {@link DataTable.models.oSettings}
-			 * 2. `{array|object}` Data for the row to be processed (same as the
-			 *    original format that was passed in as the data source, or an array
-			 *    from a DOM data source
-			 * 3. `{int}` Row index ({@link DataTable.models.oSettings.aoData}), which
-			 *    can be useful to retrieve the `TR` element if you need DOM interaction.
-			 *
-			 * And the following return is expected:
-			 *
-			 * * {boolean} Include the row in the searched result set (true) or not
-			 *   (false)
-			 *
-			 * Note that as with the main search ability in DataTables, technically this
-			 * is "filtering", since it is subtractive. However, for consistency in
-			 * naming we call it searching here.
-			 *
-			 *  @type array
-			 *  @default []
-			 *
-			 *  @example
-			 *    // The following example shows custom search being applied to the
-			 *    // fourth column (i.e. the data[3] index) based on two input values
-			 *    // from the end-user, matching the data in a certain range.
-			 *    $.fn.dataTable.ext.search.push(
-			 *      function( settings, data, dataIndex ) {
-			 *        var min = document.getElementById('min').value * 1;
-			 *        var max = document.getElementById('max').value * 1;
-			 *        var version = data[3] == "-" ? 0 : data[3]*1;
-			 *
-			 *        if ( min == "" && max == "" ) {
-			 *          return true;
-			 *        }
-			 *        else if ( min == "" && version < max ) {
-			 *          return true;
-			 *        }
-			 *        else if ( min < version && "" == max ) {
-			 *          return true;
-			 *        }
-			 *        else if ( min < version && version < max ) {
-			 *          return true;
-			 *        }
-			 *        return false;
-			 *      }
-			 *    );
-			 */
-			search: [],
-		
-		
-			/**
-			 * Selector extensions
-			 *
-			 * The `selector` option can be used to extend the options available for the
-			 * selector modifier options (`selector-modifier` object data type) that
-			 * each of the three built in selector types offer (row, column and cell +
-			 * their plural counterparts). For example the Select extension uses this
-			 * mechanism to provide an option to select only rows, columns and cells
-			 * that have been marked as selected by the end user (`{selected: true}`),
-			 * which can be used in conjunction with the existing built in selector
-			 * options.
-			 *
-			 * Each property is an array to which functions can be pushed. The functions
-			 * take three attributes:
-			 *
-			 * * Settings object for the host table
-			 * * Options object (`selector-modifier` object type)
-			 * * Array of selected item indexes
-			 *
-			 * The return is an array of the resulting item indexes after the custom
-			 * selector has been applied.
-			 *
-			 *  @type object
-			 */
-			selector: {
-				cell: [],
-				column: [],
-				row: []
-			},
-		
-		
-			/**
-			 * Internal functions, exposed for used in plug-ins.
-			 * 
-			 * Please note that you should not need to use the internal methods for
-			 * anything other than a plug-in (and even then, try to avoid if possible).
-			 * The internal function may change between releases.
-			 *
-			 *  @type object
-			 *  @default {}
-			 */
-			internal: {},
-		
-		
-			/**
-			 * Legacy configuration options. Enable and disable legacy options that
-			 * are available in DataTables.
-			 *
-			 *  @type object
-			 */
-			legacy: {
-				/**
-				 * Enable / disable DataTables 1.9 compatible server-side processing
-				 * requests
-				 *
-				 *  @type boolean
-				 *  @default null
-				 */
-				ajax: null
-			},
-		
-		
-			/**
-			 * Pagination plug-in methods.
-			 * 
-			 * Each entry in this object is a function and defines which buttons should
-			 * be shown by the pagination rendering method that is used for the table:
-			 * {@link DataTable.ext.renderer.pageButton}. The renderer addresses how the
-			 * buttons are displayed in the document, while the functions here tell it
-			 * what buttons to display. This is done by returning an array of button
-			 * descriptions (what each button will do).
-			 *
-			 * Pagination types (the four built in options and any additional plug-in
-			 * options defined here) can be used through the `paginationType`
-			 * initialisation parameter.
-			 *
-			 * The functions defined take two parameters:
-			 *
-			 * 1. `{int} page` The current page index
-			 * 2. `{int} pages` The number of pages in the table
-			 *
-			 * Each function is expected to return an array where each element of the
-			 * array can be one of:
-			 *
-			 * * `first` - Jump to first page when activated
-			 * * `last` - Jump to last page when activated
-			 * * `previous` - Show previous page when activated
-			 * * `next` - Show next page when activated
-			 * * `{int}` - Show page of the index given
-			 * * `{array}` - A nested array containing the above elements to add a
-			 *   containing 'DIV' element (might be useful for styling).
-			 *
-			 * Note that DataTables v1.9- used this object slightly differently whereby
-			 * an object with two functions would be defined for each plug-in. That
-			 * ability is still supported by DataTables 1.10+ to provide backwards
-			 * compatibility, but this option of use is now decremented and no longer
-			 * documented in DataTables 1.10+.
-			 *
-			 *  @type object
-			 *  @default {}
-			 *
-			 *  @example
-			 *    // Show previous, next and current page buttons only
-			 *    $.fn.dataTableExt.oPagination.current = function ( page, pages ) {
-			 *      return [ 'previous', page, 'next' ];
-			 *    };
-			 */
-			pager: {},
-		
-		
-			renderer: {
-				pageButton: {},
-				header: {}
-			},
-		
-		
-			/**
-			 * Ordering plug-ins - custom data source
-			 * 
-			 * The extension options for ordering of data available here is complimentary
-			 * to the default type based ordering that DataTables typically uses. It
-			 * allows much greater control over the the data that is being used to
-			 * order a column, but is necessarily therefore more complex.
-			 * 
-			 * This type of ordering is useful if you want to do ordering based on data
-			 * live from the DOM (for example the contents of an 'input' element) rather
-			 * than just the static string that DataTables knows of.
-			 * 
-			 * The way these plug-ins work is that you create an array of the values you
-			 * wish to be ordering for the column in question and then return that
-			 * array. The data in the array much be in the index order of the rows in
-			 * the table (not the currently ordering order!). Which order data gathering
-			 * function is run here depends on the `dt-init columns.orderDataType`
-			 * parameter that is used for the column (if any).
-			 *
-			 * The functions defined take two parameters:
-			 *
-			 * 1. `{object}` DataTables settings object: see
-			 *    {@link DataTable.models.oSettings}
-			 * 2. `{int}` Target column index
-			 *
-			 * Each function is expected to return an array:
-			 *
-			 * * `{array}` Data for the column to be ordering upon
-			 *
-			 *  @type array
-			 *
-			 *  @example
-			 *    // Ordering using `input` node values
-			 *    $.fn.dataTable.ext.order['dom-text'] = function  ( settings, col )
-			 *    {
-			 *      return this.api().column( col, {order:'index'} ).nodes().map( function ( td, i ) {
-			 *        return $('input', td).val();
-			 *      } );
-			 *    }
-			 */
-			order: {},
-		
-		
-			/**
-			 * Type based plug-ins.
-			 *
-			 * Each column in DataTables has a type assigned to it, either by automatic
-			 * detection or by direct assignment using the `type` option for the column.
-			 * The type of a column will effect how it is ordering and search (plug-ins
-			 * can also make use of the column type if required).
-			 *
-			 * @namespace
-			 */
-			type: {
-				/**
-				 * Type detection functions.
-				 *
-				 * The functions defined in this object are used to automatically detect
-				 * a column's type, making initialisation of DataTables super easy, even
-				 * when complex data is in the table.
-				 *
-				 * The functions defined take two parameters:
-				 *
-			     *  1. `{*}` Data from the column cell to be analysed
-			     *  2. `{settings}` DataTables settings object. This can be used to
-			     *     perform context specific type detection - for example detection
-			     *     based on language settings such as using a comma for a decimal
-			     *     place. Generally speaking the options from the settings will not
-			     *     be required
-				 *
-				 * Each function is expected to return:
-				 *
-				 * * `{string|null}` Data type detected, or null if unknown (and thus
-				 *   pass it on to the other type detection functions.
-				 *
-				 *  @type array
-				 *
-				 *  @example
-				 *    // Currency type detection plug-in:
-				 *    $.fn.dataTable.ext.type.detect.push(
-				 *      function ( data, settings ) {
-				 *        // Check the numeric part
-				 *        if ( ! data.substring(1).match(/[0-9]/) ) {
-				 *          return null;
-				 *        }
-				 *
-				 *        // Check prefixed by currency
-				 *        if ( data.charAt(0) == '$' || data.charAt(0) == '&pound;' ) {
-				 *          return 'currency';
-				 *        }
-				 *        return null;
-				 *      }
-				 *    );
-				 */
-				detect: [],
-		
-		
-				/**
-				 * Type based search formatting.
-				 *
-				 * The type based searching functions can be used to pre-format the
-				 * data to be search on. For example, it can be used to strip HTML
-				 * tags or to de-format telephone numbers for numeric only searching.
-				 *
-				 * Note that is a search is not defined for a column of a given type,
-				 * no search formatting will be performed.
-				 * 
-				 * Pre-processing of searching data plug-ins - When you assign the sType
-				 * for a column (or have it automatically detected for you by DataTables
-				 * or a type detection plug-in), you will typically be using this for
-				 * custom sorting, but it can also be used to provide custom searching
-				 * by allowing you to pre-processing the data and returning the data in
-				 * the format that should be searched upon. This is done by adding
-				 * functions this object with a parameter name which matches the sType
-				 * for that target column. This is the corollary of <i>afnSortData</i>
-				 * for searching data.
-				 *
-				 * The functions defined take a single parameter:
-				 *
-			     *  1. `{*}` Data from the column cell to be prepared for searching
-				 *
-				 * Each function is expected to return:
-				 *
-				 * * `{string|null}` Formatted string that will be used for the searching.
-				 *
-				 *  @type object
-				 *  @default {}
-				 *
-				 *  @example
-				 *    $.fn.dataTable.ext.type.search['title-numeric'] = function ( d ) {
-				 *      return d.replace(/\n/g," ").replace( /<.*?>/g, "" );
-				 *    }
-				 */
-				search: {},
-		
-		
-				/**
-				 * Type based ordering.
-				 *
-				 * The column type tells DataTables what ordering to apply to the table
-				 * when a column is sorted upon. The order for each type that is defined,
-				 * is defined by the functions available in this object.
-				 *
-				 * Each ordering option can be described by three properties added to
-				 * this object:
-				 *
-				 * * `{type}-pre` - Pre-formatting function
-				 * * `{type}-asc` - Ascending order function
-				 * * `{type}-desc` - Descending order function
-				 *
-				 * All three can be used together, only `{type}-pre` or only
-				 * `{type}-asc` and `{type}-desc` together. It is generally recommended
-				 * that only `{type}-pre` is used, as this provides the optimal
-				 * implementation in terms of speed, although the others are provided
-				 * for compatibility with existing Javascript sort functions.
-				 *
-				 * `{type}-pre`: Functions defined take a single parameter:
-				 *
-			     *  1. `{*}` Data from the column cell to be prepared for ordering
-				 *
-				 * And return:
-				 *
-				 * * `{*}` Data to be sorted upon
-				 *
-				 * `{type}-asc` and `{type}-desc`: Functions are typical Javascript sort
-				 * functions, taking two parameters:
-				 *
-			     *  1. `{*}` Data to compare to the second parameter
-			     *  2. `{*}` Data to compare to the first parameter
-				 *
-				 * And returning:
-				 *
-				 * * `{*}` Ordering match: <0 if first parameter should be sorted lower
-				 *   than the second parameter, ===0 if the two parameters are equal and
-				 *   >0 if the first parameter should be sorted height than the second
-				 *   parameter.
-				 * 
-				 *  @type object
-				 *  @default {}
-				 *
-				 *  @example
-				 *    // Numeric ordering of formatted numbers with a pre-formatter
-				 *    $.extend( $.fn.dataTable.ext.type.order, {
-				 *      "string-pre": function(x) {
-				 *        a = (a === "-" || a === "") ? 0 : a.replace( /[^\d\-\.]/g, "" );
-				 *        return parseFloat( a );
-				 *      }
-				 *    } );
-				 *
-				 *  @example
-				 *    // Case-sensitive string ordering, with no pre-formatting method
-				 *    $.extend( $.fn.dataTable.ext.order, {
-				 *      "string-case-asc": function(x,y) {
-				 *        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-				 *      },
-				 *      "string-case-desc": function(x,y) {
-				 *        return ((x < y) ? 1 : ((x > y) ? -1 : 0));
-				 *      }
-				 *    } );
-				 */
-				order: {}
-			},
-		
-			/**
-			 * Unique DataTables instance counter
-			 *
-			 * @type int
-			 * @private
-			 */
-			_unique: 0,
-		
-		
-			//
-			// Depreciated
-			// The following properties are retained for backwards compatibility only.
-			// The should not be used in new projects and will be removed in a future
-			// version
-			//
-		
-			/**
-			 * Version check function.
-			 *  @type function
-			 *  @depreciated Since 1.10
-			 */
-			fnVersionCheck: DataTable.fnVersionCheck,
-		
-		
-			/**
-			 * Index for what 'this' index API functions should use
-			 *  @type int
-			 *  @deprecated Since v1.10
-			 */
-			iApiIndex: 0,
-		
-		
-			/**
-			 * jQuery UI class container
-			 *  @type object
-			 *  @deprecated Since v1.10
-			 */
-			oJUIClasses: {},
-		
-		
-			/**
-			 * Software version
-			 *  @type string
-			 *  @deprecated Since v1.10
-			 */
-			sVersion: DataTable.version
-		};
-		
-		
-		//
-		// Backwards compatibility. Alias to pre 1.10 Hungarian notation counter parts
-		//
-		$.extend( _ext, {
-			afnFiltering: _ext.search,
-			aTypes:       _ext.type.detect,
-			ofnSearch:    _ext.type.search,
-			oSort:        _ext.type.order,
-			afnSortData:  _ext.order,
-			aoFeatures:   _ext.feature,
-			oApi:         _ext.internal,
-			oStdClasses:  _ext.classes,
-			oPagination:  _ext.pager
-		} );
-		
-		
-		$.extend( DataTable.ext.classes, {
-			"sTable": "dataTable",
-			"sNoFooter": "no-footer",
-		
-			/* Paging buttons */
-			"sPageButton": "paginate_button",
-			"sPageButtonActive": "current",
-			"sPageButtonDisabled": "disabled",
-		
-			/* Striping classes */
-			"sStripeOdd": "odd",
-			"sStripeEven": "even",
-		
-			/* Empty row */
-			"sRowEmpty": "dataTables_empty",
-		
-			/* Features */
-			"sWrapper": "dataTables_wrapper",
-			"sFilter": "dataTables_filter",
-			"sInfo": "dataTables_info",
-			"sPaging": "dataTables_paginate paging_", /* Note that the type is postfixed */
-			"sLength": "dataTables_length",
-			"sProcessing": "dataTables_processing",
-		
-			/* Sorting */
-			"sSortAsc": "sorting_asc",
-			"sSortDesc": "sorting_desc",
-			"sSortable": "sorting", /* Sortable in both directions */
-			"sSortableAsc": "sorting_desc_disabled",
-			"sSortableDesc": "sorting_asc_disabled",
-			"sSortableNone": "sorting_disabled",
-			"sSortColumn": "sorting_", /* Note that an int is postfixed for the sorting order */
-		
-			/* Filtering */
-			"sFilterInput": "",
-		
-			/* Page length */
-			"sLengthSelect": "",
-		
-			/* Scrolling */
-			"sScrollWrapper": "dataTables_scroll",
-			"sScrollHead": "dataTables_scrollHead",
-			"sScrollHeadInner": "dataTables_scrollHeadInner",
-			"sScrollBody": "dataTables_scrollBody",
-			"sScrollFoot": "dataTables_scrollFoot",
-			"sScrollFootInner": "dataTables_scrollFootInner",
-		
-			/* Misc */
-			"sHeaderTH": "",
-			"sFooterTH": "",
-		
-			// Deprecated
-			"sSortJUIAsc": "",
-			"sSortJUIDesc": "",
-			"sSortJUI": "",
-			"sSortJUIAscAllowed": "",
-			"sSortJUIDescAllowed": "",
-			"sSortJUIWrapper": "",
-			"sSortIcon": "",
-			"sJUIHeader": "",
-			"sJUIFooter": ""
-		} );
-		
-		
-		var extPagination = DataTable.ext.pager;
-		
-		function _numbers ( page, pages ) {
-			var
-				numbers = [],
-				buttons = extPagination.numbers_length,
-				half = Math.floor( buttons / 2 ),
-				i = 1;
-		
-			if ( pages <= buttons ) {
-				numbers = _range( 0, pages );
-			}
-			else if ( page <= half ) {
-				numbers = _range( 0, buttons-2 );
-				numbers.push( 'ellipsis' );
-				numbers.push( pages-1 );
-			}
-			else if ( page >= pages - 1 - half ) {
-				numbers = _range( pages-(buttons-2), pages );
-				numbers.splice( 0, 0, 'ellipsis' ); // no unshift in ie6
-				numbers.splice( 0, 0, 0 );
-			}
-			else {
-				numbers = _range( page-half+2, page+half-1 );
-				numbers.push( 'ellipsis' );
-				numbers.push( pages-1 );
-				numbers.splice( 0, 0, 'ellipsis' );
-				numbers.splice( 0, 0, 0 );
-			}
-		
-			numbers.DT_el = 'span';
-			return numbers;
-		}
-		
-		
-		$.extend( extPagination, {
-			simple: function ( page, pages ) {
-				return [ 'previous', 'next' ];
-			},
-		
-			full: function ( page, pages ) {
-				return [  'first', 'previous', 'next', 'last' ];
-			},
-		
-			numbers: function ( page, pages ) {
-				return [ _numbers(page, pages) ];
-			},
-		
-			simple_numbers: function ( page, pages ) {
-				return [ 'previous', _numbers(page, pages), 'next' ];
-			},
-		
-			full_numbers: function ( page, pages ) {
-				return [ 'first', 'previous', _numbers(page, pages), 'next', 'last' ];
-			},
-			
-			first_last_numbers: function (page, pages) {
-		 		return ['first', _numbers(page, pages), 'last'];
-		 	},
-		
-			// For testing and plug-ins to use
-			_numbers: _numbers,
-		
-			// Number of number buttons (including ellipsis) to show. _Must be odd!_
-			numbers_length: 7
-		} );
-		
-		
-		$.extend( true, DataTable.ext.renderer, {
-			pageButton: {
-				_: function ( settings, host, idx, buttons, page, pages ) {
-					var classes = settings.oClasses;
-					var lang = settings.oLanguage.oPaginate;
-					var aria = settings.oLanguage.oAria.paginate || {};
-					var btnDisplay, btnClass, counter=0;
-		
-					var attach = function( container, buttons ) {
-						var i, ien, node, button, tabIndex;
-						var disabledClass = classes.sPageButtonDisabled;
-						var clickHandler = function ( e ) {
-							_fnPageChange( settings, e.data.action, true );
-						};
-		
-						for ( i=0, ien=buttons.length ; i<ien ; i++ ) {
-							button = buttons[i];
-		
-							if ( Array.isArray( button ) ) {
-								var inner = $( '<'+(button.DT_el || 'div')+'/>' )
-									.appendTo( container );
-								attach( inner, button );
-							}
-							else {
-								btnDisplay = null;
-								btnClass = button;
-								tabIndex = settings.iTabIndex;
-		
-								switch ( button ) {
-									case 'ellipsis':
-										container.append('<span class="ellipsis">&#x2026;</span>');
-										break;
-		
-									case 'first':
-										btnDisplay = lang.sFirst;
-		
-										if ( page === 0 ) {
-											tabIndex = -1;
-											btnClass += ' ' + disabledClass;
-										}
-										break;
-		
-									case 'previous':
-										btnDisplay = lang.sPrevious;
-		
-										if ( page === 0 ) {
-											tabIndex = -1;
-											btnClass += ' ' + disabledClass;
-										}
-										break;
-		
-									case 'next':
-										btnDisplay = lang.sNext;
-		
-										if ( pages === 0 || page === pages-1 ) {
-											tabIndex = -1;
-											btnClass += ' ' + disabledClass;
-										}
-										break;
-		
-									case 'last':
-										btnDisplay = lang.sLast;
-		
-										if ( pages === 0 || page === pages-1 ) {
-											tabIndex = -1;
-											btnClass += ' ' + disabledClass;
-										}
-										break;
-		
-									default:
-										btnDisplay = settings.fnFormatNumber( button + 1 );
-										btnClass = page === button ?
-											classes.sPageButtonActive : '';
-										break;
-								}
-		
-								if ( btnDisplay !== null ) {
-									node = $('<a>', {
-											'class': classes.sPageButton+' '+btnClass,
-											'aria-controls': settings.sTableId,
-											'aria-label': aria[ button ],
-											'data-dt-idx': counter,
-											'tabindex': tabIndex,
-											'id': idx === 0 && typeof button === 'string' ?
-												settings.sTableId +'_'+ button :
-												null
-										} )
-										.html( btnDisplay )
-										.appendTo( container );
-		
-									_fnBindAction(
-										node, {action: button}, clickHandler
-									);
-		
-									counter++;
-								}
-							}
-						}
-					};
-		
-					// IE9 throws an 'unknown error' if document.activeElement is used
-					// inside an iframe or frame. Try / catch the error. Not good for
-					// accessibility, but neither are frames.
-					var activeEl;
-		
-					try {
-						// Because this approach is destroying and recreating the paging
-						// elements, focus is lost on the select button which is bad for
-						// accessibility. So we want to restore focus once the draw has
-						// completed
-						activeEl = $(host).find(document.activeElement).data('dt-idx');
-					}
-					catch (e) {}
-		
-					attach( $(host).empty(), buttons );
-		
-					if ( activeEl !== undefined ) {
-						$(host).find( '[data-dt-idx='+activeEl+']' ).trigger('focus');
-					}
-				}
-			}
-		} );
-		
-		
-		
-		// Built in type detection. See model.ext.aTypes for information about
-		// what is required from this methods.
-		$.extend( DataTable.ext.type.detect, [
-			// Plain numbers - first since V8 detects some plain numbers as dates
-			// e.g. Date.parse('55') (but not all, e.g. Date.parse('22')...).
-			function ( d, settings )
-			{
-				var decimal = settings.oLanguage.sDecimal;
-				return _isNumber( d, decimal ) ? 'num'+decimal : null;
-			},
-		
-			// Dates (only those recognised by the browser's Date.parse)
-			function ( d, settings )
-			{
-				// V8 tries _very_ hard to make a string passed into `Date.parse()`
-				// valid, so we need to use a regex to restrict date formats. Use a
-				// plug-in for anything other than ISO8601 style strings
-				if ( d && !(d instanceof Date) && ! _re_date.test(d) ) {
-					return null;
-				}
-				var parsed = Date.parse(d);
-				return (parsed !== null && !isNaN(parsed)) || _empty(d) ? 'date' : null;
-			},
-		
-			// Formatted numbers
-			function ( d, settings )
-			{
-				var decimal = settings.oLanguage.sDecimal;
-				return _isNumber( d, decimal, true ) ? 'num-fmt'+decimal : null;
-			},
-		
-			// HTML numeric
-			function ( d, settings )
-			{
-				var decimal = settings.oLanguage.sDecimal;
-				return _htmlNumeric( d, decimal ) ? 'html-num'+decimal : null;
-			},
-		
-			// HTML numeric, formatted
-			function ( d, settings )
-			{
-				var decimal = settings.oLanguage.sDecimal;
-				return _htmlNumeric( d, decimal, true ) ? 'html-num-fmt'+decimal : null;
-			},
-		
-			// HTML (this is strict checking - there must be html)
-			function ( d, settings )
-			{
-				return _empty( d ) || (typeof d === 'string' && d.indexOf('<') !== -1) ?
-					'html' : null;
-			}
-		] );
-		
-		
-		
-		// Filter formatting functions. See model.ext.ofnSearch for information about
-		// what is required from these methods.
-		// 
-		// Note that additional search methods are added for the html numbers and
-		// html formatted numbers by `_addNumericSort()` when we know what the decimal
-		// place is
-		
-		
-		$.extend( DataTable.ext.type.search, {
-			html: function ( data ) {
-				return _empty(data) ?
-					data :
-					typeof data === 'string' ?
-						data
-							.replace( _re_new_lines, " " )
-							.replace( _re_html, "" ) :
-						'';
-			},
-		
-			string: function ( data ) {
-				return _empty(data) ?
-					data :
-					typeof data === 'string' ?
-						data.replace( _re_new_lines, " " ) :
-						data;
-			}
-		} );
-		
-		
-		
-		var __numericReplace = function ( d, decimalPlace, re1, re2 ) {
-			if ( d !== 0 && (!d || d === '-') ) {
-				return -Infinity;
-			}
-		
-			// If a decimal place other than `.` is used, it needs to be given to the
-			// function so we can detect it and replace with a `.` which is the only
-			// decimal place Javascript recognises - it is not locale aware.
-			if ( decimalPlace ) {
-				d = _numToDecimal( d, decimalPlace );
-			}
-		
-			if ( d.replace ) {
-				if ( re1 ) {
-					d = d.replace( re1, '' );
-				}
-		
-				if ( re2 ) {
-					d = d.replace( re2, '' );
-				}
-			}
-		
-			return d * 1;
-		};
-		
-		
-		// Add the numeric 'deformatting' functions for sorting and search. This is done
-		// in a function to provide an easy ability for the language options to add
-		// additional methods if a non-period decimal place is used.
-		function _addNumericSort ( decimalPlace ) {
-			$.each(
-				{
-					// Plain numbers
-					"num": function ( d ) {
-						return __numericReplace( d, decimalPlace );
-					},
-		
-					// Formatted numbers
-					"num-fmt": function ( d ) {
-						return __numericReplace( d, decimalPlace, _re_formatted_numeric );
-					},
-		
-					// HTML numeric
-					"html-num": function ( d ) {
-						return __numericReplace( d, decimalPlace, _re_html );
-					},
-		
-					// HTML numeric, formatted
-					"html-num-fmt": function ( d ) {
-						return __numericReplace( d, decimalPlace, _re_html, _re_formatted_numeric );
-					}
-				},
-				function ( key, fn ) {
-					// Add the ordering method
-					_ext.type.order[ key+decimalPlace+'-pre' ] = fn;
-		
-					// For HTML types add a search formatter that will strip the HTML
-					if ( key.match(/^html\-/) ) {
-						_ext.type.search[ key+decimalPlace ] = _ext.type.search.html;
-					}
-				}
-			);
-		}
-		
-		
-		// Default sort methods
-		$.extend( _ext.type.order, {
-			// Dates
-			"date-pre": function ( d ) {
-				var ts = Date.parse( d );
-				return isNaN(ts) ? -Infinity : ts;
-			},
-		
-			// html
-			"html-pre": function ( a ) {
-				return _empty(a) ?
-					'' :
-					a.replace ?
-						a.replace( /<.*?>/g, "" ).toLowerCase() :
-						a+'';
-			},
-		
-			// string
-			"string-pre": function ( a ) {
-				// This is a little complex, but faster than always calling toString,
-				// http://jsperf.com/tostring-v-check
-				return _empty(a) ?
-					'' :
-					typeof a === 'string' ?
-						a.toLowerCase() :
-						! a.toString ?
-							'' :
-							a.toString();
-			},
-		
-			// string-asc and -desc are retained only for compatibility with the old
-			// sort methods
-			"string-asc": function ( x, y ) {
-				return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-			},
-		
-			"string-desc": function ( x, y ) {
-				return ((x < y) ? 1 : ((x > y) ? -1 : 0));
-			}
-		} );
-		
-		
-		// Numeric sorting types - order doesn't matter here
-		_addNumericSort( '' );
-		
-		
-		$.extend( true, DataTable.ext.renderer, {
-			header: {
-				_: function ( settings, cell, column, classes ) {
-					// No additional mark-up required
-					// Attach a sort listener to update on sort - note that using the
-					// `DT` namespace will allow the event to be removed automatically
-					// on destroy, while the `dt` namespaced event is the one we are
-					// listening for
-					$(settings.nTable).on( 'order.dt.DT', function ( e, ctx, sorting, columns ) {
-						if ( settings !== ctx ) { // need to check this this is the host
-							return;               // table, not a nested one
-						}
-		
-						var colIdx = column.idx;
-		
-						cell
-							.removeClass(
-								classes.sSortAsc +' '+
-								classes.sSortDesc
-							)
-							.addClass( columns[ colIdx ] == 'asc' ?
-								classes.sSortAsc : columns[ colIdx ] == 'desc' ?
-									classes.sSortDesc :
-									column.sSortingClass
-							);
-					} );
-				},
-		
-				jqueryui: function ( settings, cell, column, classes ) {
-					$('<div/>')
-						.addClass( classes.sSortJUIWrapper )
-						.append( cell.contents() )
-						.append( $('<span/>')
-							.addClass( classes.sSortIcon+' '+column.sSortingClassJUI )
-						)
-						.appendTo( cell );
-		
-					// Attach a sort listener to update on sort
-					$(settings.nTable).on( 'order.dt.DT', function ( e, ctx, sorting, columns ) {
-						if ( settings !== ctx ) {
-							return;
-						}
-		
-						var colIdx = column.idx;
-		
-						cell
-							.removeClass( classes.sSortAsc +" "+classes.sSortDesc )
-							.addClass( columns[ colIdx ] == 'asc' ?
-								classes.sSortAsc : columns[ colIdx ] == 'desc' ?
-									classes.sSortDesc :
-									column.sSortingClass
-							);
-		
-						cell
-							.find( 'span.'+classes.sSortIcon )
-							.removeClass(
-								classes.sSortJUIAsc +" "+
-								classes.sSortJUIDesc +" "+
-								classes.sSortJUI +" "+
-								classes.sSortJUIAscAllowed +" "+
-								classes.sSortJUIDescAllowed
-							)
-							.addClass( columns[ colIdx ] == 'asc' ?
-								classes.sSortJUIAsc : columns[ colIdx ] == 'desc' ?
-									classes.sSortJUIDesc :
-									column.sSortingClassJUI
-							);
-					} );
-				}
-			}
-		} );
-		
-		/*
-		 * Public helper functions. These aren't used internally by DataTables, or
-		 * called by any of the options passed into DataTables, but they can be used
-		 * externally by developers working with DataTables. They are helper functions
-		 * to make working with DataTables a little bit easier.
-		 */
-		
-		var __htmlEscapeEntities = function ( d ) {
-			if (Array.isArray(d)) {
-				d = d.join(',');
-			}
-		
-			return typeof d === 'string' ?
-				d
-					.replace(/&/g, '&amp;')
-					.replace(/</g, '&lt;')
-					.replace(/>/g, '&gt;')
-					.replace(/"/g, '&quot;') :
-				d;
-		};
-		
+		"_sRowStripe": "",
+	
 		/**
-		 * Helpers for `columns.render`.
+		 * Denote if the original data source was from the DOM, or the data source
+		 * object. This is used for invalidating data, so DataTables can
+		 * automatically read data from the original source, unless uninstructed
+		 * otherwise.
+		 *  @type string
+		 *  @default null
+		 *  @private
+		 */
+		"src": null,
+	
+		/**
+		 * Index in the aoData array. This saves an indexOf lookup when we have the
+		 * object, but want to know the index
+		 *  @type integer
+		 *  @default -1
+		 *  @private
+		 */
+		"idx": -1
+	};
+	
+	
+	/**
+	 * Template object for the column information object in DataTables. This object
+	 * is held in the settings aoColumns array and contains all the information that
+	 * DataTables needs about each individual column.
+	 *
+	 * Note that this object is related to {@link DataTable.defaults.column}
+	 * but this one is the internal data store for DataTables's cache of columns.
+	 * It should NOT be manipulated outside of DataTables. Any configuration should
+	 * be done through the initialisation options.
+	 *  @namespace
+	 */
+	DataTable.models.oColumn = {
+		/**
+		 * Column index. This could be worked out on-the-fly with $.inArray, but it
+		 * is faster to just hold it as a variable
+		 *  @type integer
+		 *  @default null
+		 */
+		"idx": null,
+	
+		/**
+		 * A list of the columns that sorting should occur on when this column
+		 * is sorted. That this property is an array allows multi-column sorting
+		 * to be defined for a column (for example first name / last name columns
+		 * would benefit from this). The values are integers pointing to the
+		 * columns to be sorted on (typically it will be a single integer pointing
+		 * at itself, but that doesn't need to be the case).
+		 *  @type array
+		 */
+		"aDataSort": null,
+	
+		/**
+		 * Define the sorting directions that are applied to the column, in sequence
+		 * as the column is repeatedly sorted upon - i.e. the first value is used
+		 * as the sorting direction when the column if first sorted (clicked on).
+		 * Sort it again (click again) and it will move on to the next index.
+		 * Repeat until loop.
+		 *  @type array
+		 */
+		"asSorting": null,
+	
+		/**
+		 * Flag to indicate if the column is searchable, and thus should be included
+		 * in the filtering or not.
+		 *  @type boolean
+		 */
+		"bSearchable": null,
+	
+		/**
+		 * Flag to indicate if the column is sortable or not.
+		 *  @type boolean
+		 */
+		"bSortable": null,
+	
+		/**
+		 * Flag to indicate if the column is currently visible in the table or not
+		 *  @type boolean
+		 */
+		"bVisible": null,
+	
+		/**
+		 * Store for manual type assignment using the `column.type` option. This
+		 * is held in store so we can manipulate the column's `sType` property.
+		 *  @type string
+		 *  @default null
+		 *  @private
+		 */
+		"_sManualType": null,
+	
+		/**
+		 * Flag to indicate if HTML5 data attributes should be used as the data
+		 * source for filtering or sorting. True is either are.
+		 *  @type boolean
+		 *  @default false
+		 *  @private
+		 */
+		"_bAttrSrc": false,
+	
+		/**
+		 * Developer definable function that is called whenever a cell is created (Ajax source,
+		 * etc) or processed for input (DOM source). This can be used as a compliment to mRender
+		 * allowing you to modify the DOM element (add background colour for example) when the
+		 * element is available.
+		 *  @type function
+		 *  @param {element} nTd The TD node that has been created
+		 *  @param {*} sData The Data for the cell
+		 *  @param {array|object} oData The data for the whole row
+		 *  @param {int} iRow The row index for the aoData data store
+		 *  @default null
+		 */
+		"fnCreatedCell": null,
+	
+		/**
+		 * Function to get data from a cell in a column. You should <b>never</b>
+		 * access data directly through _aData internally in DataTables - always use
+		 * the method attached to this property. It allows mData to function as
+		 * required. This function is automatically assigned by the column
+		 * initialisation method
+		 *  @type function
+		 *  @param {array|object} oData The data array/object for the array
+		 *    (i.e. aoData[]._aData)
+		 *  @param {string} sSpecific The specific data type you want to get -
+		 *    'display', 'type' 'filter' 'sort'
+		 *  @returns {*} The data for the cell from the given row's data
+		 *  @default null
+		 */
+		"fnGetData": null,
+	
+		/**
+		 * Function to set data for a cell in the column. You should <b>never</b>
+		 * set the data directly to _aData internally in DataTables - always use
+		 * this method. It allows mData to function as required. This function
+		 * is automatically assigned by the column initialisation method
+		 *  @type function
+		 *  @param {array|object} oData The data array/object for the array
+		 *    (i.e. aoData[]._aData)
+		 *  @param {*} sValue Value to set
+		 *  @default null
+		 */
+		"fnSetData": null,
+	
+		/**
+		 * Property to read the value for the cells in the column from the data
+		 * source array / object. If null, then the default content is used, if a
+		 * function is given then the return from the function is used.
+		 *  @type function|int|string|null
+		 *  @default null
+		 */
+		"mData": null,
+	
+		/**
+		 * Partner property to mData which is used (only when defined) to get
+		 * the data - i.e. it is basically the same as mData, but without the
+		 * 'set' option, and also the data fed to it is the result from mData.
+		 * This is the rendering method to match the data method of mData.
+		 *  @type function|int|string|null
+		 *  @default null
+		 */
+		"mRender": null,
+	
+		/**
+		 * Unique header TH/TD element for this column - this is what the sorting
+		 * listener is attached to (if sorting is enabled.)
+		 *  @type node
+		 *  @default null
+		 */
+		"nTh": null,
+	
+		/**
+		 * Unique footer TH/TD element for this column (if there is one). Not used
+		 * in DataTables as such, but can be used for plug-ins to reference the
+		 * footer for each column.
+		 *  @type node
+		 *  @default null
+		 */
+		"nTf": null,
+	
+		/**
+		 * The class to apply to all TD elements in the table's TBODY for the column
+		 *  @type string
+		 *  @default null
+		 */
+		"sClass": null,
+	
+		/**
+		 * When DataTables calculates the column widths to assign to each column,
+		 * it finds the longest string in each column and then constructs a
+		 * temporary table and reads the widths from that. The problem with this
+		 * is that "mmm" is much wider then "iiii", but the latter is a longer
+		 * string - thus the calculation can go wrong (doing it properly and putting
+		 * it into an DOM object and measuring that is horribly(!) slow). Thus as
+		 * a "work around" we provide this option. It will append its value to the
+		 * text that is found to be the longest string for the column - i.e. padding.
+		 *  @type string
+		 */
+		"sContentPadding": null,
+	
+		/**
+		 * Allows a default value to be given for a column's data, and will be used
+		 * whenever a null data source is encountered (this can be because mData
+		 * is set to null, or because the data source itself is null).
+		 *  @type string
+		 *  @default null
+		 */
+		"sDefaultContent": null,
+	
+		/**
+		 * Name for the column, allowing reference to the column by name as well as
+		 * by index (needs a lookup to work by name).
+		 *  @type string
+		 */
+		"sName": null,
+	
+		/**
+		 * Custom sorting data type - defines which of the available plug-ins in
+		 * afnSortData the custom sorting will use - if any is defined.
+		 *  @type string
+		 *  @default std
+		 */
+		"sSortDataType": 'std',
+	
+		/**
+		 * Class to be applied to the header element when sorting on this column
+		 *  @type string
+		 *  @default null
+		 */
+		"sSortingClass": null,
+	
+		/**
+		 * Class to be applied to the header element when sorting on this column -
+		 * when jQuery UI theming is used.
+		 *  @type string
+		 *  @default null
+		 */
+		"sSortingClassJUI": null,
+	
+		/**
+		 * Title of the column - what is seen in the TH element (nTh).
+		 *  @type string
+		 */
+		"sTitle": null,
+	
+		/**
+		 * Column sorting and filtering type
+		 *  @type string
+		 *  @default null
+		 */
+		"sType": null,
+	
+		/**
+		 * Width of the column
+		 *  @type string
+		 *  @default null
+		 */
+		"sWidth": null,
+	
+		/**
+		 * Width of the column when it was first "encountered"
+		 *  @type string
+		 *  @default null
+		 */
+		"sWidthOrig": null
+	};
+	
+	
+	/*
+	 * Developer note: The properties of the object below are given in Hungarian
+	 * notation, that was used as the interface for DataTables prior to v1.10, however
+	 * from v1.10 onwards the primary interface is camel case. In order to avoid
+	 * breaking backwards compatibility utterly with this change, the Hungarian
+	 * version is still, internally the primary interface, but is is not documented
+	 * - hence the @name tags in each doc comment. This allows a Javascript function
+	 * to create a map from Hungarian notation to camel case (going the other direction
+	 * would require each property to be listed, which would add around 3K to the size
+	 * of DataTables, while this method is about a 0.5K hit).
+	 *
+	 * Ultimately this does pave the way for Hungarian notation to be dropped
+	 * completely, but that is a massive amount of work and will break current
+	 * installs (therefore is on-hold until v2).
+	 */
+	
+	/**
+	 * Initialisation options that can be given to DataTables at initialisation
+	 * time.
+	 *  @namespace
+	 */
+	DataTable.defaults = {
+		/**
+		 * An array of data to use for the table, passed in at initialisation which
+		 * will be used in preference to any data which is already in the DOM. This is
+		 * particularly useful for constructing tables purely in Javascript, for
+		 * example with a custom Ajax call.
+		 *  @type array
+		 *  @default null
 		 *
-		 * The options defined here can be used with the `columns.render` initialisation
-		 * option to provide a display renderer. The following functions are defined:
+		 *  @dtopt Option
+		 *  @name DataTable.defaults.data
 		 *
-		 * * `number` - Will format numeric data (defined by `columns.data`) for
-		 *   display, retaining the original unformatted data for sorting and filtering.
-		 *   It takes 5 parameters:
-		 *   * `string` - Thousands grouping separator
-		 *   * `string` - Decimal point indicator
-		 *   * `integer` - Number of decimal points to show
-		 *   * `string` (optional) - Prefix.
-		 *   * `string` (optional) - Postfix (/suffix).
-		 * * `text` - Escape HTML to help prevent XSS attacks. It has no optional
-		 *   parameters.
+		 *  @example
+		 *    // Using a 2D array data source
+		 *    $(document).ready( function () {
+		 *      $('#example').dataTable( {
+		 *        "data": [
+		 *          ['Trident', 'Internet Explorer 4.0', 'Win 95+', 4, 'X'],
+		 *          ['Trident', 'Internet Explorer 5.0', 'Win 95+', 5, 'C'],
+		 *        ],
+		 *        "columns": [
+		 *          { "title": "Engine" },
+		 *          { "title": "Browser" },
+		 *          { "title": "Platform" },
+		 *          { "title": "Version" },
+		 *          { "title": "Grade" }
+		 *        ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using an array of objects as a data source (`data`)
+		 *    $(document).ready( function () {
+		 *      $('#example').dataTable( {
+		 *        "data": [
+		 *          {
+		 *            "engine":   "Trident",
+		 *            "browser":  "Internet Explorer 4.0",
+		 *            "platform": "Win 95+",
+		 *            "version":  4,
+		 *            "grade":    "X"
+		 *          },
+		 *          {
+		 *            "engine":   "Trident",
+		 *            "browser":  "Internet Explorer 5.0",
+		 *            "platform": "Win 95+",
+		 *            "version":  5,
+		 *            "grade":    "C"
+		 *          }
+		 *        ],
+		 *        "columns": [
+		 *          { "title": "Engine",   "data": "engine" },
+		 *          { "title": "Browser",  "data": "browser" },
+		 *          { "title": "Platform", "data": "platform" },
+		 *          { "title": "Version",  "data": "version" },
+		 *          { "title": "Grade",    "data": "grade" }
+		 *        ]
+		 *      } );
+		 *    } );
+		 */
+		"aaData": null,
+	
+	
+		/**
+		 * If ordering is enabled, then DataTables will perform a first pass sort on
+		 * initialisation. You can define which column(s) the sort is performed
+		 * upon, and the sorting direction, with this variable. The `sorting` array
+		 * should contain an array for each column to be sorted initially containing
+		 * the column's index and a direction string ('asc' or 'desc').
+		 *  @type array
+		 *  @default [[0,'asc']]
+		 *
+		 *  @dtopt Option
+		 *  @name DataTable.defaults.order
+		 *
+		 *  @example
+		 *    // Sort by 3rd column first, and then 4th column
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "order": [[2,'asc'], [3,'desc']]
+		 *      } );
+		 *    } );
+		 *
+		 *    // No initial sorting
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "order": []
+		 *      } );
+		 *    } );
+		 */
+		"aaSorting": [[0,'asc']],
+	
+	
+		/**
+		 * This parameter is basically identical to the `sorting` parameter, but
+		 * cannot be overridden by user interaction with the table. What this means
+		 * is that you could have a column (visible or hidden) which the sorting
+		 * will always be forced on first - any sorting after that (from the user)
+		 * will then be performed as required. This can be useful for grouping rows
+		 * together.
+		 *  @type array
+		 *  @default null
+		 *
+		 *  @dtopt Option
+		 *  @name DataTable.defaults.orderFixed
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "orderFixed": [[0,'asc']]
+		 *      } );
+		 *    } )
+		 */
+		"aaSortingFixed": [],
+	
+	
+		/**
+		 * DataTables can be instructed to load data to display in the table from a
+		 * Ajax source. This option defines how that Ajax call is made and where to.
+		 *
+		 * The `ajax` property has three different modes of operation, depending on
+		 * how it is defined. These are:
+		 *
+		 * * `string` - Set the URL from where the data should be loaded from.
+		 * * `object` - Define properties for `jQuery.ajax`.
+		 * * `function` - Custom data get function
+		 *
+		 * `string`
+		 * --------
+		 *
+		 * As a string, the `ajax` property simply defines the URL from which
+		 * DataTables will load data.
+		 *
+		 * `object`
+		 * --------
+		 *
+		 * As an object, the parameters in the object are passed to
+		 * [jQuery.ajax](http://api.jquery.com/jQuery.ajax/) allowing fine control
+		 * of the Ajax request. DataTables has a number of default parameters which
+		 * you can override using this option. Please refer to the jQuery
+		 * documentation for a full description of the options available, although
+		 * the following parameters provide additional options in DataTables or
+		 * require special consideration:
+		 *
+		 * * `data` - As with jQuery, `data` can be provided as an object, but it
+		 *   can also be used as a function to manipulate the data DataTables sends
+		 *   to the server. The function takes a single parameter, an object of
+		 *   parameters with the values that DataTables has readied for sending. An
+		 *   object may be returned which will be merged into the DataTables
+		 *   defaults, or you can add the items to the object that was passed in and
+		 *   not return anything from the function. This supersedes `fnServerParams`
+		 *   from DataTables 1.9-.
+		 *
+		 * * `dataSrc` - By default DataTables will look for the property `data` (or
+		 *   `aaData` for compatibility with DataTables 1.9-) when obtaining data
+		 *   from an Ajax source or for server-side processing - this parameter
+		 *   allows that property to be changed. You can use Javascript dotted
+		 *   object notation to get a data source for multiple levels of nesting, or
+		 *   it my be used as a function. As a function it takes a single parameter,
+		 *   the JSON returned from the server, which can be manipulated as
+		 *   required, with the returned value being that used by DataTables as the
+		 *   data source for the table. This supersedes `sAjaxDataProp` from
+		 *   DataTables 1.9-.
+		 *
+		 * * `success` - Should not be overridden it is used internally in
+		 *   DataTables. To manipulate / transform the data returned by the server
+		 *   use `ajax.dataSrc`, or use `ajax` as a function (see below).
+		 *
+		 * `function`
+		 * ----------
+		 *
+		 * As a function, making the Ajax call is left up to yourself allowing
+		 * complete control of the Ajax request. Indeed, if desired, a method other
+		 * than Ajax could be used to obtain the required data, such as Web storage
+		 * or an AIR database.
+		 *
+		 * The function is given four parameters and no return is required. The
+		 * parameters are:
+		 *
+		 * 1. _object_ - Data to send to the server
+		 * 2. _function_ - Callback function that must be executed when the required
+		 *    data has been obtained. That data should be passed into the callback
+		 *    as the only parameter
+		 * 3. _object_ - DataTables settings object for the table
+		 *
+		 * Note that this supersedes `fnServerData` from DataTables 1.9-.
+		 *
+		 *  @type string|object|function
+		 *  @default null
+		 *
+		 *  @dtopt Option
+		 *  @name DataTable.defaults.ajax
+		 *  @since 1.10.0
 		 *
 		 * @example
-		 *   // Column definition using the number renderer
-		 *   {
-		 *     data: "salary",
-		 *     render: $.fn.dataTable.render.number( '\'', '.', 0, '$' )
-		 *   }
+		 *   // Get JSON data from a file via Ajax.
+		 *   // Note DataTables expects data in the form `{ data: [ ...data... ] }` by default).
+		 *   $('#example').dataTable( {
+		 *     "ajax": "data.json"
+		 *   } );
+		 *
+		 * @example
+		 *   // Get JSON data from a file via Ajax, using `dataSrc` to change
+		 *   // `data` to `tableData` (i.e. `{ tableData: [ ...data... ] }`)
+		 *   $('#example').dataTable( {
+		 *     "ajax": {
+		 *       "url": "data.json",
+		 *       "dataSrc": "tableData"
+		 *     }
+		 *   } );
+		 *
+		 * @example
+		 *   // Get JSON data from a file via Ajax, using `dataSrc` to read data
+		 *   // from a plain array rather than an array in an object
+		 *   $('#example').dataTable( {
+		 *     "ajax": {
+		 *       "url": "data.json",
+		 *       "dataSrc": ""
+		 *     }
+		 *   } );
+		 *
+		 * @example
+		 *   // Manipulate the data returned from the server - add a link to data
+		 *   // (note this can, should, be done using `render` for the column - this
+		 *   // is just a simple example of how the data can be manipulated).
+		 *   $('#example').dataTable( {
+		 *     "ajax": {
+		 *       "url": "data.json",
+		 *       "dataSrc": function ( json ) {
+		 *         for ( var i=0, ien=json.length ; i<ien ; i++ ) {
+		 *           json[i][0] = '<a href="/message/'+json[i][0]+'>View message</a>';
+		 *         }
+		 *         return json;
+		 *       }
+		 *     }
+		 *   } );
+		 *
+		 * @example
+		 *   // Add data to the request
+		 *   $('#example').dataTable( {
+		 *     "ajax": {
+		 *       "url": "data.json",
+		 *       "data": function ( d ) {
+		 *         return {
+		 *           "extra_search": $('#extra').val()
+		 *         };
+		 *       }
+		 *     }
+		 *   } );
+		 *
+		 * @example
+		 *   // Send request as POST
+		 *   $('#example').dataTable( {
+		 *     "ajax": {
+		 *       "url": "data.json",
+		 *       "type": "POST"
+		 *     }
+		 *   } );
+		 *
+		 * @example
+		 *   // Get the data from localStorage (could interface with a form for
+		 *   // adding, editing and removing rows).
+		 *   $('#example').dataTable( {
+		 *     "ajax": function (data, callback, settings) {
+		 *       callback(
+		 *         JSON.parse( localStorage.getItem('dataTablesData') )
+		 *       );
+		 *     }
+		 *   } );
+		 */
+		"ajax": null,
+	
+	
+		/**
+		 * This parameter allows you to readily specify the entries in the length drop
+		 * down menu that DataTables shows when pagination is enabled. It can be
+		 * either a 1D array of options which will be used for both the displayed
+		 * option and the value, or a 2D array which will use the array in the first
+		 * position as the value, and the array in the second position as the
+		 * displayed options (useful for language strings such as 'All').
+		 *
+		 * Note that the `pageLength` property will be automatically set to the
+		 * first value given in this array, unless `pageLength` is also provided.
+		 *  @type array
+		 *  @default [ 10, 25, 50, 100 ]
+		 *
+		 *  @dtopt Option
+		 *  @name DataTable.defaults.lengthMenu
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+		 *      } );
+		 *    } );
+		 */
+		"aLengthMenu": [ 10, 25, 50, 100 ],
+	
+	
+		/**
+		 * The `columns` option in the initialisation parameter allows you to define
+		 * details about the way individual columns behave. For a full list of
+		 * column options that can be set, please see
+		 * {@link DataTable.defaults.column}. Note that if you use `columns` to
+		 * define your columns, you must have an entry in the array for every single
+		 * column that you have in your table (these can be null if you don't which
+		 * to specify any options).
+		 *  @member
+		 *
+		 *  @name DataTable.defaults.column
+		 */
+		"aoColumns": null,
+	
+		/**
+		 * Very similar to `columns`, `columnDefs` allows you to target a specific
+		 * column, multiple columns, or all columns, using the `targets` property of
+		 * each object in the array. This allows great flexibility when creating
+		 * tables, as the `columnDefs` arrays can be of any length, targeting the
+		 * columns you specifically want. `columnDefs` may use any of the column
+		 * options available: {@link DataTable.defaults.column}, but it _must_
+		 * have `targets` defined in each object in the array. Values in the `targets`
+		 * array may be:
+		 *   <ul>
+		 *     <li>a string - class name will be matched on the TH for the column</li>
+		 *     <li>0 or a positive integer - column index counting from the left</li>
+		 *     <li>a negative integer - column index counting from the right</li>
+		 *     <li>the string "_all" - all columns (i.e. assign a default)</li>
+		 *   </ul>
+		 *  @member
+		 *
+		 *  @name DataTable.defaults.columnDefs
+		 */
+		"aoColumnDefs": null,
+	
+	
+		/**
+		 * Basically the same as `search`, this parameter defines the individual column
+		 * filtering state at initialisation time. The array must be of the same size
+		 * as the number of columns, and each element be an object with the parameters
+		 * `search` and `escapeRegex` (the latter is optional). 'null' is also
+		 * accepted and the default will be used.
+		 *  @type array
+		 *  @default []
+		 *
+		 *  @dtopt Option
+		 *  @name DataTable.defaults.searchCols
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "searchCols": [
+		 *          null,
+		 *          { "search": "My filter" },
+		 *          null,
+		 *          { "search": "^[0-9]", "escapeRegex": false }
+		 *        ]
+		 *      } );
+		 *    } )
+		 */
+		"aoSearchCols": [],
+	
+	
+		/**
+		 * An array of CSS classes that should be applied to displayed rows. This
+		 * array may be of any length, and DataTables will apply each class
+		 * sequentially, looping when required.
+		 *  @type array
+		 *  @default null <i>Will take the values determined by the `oClasses.stripe*`
+		 *    options</i>
+		 *
+		 *  @dtopt Option
+		 *  @name DataTable.defaults.stripeClasses
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "stripeClasses": [ 'strip1', 'strip2', 'strip3' ]
+		 *      } );
+		 *    } )
+		 */
+		"asStripeClasses": null,
+	
+	
+		/**
+		 * Enable or disable automatic column width calculation. This can be disabled
+		 * as an optimisation (it takes some time to calculate the widths) if the
+		 * tables widths are passed in using `columns`.
+		 *  @type boolean
+		 *  @default true
+		 *
+		 *  @dtopt Features
+		 *  @name DataTable.defaults.autoWidth
+		 *
+		 *  @example
+		 *    $(document).ready( function () {
+		 *      $('#example').dataTable( {
+		 *        "autoWidth": false
+		 *      } );
+		 *    } );
+		 */
+		"bAutoWidth": true,
+	
+	
+		/**
+		 * Deferred rendering can provide DataTables with a huge speed boost when you
+		 * are using an Ajax or JS data source for the table. This option, when set to
+		 * true, will cause DataTables to defer the creation of the table elements for
+		 * each row until they are needed for a draw - saving a significant amount of
+		 * time.
+		 *  @type boolean
+		 *  @default false
+		 *
+		 *  @dtopt Features
+		 *  @name DataTable.defaults.deferRender
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "ajax": "sources/arrays.txt",
+		 *        "deferRender": true
+		 *      } );
+		 *    } );
+		 */
+		"bDeferRender": false,
+	
+	
+		/**
+		 * Replace a DataTable which matches the given selector and replace it with
+		 * one which has the properties of the new initialisation object passed. If no
+		 * table matches the selector, then the new DataTable will be constructed as
+		 * per normal.
+		 *  @type boolean
+		 *  @default false
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.destroy
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "srollY": "200px",
+		 *        "paginate": false
+		 *      } );
+		 *
+		 *      // Some time later....
+		 *      $('#example').dataTable( {
+		 *        "filter": false,
+		 *        "destroy": true
+		 *      } );
+		 *    } );
+		 */
+		"bDestroy": false,
+	
+	
+		/**
+		 * Enable or disable filtering of data. Filtering in DataTables is "smart" in
+		 * that it allows the end user to input multiple words (space separated) and
+		 * will match a row containing those words, even if not in the order that was
+		 * specified (this allow matching across multiple columns). Note that if you
+		 * wish to use filtering in DataTables this must remain 'true' - to remove the
+		 * default filtering input box and retain filtering abilities, please use
+		 * {@link DataTable.defaults.dom}.
+		 *  @type boolean
+		 *  @default true
+		 *
+		 *  @dtopt Features
+		 *  @name DataTable.defaults.searching
+		 *
+		 *  @example
+		 *    $(document).ready( function () {
+		 *      $('#example').dataTable( {
+		 *        "searching": false
+		 *      } );
+		 *    } );
+		 */
+		"bFilter": true,
+	
+	
+		/**
+		 * Enable or disable the table information display. This shows information
+		 * about the data that is currently visible on the page, including information
+		 * about filtered data if that action is being performed.
+		 *  @type boolean
+		 *  @default true
+		 *
+		 *  @dtopt Features
+		 *  @name DataTable.defaults.info
+		 *
+		 *  @example
+		 *    $(document).ready( function () {
+		 *      $('#example').dataTable( {
+		 *        "info": false
+		 *      } );
+		 *    } );
+		 */
+		"bInfo": true,
+	
+	
+		/**
+		 * Allows the end user to select the size of a formatted page from a select
+		 * menu (sizes are 10, 25, 50 and 100). Requires pagination (`paginate`).
+		 *  @type boolean
+		 *  @default true
+		 *
+		 *  @dtopt Features
+		 *  @name DataTable.defaults.lengthChange
+		 *
+		 *  @example
+		 *    $(document).ready( function () {
+		 *      $('#example').dataTable( {
+		 *        "lengthChange": false
+		 *      } );
+		 *    } );
+		 */
+		"bLengthChange": true,
+	
+	
+		/**
+		 * Enable or disable pagination.
+		 *  @type boolean
+		 *  @default true
+		 *
+		 *  @dtopt Features
+		 *  @name DataTable.defaults.paging
+		 *
+		 *  @example
+		 *    $(document).ready( function () {
+		 *      $('#example').dataTable( {
+		 *        "paging": false
+		 *      } );
+		 *    } );
+		 */
+		"bPaginate": true,
+	
+	
+		/**
+		 * Enable or disable the display of a 'processing' indicator when the table is
+		 * being processed (e.g. a sort). This is particularly useful for tables with
+		 * large amounts of data where it can take a noticeable amount of time to sort
+		 * the entries.
+		 *  @type boolean
+		 *  @default false
+		 *
+		 *  @dtopt Features
+		 *  @name DataTable.defaults.processing
+		 *
+		 *  @example
+		 *    $(document).ready( function () {
+		 *      $('#example').dataTable( {
+		 *        "processing": true
+		 *      } );
+		 *    } );
+		 */
+		"bProcessing": false,
+	
+	
+		/**
+		 * Retrieve the DataTables object for the given selector. Note that if the
+		 * table has already been initialised, this parameter will cause DataTables
+		 * to simply return the object that has already been set up - it will not take
+		 * account of any changes you might have made to the initialisation object
+		 * passed to DataTables (setting this parameter to true is an acknowledgement
+		 * that you understand this). `destroy` can be used to reinitialise a table if
+		 * you need.
+		 *  @type boolean
+		 *  @default false
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.retrieve
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      initTable();
+		 *      tableActions();
+		 *    } );
+		 *
+		 *    function initTable ()
+		 *    {
+		 *      return $('#example').dataTable( {
+		 *        "scrollY": "200px",
+		 *        "paginate": false,
+		 *        "retrieve": true
+		 *      } );
+		 *    }
+		 *
+		 *    function tableActions ()
+		 *    {
+		 *      var table = initTable();
+		 *      // perform API operations with oTable
+		 *    }
+		 */
+		"bRetrieve": false,
+	
+	
+		/**
+		 * When vertical (y) scrolling is enabled, DataTables will force the height of
+		 * the table's viewport to the given height at all times (useful for layout).
+		 * However, this can look odd when filtering data down to a small data set,
+		 * and the footer is left "floating" further down. This parameter (when
+		 * enabled) will cause DataTables to collapse the table's viewport down when
+		 * the result set will fit within the given Y height.
+		 *  @type boolean
+		 *  @default false
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.scrollCollapse
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "scrollY": "200",
+		 *        "scrollCollapse": true
+		 *      } );
+		 *    } );
+		 */
+		"bScrollCollapse": false,
+	
+	
+		/**
+		 * Configure DataTables to use server-side processing. Note that the
+		 * `ajax` parameter must also be given in order to give DataTables a
+		 * source to obtain the required data for each draw.
+		 *  @type boolean
+		 *  @default false
+		 *
+		 *  @dtopt Features
+		 *  @dtopt Server-side
+		 *  @name DataTable.defaults.serverSide
+		 *
+		 *  @example
+		 *    $(document).ready( function () {
+		 *      $('#example').dataTable( {
+		 *        "serverSide": true,
+		 *        "ajax": "xhr.php"
+		 *      } );
+		 *    } );
+		 */
+		"bServerSide": false,
+	
+	
+		/**
+		 * Enable or disable sorting of columns. Sorting of individual columns can be
+		 * disabled by the `sortable` option for each column.
+		 *  @type boolean
+		 *  @default true
+		 *
+		 *  @dtopt Features
+		 *  @name DataTable.defaults.ordering
+		 *
+		 *  @example
+		 *    $(document).ready( function () {
+		 *      $('#example').dataTable( {
+		 *        "ordering": false
+		 *      } );
+		 *    } );
+		 */
+		"bSort": true,
+	
+	
+		/**
+		 * Enable or display DataTables' ability to sort multiple columns at the
+		 * same time (activated by shift-click by the user).
+		 *  @type boolean
+		 *  @default true
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.orderMulti
+		 *
+		 *  @example
+		 *    // Disable multiple column sorting ability
+		 *    $(document).ready( function () {
+		 *      $('#example').dataTable( {
+		 *        "orderMulti": false
+		 *      } );
+		 *    } );
+		 */
+		"bSortMulti": true,
+	
+	
+		/**
+		 * Allows control over whether DataTables should use the top (true) unique
+		 * cell that is found for a single column, or the bottom (false - default).
+		 * This is useful when using complex headers.
+		 *  @type boolean
+		 *  @default false
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.orderCellsTop
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "orderCellsTop": true
+		 *      } );
+		 *    } );
+		 */
+		"bSortCellsTop": false,
+	
+	
+		/**
+		 * Enable or disable the addition of the classes `sorting\_1`, `sorting\_2` and
+		 * `sorting\_3` to the columns which are currently being sorted on. This is
+		 * presented as a feature switch as it can increase processing time (while
+		 * classes are removed and added) so for large data sets you might want to
+		 * turn this off.
+		 *  @type boolean
+		 *  @default true
+		 *
+		 *  @dtopt Features
+		 *  @name DataTable.defaults.orderClasses
+		 *
+		 *  @example
+		 *    $(document).ready( function () {
+		 *      $('#example').dataTable( {
+		 *        "orderClasses": false
+		 *      } );
+		 *    } );
+		 */
+		"bSortClasses": true,
+	
+	
+		/**
+		 * Enable or disable state saving. When enabled HTML5 `localStorage` will be
+		 * used to save table display information such as pagination information,
+		 * display length, filtering and sorting. As such when the end user reloads
+		 * the page the display display will match what thy had previously set up.
+		 *
+		 * Due to the use of `localStorage` the default state saving is not supported
+		 * in IE6 or 7. If state saving is required in those browsers, use
+		 * `stateSaveCallback` to provide a storage solution such as cookies.
+		 *  @type boolean
+		 *  @default false
+		 *
+		 *  @dtopt Features
+		 *  @name DataTable.defaults.stateSave
+		 *
+		 *  @example
+		 *    $(document).ready( function () {
+		 *      $('#example').dataTable( {
+		 *        "stateSave": true
+		 *      } );
+		 *    } );
+		 */
+		"bStateSave": false,
+	
+	
+		/**
+		 * This function is called when a TR element is created (and all TD child
+		 * elements have been inserted), or registered if using a DOM source, allowing
+		 * manipulation of the TR element (adding classes etc).
+		 *  @type function
+		 *  @param {node} row "TR" element for the current row
+		 *  @param {array} data Raw data array for this row
+		 *  @param {int} dataIndex The index of this row in the internal aoData array
+		 *
+		 *  @dtopt Callbacks
+		 *  @name DataTable.defaults.createdRow
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "createdRow": function( row, data, dataIndex ) {
+		 *          // Bold the grade for all 'A' grade browsers
+		 *          if ( data[4] == "A" )
+		 *          {
+		 *            $('td:eq(4)', row).html( '<b>A</b>' );
+		 *          }
+		 *        }
+		 *      } );
+		 *    } );
+		 */
+		"fnCreatedRow": null,
+	
+	
+		/**
+		 * This function is called on every 'draw' event, and allows you to
+		 * dynamically modify any aspect you want about the created DOM.
+		 *  @type function
+		 *  @param {object} settings DataTables settings object
+		 *
+		 *  @dtopt Callbacks
+		 *  @name DataTable.defaults.drawCallback
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "drawCallback": function( settings ) {
+		 *          alert( 'DataTables has redrawn the table' );
+		 *        }
+		 *      } );
+		 *    } );
+		 */
+		"fnDrawCallback": null,
+	
+	
+		/**
+		 * Identical to fnHeaderCallback() but for the table footer this function
+		 * allows you to modify the table footer on every 'draw' event.
+		 *  @type function
+		 *  @param {node} foot "TR" element for the footer
+		 *  @param {array} data Full table data (as derived from the original HTML)
+		 *  @param {int} start Index for the current display starting point in the
+		 *    display array
+		 *  @param {int} end Index for the current display ending point in the
+		 *    display array
+		 *  @param {array int} display Index array to translate the visual position
+		 *    to the full data array
+		 *
+		 *  @dtopt Callbacks
+		 *  @name DataTable.defaults.footerCallback
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "footerCallback": function( tfoot, data, start, end, display ) {
+		 *          tfoot.getElementsByTagName('th')[0].innerHTML = "Starting index is "+start;
+		 *        }
+		 *      } );
+		 *    } )
+		 */
+		"fnFooterCallback": null,
+	
+	
+		/**
+		 * When rendering large numbers in the information element for the table
+		 * (i.e. "Showing 1 to 10 of 57 entries") DataTables will render large numbers
+		 * to have a comma separator for the 'thousands' units (e.g. 1 million is
+		 * rendered as "1,000,000") to help readability for the end user. This
+		 * function will override the default method DataTables uses.
+		 *  @type function
+		 *  @member
+		 *  @param {int} toFormat number to be formatted
+		 *  @returns {string} formatted string for DataTables to show the number
+		 *
+		 *  @dtopt Callbacks
+		 *  @name DataTable.defaults.formatNumber
+		 *
+		 *  @example
+		 *    // Format a number using a single quote for the separator (note that
+		 *    // this can also be done with the language.thousands option)
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "formatNumber": function ( toFormat ) {
+		 *          return toFormat.toString().replace(
+		 *            /\B(?=(\d{3})+(?!\d))/g, "'"
+		 *          );
+		 *        };
+		 *      } );
+		 *    } );
+		 */
+		"fnFormatNumber": function ( toFormat ) {
+			return toFormat.toString().replace(
+				/\B(?=(\d{3})+(?!\d))/g,
+				this.oLanguage.sThousands
+			);
+		},
+	
+	
+		/**
+		 * This function is called on every 'draw' event, and allows you to
+		 * dynamically modify the header row. This can be used to calculate and
+		 * display useful information about the table.
+		 *  @type function
+		 *  @param {node} head "TR" element for the header
+		 *  @param {array} data Full table data (as derived from the original HTML)
+		 *  @param {int} start Index for the current display starting point in the
+		 *    display array
+		 *  @param {int} end Index for the current display ending point in the
+		 *    display array
+		 *  @param {array int} display Index array to translate the visual position
+		 *    to the full data array
+		 *
+		 *  @dtopt Callbacks
+		 *  @name DataTable.defaults.headerCallback
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "fheaderCallback": function( head, data, start, end, display ) {
+		 *          head.getElementsByTagName('th')[0].innerHTML = "Displaying "+(end-start)+" records";
+		 *        }
+		 *      } );
+		 *    } )
+		 */
+		"fnHeaderCallback": null,
+	
+	
+		/**
+		 * The information element can be used to convey information about the current
+		 * state of the table. Although the internationalisation options presented by
+		 * DataTables are quite capable of dealing with most customisations, there may
+		 * be times where you wish to customise the string further. This callback
+		 * allows you to do exactly that.
+		 *  @type function
+		 *  @param {object} oSettings DataTables settings object
+		 *  @param {int} start Starting position in data for the draw
+		 *  @param {int} end End position in data for the draw
+		 *  @param {int} max Total number of rows in the table (regardless of
+		 *    filtering)
+		 *  @param {int} total Total number of rows in the data set, after filtering
+		 *  @param {string} pre The string that DataTables has formatted using it's
+		 *    own rules
+		 *  @returns {string} The string to be displayed in the information element.
+		 *
+		 *  @dtopt Callbacks
+		 *  @name DataTable.defaults.infoCallback
+		 *
+		 *  @example
+		 *    $('#example').dataTable( {
+		 *      "infoCallback": function( settings, start, end, max, total, pre ) {
+		 *        return start +" to "+ end;
+		 *      }
+		 *    } );
+		 */
+		"fnInfoCallback": null,
+	
+	
+		/**
+		 * Called when the table has been initialised. Normally DataTables will
+		 * initialise sequentially and there will be no need for this function,
+		 * however, this does not hold true when using external language information
+		 * since that is obtained using an async XHR call.
+		 *  @type function
+		 *  @param {object} settings DataTables settings object
+		 *  @param {object} json The JSON object request from the server - only
+		 *    present if client-side Ajax sourced data is used
+		 *
+		 *  @dtopt Callbacks
+		 *  @name DataTable.defaults.initComplete
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "initComplete": function(settings, json) {
+		 *          alert( 'DataTables has finished its initialisation.' );
+		 *        }
+		 *      } );
+		 *    } )
+		 */
+		"fnInitComplete": null,
+	
+	
+		/**
+		 * Called at the very start of each table draw and can be used to cancel the
+		 * draw by returning false, any other return (including undefined) results in
+		 * the full draw occurring).
+		 *  @type function
+		 *  @param {object} settings DataTables settings object
+		 *  @returns {boolean} False will cancel the draw, anything else (including no
+		 *    return) will allow it to complete.
+		 *
+		 *  @dtopt Callbacks
+		 *  @name DataTable.defaults.preDrawCallback
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "preDrawCallback": function( settings ) {
+		 *          if ( $('#test').val() == 1 ) {
+		 *            return false;
+		 *          }
+		 *        }
+		 *      } );
+		 *    } );
+		 */
+		"fnPreDrawCallback": null,
+	
+	
+		/**
+		 * This function allows you to 'post process' each row after it have been
+		 * generated for each table draw, but before it is rendered on screen. This
+		 * function might be used for setting the row class name etc.
+		 *  @type function
+		 *  @param {node} row "TR" element for the current row
+		 *  @param {array} data Raw data array for this row
+		 *  @param {int} displayIndex The display index for the current table draw
+		 *  @param {int} displayIndexFull The index of the data in the full list of
+		 *    rows (after filtering)
+		 *
+		 *  @dtopt Callbacks
+		 *  @name DataTable.defaults.rowCallback
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "rowCallback": function( row, data, displayIndex, displayIndexFull ) {
+		 *          // Bold the grade for all 'A' grade browsers
+		 *          if ( data[4] == "A" ) {
+		 *            $('td:eq(4)', row).html( '<b>A</b>' );
+		 *          }
+		 *        }
+		 *      } );
+		 *    } );
+		 */
+		"fnRowCallback": null,
+	
+	
+		/**
+		 * __Deprecated__ The functionality provided by this parameter has now been
+		 * superseded by that provided through `ajax`, which should be used instead.
+		 *
+		 * This parameter allows you to override the default function which obtains
+		 * the data from the server so something more suitable for your application.
+		 * For example you could use POST data, or pull information from a Gears or
+		 * AIR database.
+		 *  @type function
+		 *  @member
+		 *  @param {string} source HTTP source to obtain the data from (`ajax`)
+		 *  @param {array} data A key/value pair object containing the data to send
+		 *    to the server
+		 *  @param {function} callback to be called on completion of the data get
+		 *    process that will draw the data on the page.
+		 *  @param {object} settings DataTables settings object
+		 *
+		 *  @dtopt Callbacks
+		 *  @dtopt Server-side
+		 *  @name DataTable.defaults.serverData
+		 *
+		 *  @deprecated 1.10. Please use `ajax` for this functionality now.
+		 */
+		"fnServerData": null,
+	
+	
+		/**
+		 * __Deprecated__ The functionality provided by this parameter has now been
+		 * superseded by that provided through `ajax`, which should be used instead.
+		 *
+		 *  It is often useful to send extra data to the server when making an Ajax
+		 * request - for example custom filtering information, and this callback
+		 * function makes it trivial to send extra information to the server. The
+		 * passed in parameter is the data set that has been constructed by
+		 * DataTables, and you can add to this or modify it as you require.
+		 *  @type function
+		 *  @param {array} data Data array (array of objects which are name/value
+		 *    pairs) that has been constructed by DataTables and will be sent to the
+		 *    server. In the case of Ajax sourced data with server-side processing
+		 *    this will be an empty array, for server-side processing there will be a
+		 *    significant number of parameters!
+		 *  @returns {undefined} Ensure that you modify the data array passed in,
+		 *    as this is passed by reference.
+		 *
+		 *  @dtopt Callbacks
+		 *  @dtopt Server-side
+		 *  @name DataTable.defaults.serverParams
+		 *
+		 *  @deprecated 1.10. Please use `ajax` for this functionality now.
+		 */
+		"fnServerParams": null,
+	
+	
+		/**
+		 * Load the table state. With this function you can define from where, and how, the
+		 * state of a table is loaded. By default DataTables will load from `localStorage`
+		 * but you might wish to use a server-side database or cookies.
+		 *  @type function
+		 *  @member
+		 *  @param {object} settings DataTables settings object
+		 *  @param {object} callback Callback that can be executed when done. It
+		 *    should be passed the loaded state object.
+		 *  @return {object} The DataTables state object to be loaded
+		 *
+		 *  @dtopt Callbacks
+		 *  @name DataTable.defaults.stateLoadCallback
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "stateSave": true,
+		 *        "stateLoadCallback": function (settings, callback) {
+		 *          $.ajax( {
+		 *            "url": "/state_load",
+		 *            "dataType": "json",
+		 *            "success": function (json) {
+		 *              callback( json );
+		 *            }
+		 *          } );
+		 *        }
+		 *      } );
+		 *    } );
+		 */
+		"fnStateLoadCallback": function ( settings ) {
+			try {
+				return JSON.parse(
+					(settings.iStateDuration === -1 ? sessionStorage : localStorage).getItem(
+						'DataTables_'+settings.sInstance+'_'+location.pathname
+					)
+				);
+			} catch (e) {
+				return {};
+			}
+		},
+	
+	
+		/**
+		 * Callback which allows modification of the saved state prior to loading that state.
+		 * This callback is called when the table is loading state from the stored data, but
+		 * prior to the settings object being modified by the saved state. Note that for
+		 * plug-in authors, you should use the `stateLoadParams` event to load parameters for
+		 * a plug-in.
+		 *  @type function
+		 *  @param {object} settings DataTables settings object
+		 *  @param {object} data The state object that is to be loaded
+		 *
+		 *  @dtopt Callbacks
+		 *  @name DataTable.defaults.stateLoadParams
+		 *
+		 *  @example
+		 *    // Remove a saved filter, so filtering is never loaded
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "stateSave": true,
+		 *        "stateLoadParams": function (settings, data) {
+		 *          data.oSearch.sSearch = "";
+		 *        }
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Disallow state loading by returning false
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "stateSave": true,
+		 *        "stateLoadParams": function (settings, data) {
+		 *          return false;
+		 *        }
+		 *      } );
+		 *    } );
+		 */
+		"fnStateLoadParams": null,
+	
+	
+		/**
+		 * Callback that is called when the state has been loaded from the state saving method
+		 * and the DataTables settings object has been modified as a result of the loaded state.
+		 *  @type function
+		 *  @param {object} settings DataTables settings object
+		 *  @param {object} data The state object that was loaded
+		 *
+		 *  @dtopt Callbacks
+		 *  @name DataTable.defaults.stateLoaded
+		 *
+		 *  @example
+		 *    // Show an alert with the filtering value that was saved
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "stateSave": true,
+		 *        "stateLoaded": function (settings, data) {
+		 *          alert( 'Saved filter was: '+data.oSearch.sSearch );
+		 *        }
+		 *      } );
+		 *    } );
+		 */
+		"fnStateLoaded": null,
+	
+	
+		/**
+		 * Save the table state. This function allows you to define where and how the state
+		 * information for the table is stored By default DataTables will use `localStorage`
+		 * but you might wish to use a server-side database or cookies.
+		 *  @type function
+		 *  @member
+		 *  @param {object} settings DataTables settings object
+		 *  @param {object} data The state object to be saved
+		 *
+		 *  @dtopt Callbacks
+		 *  @name DataTable.defaults.stateSaveCallback
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "stateSave": true,
+		 *        "stateSaveCallback": function (settings, data) {
+		 *          // Send an Ajax request to the server with the state object
+		 *          $.ajax( {
+		 *            "url": "/state_save",
+		 *            "data": data,
+		 *            "dataType": "json",
+		 *            "method": "POST"
+		 *            "success": function () {}
+		 *          } );
+		 *        }
+		 *      } );
+		 *    } );
+		 */
+		"fnStateSaveCallback": function ( settings, data ) {
+			try {
+				(settings.iStateDuration === -1 ? sessionStorage : localStorage).setItem(
+					'DataTables_'+settings.sInstance+'_'+location.pathname,
+					JSON.stringify( data )
+				);
+			} catch (e) {}
+		},
+	
+	
+		/**
+		 * Callback which allows modification of the state to be saved. Called when the table
+		 * has changed state a new state save is required. This method allows modification of
+		 * the state saving object prior to actually doing the save, including addition or
+		 * other state properties or modification. Note that for plug-in authors, you should
+		 * use the `stateSaveParams` event to save parameters for a plug-in.
+		 *  @type function
+		 *  @param {object} settings DataTables settings object
+		 *  @param {object} data The state object to be saved
+		 *
+		 *  @dtopt Callbacks
+		 *  @name DataTable.defaults.stateSaveParams
+		 *
+		 *  @example
+		 *    // Remove a saved filter, so filtering is never saved
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "stateSave": true,
+		 *        "stateSaveParams": function (settings, data) {
+		 *          data.oSearch.sSearch = "";
+		 *        }
+		 *      } );
+		 *    } );
+		 */
+		"fnStateSaveParams": null,
+	
+	
+		/**
+		 * Duration for which the saved state information is considered valid. After this period
+		 * has elapsed the state will be returned to the default.
+		 * Value is given in seconds.
+		 *  @type int
+		 *  @default 7200 <i>(2 hours)</i>
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.stateDuration
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "stateDuration": 60*60*24; // 1 day
+		 *      } );
+		 *    } )
+		 */
+		"iStateDuration": 7200,
+	
+	
+		/**
+		 * When enabled DataTables will not make a request to the server for the first
+		 * page draw - rather it will use the data already on the page (no sorting etc
+		 * will be applied to it), thus saving on an XHR at load time. `deferLoading`
+		 * is used to indicate that deferred loading is required, but it is also used
+		 * to tell DataTables how many records there are in the full table (allowing
+		 * the information element and pagination to be displayed correctly). In the case
+		 * where a filtering is applied to the table on initial load, this can be
+		 * indicated by giving the parameter as an array, where the first element is
+		 * the number of records available after filtering and the second element is the
+		 * number of records without filtering (allowing the table information element
+		 * to be shown correctly).
+		 *  @type int | array
+		 *  @default null
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.deferLoading
+		 *
+		 *  @example
+		 *    // 57 records available in the table, no filtering applied
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "serverSide": true,
+		 *        "ajax": "scripts/server_processing.php",
+		 *        "deferLoading": 57
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // 57 records after filtering, 100 without filtering (an initial filter applied)
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "serverSide": true,
+		 *        "ajax": "scripts/server_processing.php",
+		 *        "deferLoading": [ 57, 100 ],
+		 *        "search": {
+		 *          "search": "my_filter"
+		 *        }
+		 *      } );
+		 *    } );
+		 */
+		"iDeferLoading": null,
+	
+	
+		/**
+		 * Number of rows to display on a single page when using pagination. If
+		 * feature enabled (`lengthChange`) then the end user will be able to override
+		 * this to a custom setting using a pop-up menu.
+		 *  @type int
+		 *  @default 10
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.pageLength
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "pageLength": 50
+		 *      } );
+		 *    } )
+		 */
+		"iDisplayLength": 10,
+	
+	
+		/**
+		 * Define the starting point for data display when using DataTables with
+		 * pagination. Note that this parameter is the number of records, rather than
+		 * the page number, so if you have 10 records per page and want to start on
+		 * the third page, it should be "20".
+		 *  @type int
+		 *  @default 0
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.displayStart
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "displayStart": 20
+		 *      } );
+		 *    } )
+		 */
+		"iDisplayStart": 0,
+	
+	
+		/**
+		 * By default DataTables allows keyboard navigation of the table (sorting, paging,
+		 * and filtering) by adding a `tabindex` attribute to the required elements. This
+		 * allows you to tab through the controls and press the enter key to activate them.
+		 * The tabindex is default 0, meaning that the tab follows the flow of the document.
+		 * You can overrule this using this parameter if you wish. Use a value of -1 to
+		 * disable built-in keyboard navigation.
+		 *  @type int
+		 *  @default 0
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.tabIndex
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "tabIndex": 1
+		 *      } );
+		 *    } );
+		 */
+		"iTabIndex": 0,
+	
+	
+		/**
+		 * Classes that DataTables assigns to the various components and features
+		 * that it adds to the HTML table. This allows classes to be configured
+		 * during initialisation in addition to through the static
+		 * {@link DataTable.ext.oStdClasses} object).
+		 *  @namespace
+		 *  @name DataTable.defaults.classes
+		 */
+		"oClasses": {},
+	
+	
+		/**
+		 * All strings that DataTables uses in the user interface that it creates
+		 * are defined in this object, allowing you to modified them individually or
+		 * completely replace them all as required.
+		 *  @namespace
+		 *  @name DataTable.defaults.language
+		 */
+		"oLanguage": {
+			/**
+			 * Strings that are used for WAI-ARIA labels and controls only (these are not
+			 * actually visible on the page, but will be read by screenreaders, and thus
+			 * must be internationalised as well).
+			 *  @namespace
+			 *  @name DataTable.defaults.language.aria
+			 */
+			"oAria": {
+				/**
+				 * ARIA label that is added to the table headers when the column may be
+				 * sorted ascending by activing the column (click or return when focused).
+				 * Note that the column header is prefixed to this string.
+				 *  @type string
+				 *  @default : activate to sort column ascending
+				 *
+				 *  @dtopt Language
+				 *  @name DataTable.defaults.language.aria.sortAscending
+				 *
+				 *  @example
+				 *    $(document).ready( function() {
+				 *      $('#example').dataTable( {
+				 *        "language": {
+				 *          "aria": {
+				 *            "sortAscending": " - click/return to sort ascending"
+				 *          }
+				 *        }
+				 *      } );
+				 *    } );
+				 */
+				"sSortAscending": ": activate to sort column ascending",
+	
+				/**
+				 * ARIA label that is added to the table headers when the column may be
+				 * sorted descending by activing the column (click or return when focused).
+				 * Note that the column header is prefixed to this string.
+				 *  @type string
+				 *  @default : activate to sort column ascending
+				 *
+				 *  @dtopt Language
+				 *  @name DataTable.defaults.language.aria.sortDescending
+				 *
+				 *  @example
+				 *    $(document).ready( function() {
+				 *      $('#example').dataTable( {
+				 *        "language": {
+				 *          "aria": {
+				 *            "sortDescending": " - click/return to sort descending"
+				 *          }
+				 *        }
+				 *      } );
+				 *    } );
+				 */
+				"sSortDescending": ": activate to sort column descending"
+			},
+	
+			/**
+			 * Pagination string used by DataTables for the built-in pagination
+			 * control types.
+			 *  @namespace
+			 *  @name DataTable.defaults.language.paginate
+			 */
+			"oPaginate": {
+				/**
+				 * Text to use when using the 'full_numbers' type of pagination for the
+				 * button to take the user to the first page.
+				 *  @type string
+				 *  @default First
+				 *
+				 *  @dtopt Language
+				 *  @name DataTable.defaults.language.paginate.first
+				 *
+				 *  @example
+				 *    $(document).ready( function() {
+				 *      $('#example').dataTable( {
+				 *        "language": {
+				 *          "paginate": {
+				 *            "first": "First page"
+				 *          }
+				 *        }
+				 *      } );
+				 *    } );
+				 */
+				"sFirst": "First",
+	
+	
+				/**
+				 * Text to use when using the 'full_numbers' type of pagination for the
+				 * button to take the user to the last page.
+				 *  @type string
+				 *  @default Last
+				 *
+				 *  @dtopt Language
+				 *  @name DataTable.defaults.language.paginate.last
+				 *
+				 *  @example
+				 *    $(document).ready( function() {
+				 *      $('#example').dataTable( {
+				 *        "language": {
+				 *          "paginate": {
+				 *            "last": "Last page"
+				 *          }
+				 *        }
+				 *      } );
+				 *    } );
+				 */
+				"sLast": "Last",
+	
+	
+				/**
+				 * Text to use for the 'next' pagination button (to take the user to the
+				 * next page).
+				 *  @type string
+				 *  @default Next
+				 *
+				 *  @dtopt Language
+				 *  @name DataTable.defaults.language.paginate.next
+				 *
+				 *  @example
+				 *    $(document).ready( function() {
+				 *      $('#example').dataTable( {
+				 *        "language": {
+				 *          "paginate": {
+				 *            "next": "Next page"
+				 *          }
+				 *        }
+				 *      } );
+				 *    } );
+				 */
+				"sNext": "Next",
+	
+	
+				/**
+				 * Text to use for the 'previous' pagination button (to take the user to
+				 * the previous page).
+				 *  @type string
+				 *  @default Previous
+				 *
+				 *  @dtopt Language
+				 *  @name DataTable.defaults.language.paginate.previous
+				 *
+				 *  @example
+				 *    $(document).ready( function() {
+				 *      $('#example').dataTable( {
+				 *        "language": {
+				 *          "paginate": {
+				 *            "previous": "Previous page"
+				 *          }
+				 *        }
+				 *      } );
+				 *    } );
+				 */
+				"sPrevious": "Previous"
+			},
+	
+			/**
+			 * This string is shown in preference to `zeroRecords` when the table is
+			 * empty of data (regardless of filtering). Note that this is an optional
+			 * parameter - if it is not given, the value of `zeroRecords` will be used
+			 * instead (either the default or given value).
+			 *  @type string
+			 *  @default No data available in table
+			 *
+			 *  @dtopt Language
+			 *  @name DataTable.defaults.language.emptyTable
+			 *
+			 *  @example
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "emptyTable": "No data available in table"
+			 *        }
+			 *      } );
+			 *    } );
+			 */
+			"sEmptyTable": "No data available in table",
+	
+	
+			/**
+			 * This string gives information to the end user about the information
+			 * that is current on display on the page. The following tokens can be
+			 * used in the string and will be dynamically replaced as the table
+			 * display updates. This tokens can be placed anywhere in the string, or
+			 * removed as needed by the language requires:
+			 *
+			 * * `\_START\_` - Display index of the first record on the current page
+			 * * `\_END\_` - Display index of the last record on the current page
+			 * * `\_TOTAL\_` - Number of records in the table after filtering
+			 * * `\_MAX\_` - Number of records in the table without filtering
+			 * * `\_PAGE\_` - Current page number
+			 * * `\_PAGES\_` - Total number of pages of data in the table
+			 *
+			 *  @type string
+			 *  @default Showing _START_ to _END_ of _TOTAL_ entries
+			 *
+			 *  @dtopt Language
+			 *  @name DataTable.defaults.language.info
+			 *
+			 *  @example
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "info": "Showing page _PAGE_ of _PAGES_"
+			 *        }
+			 *      } );
+			 *    } );
+			 */
+			"sInfo": "Showing _START_ to _END_ of _TOTAL_ entries",
+	
+	
+			/**
+			 * Display information string for when the table is empty. Typically the
+			 * format of this string should match `info`.
+			 *  @type string
+			 *  @default Showing 0 to 0 of 0 entries
+			 *
+			 *  @dtopt Language
+			 *  @name DataTable.defaults.language.infoEmpty
+			 *
+			 *  @example
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "infoEmpty": "No entries to show"
+			 *        }
+			 *      } );
+			 *    } );
+			 */
+			"sInfoEmpty": "Showing 0 to 0 of 0 entries",
+	
+	
+			/**
+			 * When a user filters the information in a table, this string is appended
+			 * to the information (`info`) to give an idea of how strong the filtering
+			 * is. The variable _MAX_ is dynamically updated.
+			 *  @type string
+			 *  @default (filtered from _MAX_ total entries)
+			 *
+			 *  @dtopt Language
+			 *  @name DataTable.defaults.language.infoFiltered
+			 *
+			 *  @example
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "infoFiltered": " - filtering from _MAX_ records"
+			 *        }
+			 *      } );
+			 *    } );
+			 */
+			"sInfoFiltered": "(filtered from _MAX_ total entries)",
+	
+	
+			/**
+			 * If can be useful to append extra information to the info string at times,
+			 * and this variable does exactly that. This information will be appended to
+			 * the `info` (`infoEmpty` and `infoFiltered` in whatever combination they are
+			 * being used) at all times.
+			 *  @type string
+			 *  @default <i>Empty string</i>
+			 *
+			 *  @dtopt Language
+			 *  @name DataTable.defaults.language.infoPostFix
+			 *
+			 *  @example
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "infoPostFix": "All records shown are derived from real information."
+			 *        }
+			 *      } );
+			 *    } );
+			 */
+			"sInfoPostFix": "",
+	
+	
+			/**
+			 * This decimal place operator is a little different from the other
+			 * language options since DataTables doesn't output floating point
+			 * numbers, so it won't ever use this for display of a number. Rather,
+			 * what this parameter does is modify the sort methods of the table so
+			 * that numbers which are in a format which has a character other than
+			 * a period (`.`) as a decimal place will be sorted numerically.
+			 *
+			 * Note that numbers with different decimal places cannot be shown in
+			 * the same table and still be sortable, the table must be consistent.
+			 * However, multiple different tables on the page can use different
+			 * decimal place characters.
+			 *  @type string
+			 *  @default 
+			 *
+			 *  @dtopt Language
+			 *  @name DataTable.defaults.language.decimal
+			 *
+			 *  @example
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "decimal": ","
+			 *          "thousands": "."
+			 *        }
+			 *      } );
+			 *    } );
+			 */
+			"sDecimal": "",
+	
+	
+			/**
+			 * DataTables has a build in number formatter (`formatNumber`) which is
+			 * used to format large numbers that are used in the table information.
+			 * By default a comma is used, but this can be trivially changed to any
+			 * character you wish with this parameter.
+			 *  @type string
+			 *  @default ,
+			 *
+			 *  @dtopt Language
+			 *  @name DataTable.defaults.language.thousands
+			 *
+			 *  @example
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "thousands": "'"
+			 *        }
+			 *      } );
+			 *    } );
+			 */
+			"sThousands": ",",
+	
+	
+			/**
+			 * Detail the action that will be taken when the drop down menu for the
+			 * pagination length option is changed. The '_MENU_' variable is replaced
+			 * with a default select list of 10, 25, 50 and 100, and can be replaced
+			 * with a custom select box if required.
+			 *  @type string
+			 *  @default Show _MENU_ entries
+			 *
+			 *  @dtopt Language
+			 *  @name DataTable.defaults.language.lengthMenu
+			 *
+			 *  @example
+			 *    // Language change only
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "lengthMenu": "Display _MENU_ records"
+			 *        }
+			 *      } );
+			 *    } );
+			 *
+			 *  @example
+			 *    // Language and options change
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "lengthMenu": 'Display <select>'+
+			 *            '<option value="10">10</option>'+
+			 *            '<option value="20">20</option>'+
+			 *            '<option value="30">30</option>'+
+			 *            '<option value="40">40</option>'+
+			 *            '<option value="50">50</option>'+
+			 *            '<option value="-1">All</option>'+
+			 *            '</select> records'
+			 *        }
+			 *      } );
+			 *    } );
+			 */
+			"sLengthMenu": "Show _MENU_ entries",
+	
+	
+			/**
+			 * When using Ajax sourced data and during the first draw when DataTables is
+			 * gathering the data, this message is shown in an empty row in the table to
+			 * indicate to the end user the the data is being loaded. Note that this
+			 * parameter is not used when loading data by server-side processing, just
+			 * Ajax sourced data with client-side processing.
+			 *  @type string
+			 *  @default Loading...
+			 *
+			 *  @dtopt Language
+			 *  @name DataTable.defaults.language.loadingRecords
+			 *
+			 *  @example
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "loadingRecords": "Please wait - loading..."
+			 *        }
+			 *      } );
+			 *    } );
+			 */
+			"sLoadingRecords": "Loading...",
+	
+	
+			/**
+			 * Text which is displayed when the table is processing a user action
+			 * (usually a sort command or similar).
+			 *  @type string
+			 *
+			 *  @dtopt Language
+			 *  @name DataTable.defaults.language.processing
+			 *
+			 *  @example
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "processing": "DataTables is currently busy"
+			 *        }
+			 *      } );
+			 *    } );
+			 */
+			"sProcessing": "",
+	
+	
+			/**
+			 * Details the actions that will be taken when the user types into the
+			 * filtering input text box. The variable "_INPUT_", if used in the string,
+			 * is replaced with the HTML text box for the filtering input allowing
+			 * control over where it appears in the string. If "_INPUT_" is not given
+			 * then the input box is appended to the string automatically.
+			 *  @type string
+			 *  @default Search:
+			 *
+			 *  @dtopt Language
+			 *  @name DataTable.defaults.language.search
+			 *
+			 *  @example
+			 *    // Input text box will be appended at the end automatically
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "search": "Filter records:"
+			 *        }
+			 *      } );
+			 *    } );
+			 *
+			 *  @example
+			 *    // Specify where the filter should appear
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "search": "Apply filter _INPUT_ to table"
+			 *        }
+			 *      } );
+			 *    } );
+			 */
+			"sSearch": "Search:",
+	
+	
+			/**
+			 * Assign a `placeholder` attribute to the search `input` element
+			 *  @type string
+			 *  @default 
+			 *
+			 *  @dtopt Language
+			 *  @name DataTable.defaults.language.searchPlaceholder
+			 */
+			"sSearchPlaceholder": "",
+	
+	
+			/**
+			 * All of the language information can be stored in a file on the
+			 * server-side, which DataTables will look up if this parameter is passed.
+			 * It must store the URL of the language file, which is in a JSON format,
+			 * and the object has the same properties as the oLanguage object in the
+			 * initialiser object (i.e. the above parameters). Please refer to one of
+			 * the example language files to see how this works in action.
+			 *  @type string
+			 *  @default <i>Empty string - i.e. disabled</i>
+			 *
+			 *  @dtopt Language
+			 *  @name DataTable.defaults.language.url
+			 *
+			 *  @example
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "url": "http://www.sprymedia.co.uk/dataTables/lang.txt"
+			 *        }
+			 *      } );
+			 *    } );
+			 */
+			"sUrl": "",
+	
+	
+			/**
+			 * Text shown inside the table records when the is no information to be
+			 * displayed after filtering. `emptyTable` is shown when there is simply no
+			 * information in the table at all (regardless of filtering).
+			 *  @type string
+			 *  @default No matching records found
+			 *
+			 *  @dtopt Language
+			 *  @name DataTable.defaults.language.zeroRecords
+			 *
+			 *  @example
+			 *    $(document).ready( function() {
+			 *      $('#example').dataTable( {
+			 *        "language": {
+			 *          "zeroRecords": "No records to display"
+			 *        }
+			 *      } );
+			 *    } );
+			 */
+			"sZeroRecords": "No matching records found"
+		},
+	
+	
+		/**
+		 * This parameter allows you to have define the global filtering state at
+		 * initialisation time. As an object the `search` parameter must be
+		 * defined, but all other parameters are optional. When `regex` is true,
+		 * the search string will be treated as a regular expression, when false
+		 * (default) it will be treated as a straight string. When `smart`
+		 * DataTables will use it's smart filtering methods (to word match at
+		 * any point in the data), when false this will not be done.
+		 *  @namespace
+		 *  @extends DataTable.models.oSearch
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.search
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "search": {"search": "Initial search"}
+		 *      } );
+		 *    } )
+		 */
+		"oSearch": $.extend( {}, DataTable.models.oSearch ),
+	
+	
+		/**
+		 * __Deprecated__ The functionality provided by this parameter has now been
+		 * superseded by that provided through `ajax`, which should be used instead.
+		 *
+		 * By default DataTables will look for the property `data` (or `aaData` for
+		 * compatibility with DataTables 1.9-) when obtaining data from an Ajax
+		 * source or for server-side processing - this parameter allows that
+		 * property to be changed. You can use Javascript dotted object notation to
+		 * get a data source for multiple levels of nesting.
+		 *  @type string
+		 *  @default data
+		 *
+		 *  @dtopt Options
+		 *  @dtopt Server-side
+		 *  @name DataTable.defaults.ajaxDataProp
+		 *
+		 *  @deprecated 1.10. Please use `ajax` for this functionality now.
+		 */
+		"sAjaxDataProp": "data",
+	
+	
+		/**
+		 * __Deprecated__ The functionality provided by this parameter has now been
+		 * superseded by that provided through `ajax`, which should be used instead.
+		 *
+		 * You can instruct DataTables to load data from an external
+		 * source using this parameter (use aData if you want to pass data in you
+		 * already have). Simply provide a url a JSON object can be obtained from.
+		 *  @type string
+		 *  @default null
+		 *
+		 *  @dtopt Options
+		 *  @dtopt Server-side
+		 *  @name DataTable.defaults.ajaxSource
+		 *
+		 *  @deprecated 1.10. Please use `ajax` for this functionality now.
+		 */
+		"sAjaxSource": null,
+	
+	
+		/**
+		 * This initialisation variable allows you to specify exactly where in the
+		 * DOM you want DataTables to inject the various controls it adds to the page
+		 * (for example you might want the pagination controls at the top of the
+		 * table). DIV elements (with or without a custom class) can also be added to
+		 * aid styling. The follow syntax is used:
+		 *   <ul>
+		 *     <li>The following options are allowed:
+		 *       <ul>
+		 *         <li>'l' - Length changing</li>
+		 *         <li>'f' - Filtering input</li>
+		 *         <li>'t' - The table!</li>
+		 *         <li>'i' - Information</li>
+		 *         <li>'p' - Pagination</li>
+		 *         <li>'r' - pRocessing</li>
+		 *       </ul>
+		 *     </li>
+		 *     <li>The following constants are allowed:
+		 *       <ul>
+		 *         <li>'H' - jQueryUI theme "header" classes ('fg-toolbar ui-widget-header ui-corner-tl ui-corner-tr ui-helper-clearfix')</li>
+		 *         <li>'F' - jQueryUI theme "footer" classes ('fg-toolbar ui-widget-header ui-corner-bl ui-corner-br ui-helper-clearfix')</li>
+		 *       </ul>
+		 *     </li>
+		 *     <li>The following syntax is expected:
+		 *       <ul>
+		 *         <li>'&lt;' and '&gt;' - div elements</li>
+		 *         <li>'&lt;"class" and '&gt;' - div with a class</li>
+		 *         <li>'&lt;"#id" and '&gt;' - div with an ID</li>
+		 *       </ul>
+		 *     </li>
+		 *     <li>Examples:
+		 *       <ul>
+		 *         <li>'&lt;"wrapper"flipt&gt;'</li>
+		 *         <li>'&lt;lf&lt;t&gt;ip&gt;'</li>
+		 *       </ul>
+		 *     </li>
+		 *   </ul>
+		 *  @type string
+		 *  @default lfrtip <i>(when `jQueryUI` is false)</i> <b>or</b>
+		 *    <"H"lfr>t<"F"ip> <i>(when `jQueryUI` is true)</i>
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.dom
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "dom": '&lt;"top"i&gt;rt&lt;"bottom"flp&gt;&lt;"clear"&gt;'
+		 *      } );
+		 *    } );
+		 */
+		"sDom": "lfrtip",
+	
+	
+		/**
+		 * Search delay option. This will throttle full table searches that use the
+		 * DataTables provided search input element (it does not effect calls to
+		 * `dt-api search()`, providing a delay before the search is made.
+		 *  @type integer
+		 *  @default 0
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.searchDelay
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "searchDelay": 200
+		 *      } );
+		 *    } )
+		 */
+		"searchDelay": null,
+	
+	
+		/**
+		 * DataTables features six different built-in options for the buttons to
+		 * display for pagination control:
+		 *
+		 * * `numbers` - Page number buttons only
+		 * * `simple` - 'Previous' and 'Next' buttons only
+		 * * 'simple_numbers` - 'Previous' and 'Next' buttons, plus page numbers
+		 * * `full` - 'First', 'Previous', 'Next' and 'Last' buttons
+		 * * `full_numbers` - 'First', 'Previous', 'Next' and 'Last' buttons, plus page numbers
+		 * * `first_last_numbers` - 'First' and 'Last' buttons, plus page numbers
+		 *  
+		 * Further methods can be added using {@link DataTable.ext.oPagination}.
+		 *  @type string
+		 *  @default simple_numbers
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.pagingType
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "pagingType": "full_numbers"
+		 *      } );
+		 *    } )
+		 */
+		"sPaginationType": "simple_numbers",
+	
+	
+		/**
+		 * Enable horizontal scrolling. When a table is too wide to fit into a
+		 * certain layout, or you have a large number of columns in the table, you
+		 * can enable x-scrolling to show the table in a viewport, which can be
+		 * scrolled. This property can be `true` which will allow the table to
+		 * scroll horizontally when needed, or any CSS unit, or a number (in which
+		 * case it will be treated as a pixel measurement). Setting as simply `true`
+		 * is recommended.
+		 *  @type boolean|string
+		 *  @default <i>blank string - i.e. disabled</i>
+		 *
+		 *  @dtopt Features
+		 *  @name DataTable.defaults.scrollX
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "scrollX": true,
+		 *        "scrollCollapse": true
+		 *      } );
+		 *    } );
+		 */
+		"sScrollX": "",
+	
+	
+		/**
+		 * This property can be used to force a DataTable to use more width than it
+		 * might otherwise do when x-scrolling is enabled. For example if you have a
+		 * table which requires to be well spaced, this parameter is useful for
+		 * "over-sizing" the table, and thus forcing scrolling. This property can by
+		 * any CSS unit, or a number (in which case it will be treated as a pixel
+		 * measurement).
+		 *  @type string
+		 *  @default <i>blank string - i.e. disabled</i>
+		 *
+		 *  @dtopt Options
+		 *  @name DataTable.defaults.scrollXInner
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "scrollX": "100%",
+		 *        "scrollXInner": "110%"
+		 *      } );
+		 *    } );
+		 */
+		"sScrollXInner": "",
+	
+	
+		/**
+		 * Enable vertical scrolling. Vertical scrolling will constrain the DataTable
+		 * to the given height, and enable scrolling for any data which overflows the
+		 * current viewport. This can be used as an alternative to paging to display
+		 * a lot of data in a small area (although paging and scrolling can both be
+		 * enabled at the same time). This property can be any CSS unit, or a number
+		 * (in which case it will be treated as a pixel measurement).
+		 *  @type string
+		 *  @default <i>blank string - i.e. disabled</i>
+		 *
+		 *  @dtopt Features
+		 *  @name DataTable.defaults.scrollY
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "scrollY": "200px",
+		 *        "paginate": false
+		 *      } );
+		 *    } );
+		 */
+		"sScrollY": "",
+	
+	
+		/**
+		 * __Deprecated__ The functionality provided by this parameter has now been
+		 * superseded by that provided through `ajax`, which should be used instead.
+		 *
+		 * Set the HTTP method that is used to make the Ajax call for server-side
+		 * processing or Ajax sourced data.
+		 *  @type string
+		 *  @default GET
+		 *
+		 *  @dtopt Options
+		 *  @dtopt Server-side
+		 *  @name DataTable.defaults.serverMethod
+		 *
+		 *  @deprecated 1.10. Please use `ajax` for this functionality now.
+		 */
+		"sServerMethod": "GET",
+	
+	
+		/**
+		 * DataTables makes use of renderers when displaying HTML elements for
+		 * a table. These renderers can be added or modified by plug-ins to
+		 * generate suitable mark-up for a site. For example the Bootstrap
+		 * integration plug-in for DataTables uses a paging button renderer to
+		 * display pagination buttons in the mark-up required by Bootstrap.
+		 *
+		 * For further information about the renderers available see
+		 * DataTable.ext.renderer
+		 *  @type string|object
+		 *  @default null
+		 *
+		 *  @name DataTable.defaults.renderer
+		 *
+		 */
+		"renderer": null,
+	
+	
+		/**
+		 * Set the data property name that DataTables should use to get a row's id
+		 * to set as the `id` property in the node.
+		 *  @type string
+		 *  @default DT_RowId
+		 *
+		 *  @name DataTable.defaults.rowId
+		 */
+		"rowId": "DT_RowId"
+	};
+	
+	_fnHungarianMap( DataTable.defaults );
+	
+	
+	
+	/*
+	 * Developer note - See note in model.defaults.js about the use of Hungarian
+	 * notation and camel case.
+	 */
+	
+	/**
+	 * Column options that can be given to DataTables at initialisation time.
+	 *  @namespace
+	 */
+	DataTable.defaults.column = {
+		/**
+		 * Define which column(s) an order will occur on for this column. This
+		 * allows a column's ordering to take multiple columns into account when
+		 * doing a sort or use the data from a different column. For example first
+		 * name / last name columns make sense to do a multi-column sort over the
+		 * two columns.
+		 *  @type array|int
+		 *  @default null <i>Takes the value of the column index automatically</i>
+		 *
+		 *  @name DataTable.defaults.column.orderData
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Using `columnDefs`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [
+		 *          { "orderData": [ 0, 1 ], "targets": [ 0 ] },
+		 *          { "orderData": [ 1, 0 ], "targets": [ 1 ] },
+		 *          { "orderData": 2, "targets": [ 2 ] }
+		 *        ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using `columns`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columns": [
+		 *          { "orderData": [ 0, 1 ] },
+		 *          { "orderData": [ 1, 0 ] },
+		 *          { "orderData": 2 },
+		 *          null,
+		 *          null
+		 *        ]
+		 *      } );
+		 *    } );
+		 */
+		"aDataSort": null,
+		"iDataSort": -1,
+	
+	
+		/**
+		 * You can control the default ordering direction, and even alter the
+		 * behaviour of the sort handler (i.e. only allow ascending ordering etc)
+		 * using this parameter.
+		 *  @type array
+		 *  @default [ 'asc', 'desc' ]
+		 *
+		 *  @name DataTable.defaults.column.orderSequence
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Using `columnDefs`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [
+		 *          { "orderSequence": [ "asc" ], "targets": [ 1 ] },
+		 *          { "orderSequence": [ "desc", "asc", "asc" ], "targets": [ 2 ] },
+		 *          { "orderSequence": [ "desc" ], "targets": [ 3 ] }
+		 *        ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using `columns`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columns": [
+		 *          null,
+		 *          { "orderSequence": [ "asc" ] },
+		 *          { "orderSequence": [ "desc", "asc", "asc" ] },
+		 *          { "orderSequence": [ "desc" ] },
+		 *          null
+		 *        ]
+		 *      } );
+		 *    } );
+		 */
+		"asSorting": [ 'asc', 'desc' ],
+	
+	
+		/**
+		 * Enable or disable filtering on the data in this column.
+		 *  @type boolean
+		 *  @default true
+		 *
+		 *  @name DataTable.defaults.column.searchable
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Using `columnDefs`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [
+		 *          { "searchable": false, "targets": [ 0 ] }
+		 *        ] } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using `columns`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columns": [
+		 *          { "searchable": false },
+		 *          null,
+		 *          null,
+		 *          null,
+		 *          null
+		 *        ] } );
+		 *    } );
+		 */
+		"bSearchable": true,
+	
+	
+		/**
+		 * Enable or disable ordering on this column.
+		 *  @type boolean
+		 *  @default true
+		 *
+		 *  @name DataTable.defaults.column.orderable
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Using `columnDefs`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [
+		 *          { "orderable": false, "targets": [ 0 ] }
+		 *        ] } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using `columns`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columns": [
+		 *          { "orderable": false },
+		 *          null,
+		 *          null,
+		 *          null,
+		 *          null
+		 *        ] } );
+		 *    } );
+		 */
+		"bSortable": true,
+	
+	
+		/**
+		 * Enable or disable the display of this column.
+		 *  @type boolean
+		 *  @default true
+		 *
+		 *  @name DataTable.defaults.column.visible
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Using `columnDefs`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [
+		 *          { "visible": false, "targets": [ 0 ] }
+		 *        ] } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using `columns`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columns": [
+		 *          { "visible": false },
+		 *          null,
+		 *          null,
+		 *          null,
+		 *          null
+		 *        ] } );
+		 *    } );
+		 */
+		"bVisible": true,
+	
+	
+		/**
+		 * Developer definable function that is called whenever a cell is created (Ajax source,
+		 * etc) or processed for input (DOM source). This can be used as a compliment to mRender
+		 * allowing you to modify the DOM element (add background colour for example) when the
+		 * element is available.
+		 *  @type function
+		 *  @param {element} td The TD node that has been created
+		 *  @param {*} cellData The Data for the cell
+		 *  @param {array|object} rowData The data for the whole row
+		 *  @param {int} row The row index for the aoData data store
+		 *  @param {int} col The column index for aoColumns
+		 *
+		 *  @name DataTable.defaults.column.createdCell
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [ {
+		 *          "targets": [3],
+		 *          "createdCell": function (td, cellData, rowData, row, col) {
+		 *            if ( cellData == "1.7" ) {
+		 *              $(td).css('color', 'blue')
+		 *            }
+		 *          }
+		 *        } ]
+		 *      });
+		 *    } );
+		 */
+		"fnCreatedCell": null,
+	
+	
+		/**
+		 * This parameter has been replaced by `data` in DataTables to ensure naming
+		 * consistency. `dataProp` can still be used, as there is backwards
+		 * compatibility in DataTables for this option, but it is strongly
+		 * recommended that you use `data` in preference to `dataProp`.
+		 *  @name DataTable.defaults.column.dataProp
+		 */
+	
+	
+		/**
+		 * This property can be used to read data from any data source property,
+		 * including deeply nested objects / properties. `data` can be given in a
+		 * number of different ways which effect its behaviour:
+		 *
+		 * * `integer` - treated as an array index for the data source. This is the
+		 *   default that DataTables uses (incrementally increased for each column).
+		 * * `string` - read an object property from the data source. There are
+		 *   three 'special' options that can be used in the string to alter how
+		 *   DataTables reads the data from the source object:
+		 *    * `.` - Dotted Javascript notation. Just as you use a `.` in
+		 *      Javascript to read from nested objects, so to can the options
+		 *      specified in `data`. For example: `browser.version` or
+		 *      `browser.name`. If your object parameter name contains a period, use
+		 *      `\\` to escape it - i.e. `first\\.name`.
+		 *    * `[]` - Array notation. DataTables can automatically combine data
+		 *      from and array source, joining the data with the characters provided
+		 *      between the two brackets. For example: `name[, ]` would provide a
+		 *      comma-space separated list from the source array. If no characters
+		 *      are provided between the brackets, the original array source is
+		 *      returned.
+		 *    * `()` - Function notation. Adding `()` to the end of a parameter will
+		 *      execute a function of the name given. For example: `browser()` for a
+		 *      simple function on the data source, `browser.version()` for a
+		 *      function in a nested property or even `browser().version` to get an
+		 *      object property if the function called returns an object. Note that
+		 *      function notation is recommended for use in `render` rather than
+		 *      `data` as it is much simpler to use as a renderer.
+		 * * `null` - use the original data source for the row rather than plucking
+		 *   data directly from it. This action has effects on two other
+		 *   initialisation options:
+		 *    * `defaultContent` - When null is given as the `data` option and
+		 *      `defaultContent` is specified for the column, the value defined by
+		 *      `defaultContent` will be used for the cell.
+		 *    * `render` - When null is used for the `data` option and the `render`
+		 *      option is specified for the column, the whole data source for the
+		 *      row is used for the renderer.
+		 * * `function` - the function given will be executed whenever DataTables
+		 *   needs to set or get the data for a cell in the column. The function
+		 *   takes three parameters:
+		 *    * Parameters:
+		 *      * `{array|object}` The data source for the row
+		 *      * `{string}` The type call data requested - this will be 'set' when
+		 *        setting data or 'filter', 'display', 'type', 'sort' or undefined
+		 *        when gathering data. Note that when `undefined` is given for the
+		 *        type DataTables expects to get the raw data for the object back<
+		 *      * `{*}` Data to set when the second parameter is 'set'.
+		 *    * Return:
+		 *      * The return value from the function is not required when 'set' is
+		 *        the type of call, but otherwise the return is what will be used
+		 *        for the data requested.
+		 *
+		 * Note that `data` is a getter and setter option. If you just require
+		 * formatting of data for output, you will likely want to use `render` which
+		 * is simply a getter and thus simpler to use.
+		 *
+		 * Note that prior to DataTables 1.9.2 `data` was called `mDataProp`. The
+		 * name change reflects the flexibility of this property and is consistent
+		 * with the naming of mRender. If 'mDataProp' is given, then it will still
+		 * be used by DataTables, as it automatically maps the old name to the new
+		 * if required.
+		 *
+		 *  @type string|int|function|null
+		 *  @default null <i>Use automatically calculated column index</i>
+		 *
+		 *  @name DataTable.defaults.column.data
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Read table data from objects
+		 *    // JSON structure for each row:
+		 *    //   {
+		 *    //      "engine": {value},
+		 *    //      "browser": {value},
+		 *    //      "platform": {value},
+		 *    //      "version": {value},
+		 *    //      "grade": {value}
+		 *    //   }
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "ajaxSource": "sources/objects.txt",
+		 *        "columns": [
+		 *          { "data": "engine" },
+		 *          { "data": "browser" },
+		 *          { "data": "platform" },
+		 *          { "data": "version" },
+		 *          { "data": "grade" }
+		 *        ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Read information from deeply nested objects
+		 *    // JSON structure for each row:
+		 *    //   {
+		 *    //      "engine": {value},
+		 *    //      "browser": {value},
+		 *    //      "platform": {
+		 *    //         "inner": {value}
+		 *    //      },
+		 *    //      "details": [
+		 *    //         {value}, {value}
+		 *    //      ]
+		 *    //   }
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "ajaxSource": "sources/deep.txt",
+		 *        "columns": [
+		 *          { "data": "engine" },
+		 *          { "data": "browser" },
+		 *          { "data": "platform.inner" },
+		 *          { "data": "details.0" },
+		 *          { "data": "details.1" }
+		 *        ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using `data` as a function to provide different information for
+		 *    // sorting, filtering and display. In this case, currency (price)
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [ {
+		 *          "targets": [ 0 ],
+		 *          "data": function ( source, type, val ) {
+		 *            if (type === 'set') {
+		 *              source.price = val;
+		 *              // Store the computed display and filter values for efficiency
+		 *              source.price_display = val=="" ? "" : "$"+numberFormat(val);
+		 *              source.price_filter  = val=="" ? "" : "$"+numberFormat(val)+" "+val;
+		 *              return;
+		 *            }
+		 *            else if (type === 'display') {
+		 *              return source.price_display;
+		 *            }
+		 *            else if (type === 'filter') {
+		 *              return source.price_filter;
+		 *            }
+		 *            // 'sort', 'type' and undefined all just use the integer
+		 *            return source.price;
+		 *          }
+		 *        } ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using default content
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [ {
+		 *          "targets": [ 0 ],
+		 *          "data": null,
+		 *          "defaultContent": "Click to edit"
+		 *        } ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using array notation - outputting a list from an array
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [ {
+		 *          "targets": [ 0 ],
+		 *          "data": "name[, ]"
+		 *        } ]
+		 *      } );
+		 *    } );
+		 *
+		 */
+		"mData": null,
+	
+	
+		/**
+		 * This property is the rendering partner to `data` and it is suggested that
+		 * when you want to manipulate data for display (including filtering,
+		 * sorting etc) without altering the underlying data for the table, use this
+		 * property. `render` can be considered to be the the read only companion to
+		 * `data` which is read / write (then as such more complex). Like `data`
+		 * this option can be given in a number of different ways to effect its
+		 * behaviour:
+		 *
+		 * * `integer` - treated as an array index for the data source. This is the
+		 *   default that DataTables uses (incrementally increased for each column).
+		 * * `string` - read an object property from the data source. There are
+		 *   three 'special' options that can be used in the string to alter how
+		 *   DataTables reads the data from the source object:
+		 *    * `.` - Dotted Javascript notation. Just as you use a `.` in
+		 *      Javascript to read from nested objects, so to can the options
+		 *      specified in `data`. For example: `browser.version` or
+		 *      `browser.name`. If your object parameter name contains a period, use
+		 *      `\\` to escape it - i.e. `first\\.name`.
+		 *    * `[]` - Array notation. DataTables can automatically combine data
+		 *      from and array source, joining the data with the characters provided
+		 *      between the two brackets. For example: `name[, ]` would provide a
+		 *      comma-space separated list from the source array. If no characters
+		 *      are provided between the brackets, the original array source is
+		 *      returned.
+		 *    * `()` - Function notation. Adding `()` to the end of a parameter will
+		 *      execute a function of the name given. For example: `browser()` for a
+		 *      simple function on the data source, `browser.version()` for a
+		 *      function in a nested property or even `browser().version` to get an
+		 *      object property if the function called returns an object.
+		 * * `object` - use different data for the different data types requested by
+		 *   DataTables ('filter', 'display', 'type' or 'sort'). The property names
+		 *   of the object is the data type the property refers to and the value can
+		 *   defined using an integer, string or function using the same rules as
+		 *   `render` normally does. Note that an `_` option _must_ be specified.
+		 *   This is the default value to use if you haven't specified a value for
+		 *   the data type requested by DataTables.
+		 * * `function` - the function given will be executed whenever DataTables
+		 *   needs to set or get the data for a cell in the column. The function
+		 *   takes three parameters:
+		 *    * Parameters:
+		 *      * {array|object} The data source for the row (based on `data`)
+		 *      * {string} The type call data requested - this will be 'filter',
+		 *        'display', 'type' or 'sort'.
+		 *      * {array|object} The full data source for the row (not based on
+		 *        `data`)
+		 *    * Return:
+		 *      * The return value from the function is what will be used for the
+		 *        data requested.
+		 *
+		 *  @type string|int|function|object|null
+		 *  @default null Use the data source value.
+		 *
+		 *  @name DataTable.defaults.column.render
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Create a comma separated list from an array of objects
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "ajaxSource": "sources/deep.txt",
+		 *        "columns": [
+		 *          { "data": "engine" },
+		 *          { "data": "browser" },
+		 *          {
+		 *            "data": "platform",
+		 *            "render": "[, ].name"
+		 *          }
+		 *        ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Execute a function to obtain data
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [ {
+		 *          "targets": [ 0 ],
+		 *          "data": null, // Use the full data source object for the renderer's source
+		 *          "render": "browserName()"
+		 *        } ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // As an object, extracting different data for the different types
+		 *    // This would be used with a data source such as:
+		 *    //   { "phone": 5552368, "phone_filter": "5552368 555-2368", "phone_display": "555-2368" }
+		 *    // Here the `phone` integer is used for sorting and type detection, while `phone_filter`
+		 *    // (which has both forms) is used for filtering for if a user inputs either format, while
+		 *    // the formatted phone number is the one that is shown in the table.
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [ {
+		 *          "targets": [ 0 ],
+		 *          "data": null, // Use the full data source object for the renderer's source
+		 *          "render": {
+		 *            "_": "phone",
+		 *            "filter": "phone_filter",
+		 *            "display": "phone_display"
+		 *          }
+		 *        } ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Use as a function to create a link from the data source
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [ {
+		 *          "targets": [ 0 ],
+		 *          "data": "download_link",
+		 *          "render": function ( data, type, full ) {
+		 *            return '<a href="'+data+'">Download</a>';
+		 *          }
+		 *        } ]
+		 *      } );
+		 *    } );
+		 */
+		"mRender": null,
+	
+	
+		/**
+		 * Change the cell type created for the column - either TD cells or TH cells. This
+		 * can be useful as TH cells have semantic meaning in the table body, allowing them
+		 * to act as a header for a row (you may wish to add scope='row' to the TH elements).
+		 *  @type string
+		 *  @default td
+		 *
+		 *  @name DataTable.defaults.column.cellType
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Make the first column use TH cells
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [ {
+		 *          "targets": [ 0 ],
+		 *          "cellType": "th"
+		 *        } ]
+		 *      } );
+		 *    } );
+		 */
+		"sCellType": "td",
+	
+	
+		/**
+		 * Class to give to each cell in this column.
+		 *  @type string
+		 *  @default <i>Empty string</i>
+		 *
+		 *  @name DataTable.defaults.column.class
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Using `columnDefs`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [
+		 *          { "class": "my_class", "targets": [ 0 ] }
+		 *        ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using `columns`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columns": [
+		 *          { "class": "my_class" },
+		 *          null,
+		 *          null,
+		 *          null,
+		 *          null
+		 *        ]
+		 *      } );
+		 *    } );
+		 */
+		"sClass": "",
+	
+		/**
+		 * When DataTables calculates the column widths to assign to each column,
+		 * it finds the longest string in each column and then constructs a
+		 * temporary table and reads the widths from that. The problem with this
+		 * is that "mmm" is much wider then "iiii", but the latter is a longer
+		 * string - thus the calculation can go wrong (doing it properly and putting
+		 * it into an DOM object and measuring that is horribly(!) slow). Thus as
+		 * a "work around" we provide this option. It will append its value to the
+		 * text that is found to be the longest string for the column - i.e. padding.
+		 * Generally you shouldn't need this!
+		 *  @type string
+		 *  @default <i>Empty string<i>
+		 *
+		 *  @name DataTable.defaults.column.contentPadding
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Using `columns`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columns": [
+		 *          null,
+		 *          null,
+		 *          null,
+		 *          {
+		 *            "contentPadding": "mmm"
+		 *          }
+		 *        ]
+		 *      } );
+		 *    } );
+		 */
+		"sContentPadding": "",
+	
+	
+		/**
+		 * Allows a default value to be given for a column's data, and will be used
+		 * whenever a null data source is encountered (this can be because `data`
+		 * is set to null, or because the data source itself is null).
+		 *  @type string
+		 *  @default null
+		 *
+		 *  @name DataTable.defaults.column.defaultContent
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Using `columnDefs`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [
+		 *          {
+		 *            "data": null,
+		 *            "defaultContent": "Edit",
+		 *            "targets": [ -1 ]
+		 *          }
+		 *        ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using `columns`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columns": [
+		 *          null,
+		 *          null,
+		 *          null,
+		 *          {
+		 *            "data": null,
+		 *            "defaultContent": "Edit"
+		 *          }
+		 *        ]
+		 *      } );
+		 *    } );
+		 */
+		"sDefaultContent": null,
+	
+	
+		/**
+		 * This parameter is only used in DataTables' server-side processing. It can
+		 * be exceptionally useful to know what columns are being displayed on the
+		 * client side, and to map these to database fields. When defined, the names
+		 * also allow DataTables to reorder information from the server if it comes
+		 * back in an unexpected order (i.e. if you switch your columns around on the
+		 * client-side, your server-side code does not also need updating).
+		 *  @type string
+		 *  @default <i>Empty string</i>
+		 *
+		 *  @name DataTable.defaults.column.name
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Using `columnDefs`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [
+		 *          { "name": "engine", "targets": [ 0 ] },
+		 *          { "name": "browser", "targets": [ 1 ] },
+		 *          { "name": "platform", "targets": [ 2 ] },
+		 *          { "name": "version", "targets": [ 3 ] },
+		 *          { "name": "grade", "targets": [ 4 ] }
+		 *        ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using `columns`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columns": [
+		 *          { "name": "engine" },
+		 *          { "name": "browser" },
+		 *          { "name": "platform" },
+		 *          { "name": "version" },
+		 *          { "name": "grade" }
+		 *        ]
+		 *      } );
+		 *    } );
+		 */
+		"sName": "",
+	
+	
+		/**
+		 * Defines a data source type for the ordering which can be used to read
+		 * real-time information from the table (updating the internally cached
+		 * version) prior to ordering. This allows ordering to occur on user
+		 * editable elements such as form inputs.
+		 *  @type string
+		 *  @default std
+		 *
+		 *  @name DataTable.defaults.column.orderDataType
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Using `columnDefs`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [
+		 *          { "orderDataType": "dom-text", "targets": [ 2, 3 ] },
+		 *          { "type": "numeric", "targets": [ 3 ] },
+		 *          { "orderDataType": "dom-select", "targets": [ 4 ] },
+		 *          { "orderDataType": "dom-checkbox", "targets": [ 5 ] }
+		 *        ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using `columns`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columns": [
+		 *          null,
+		 *          null,
+		 *          { "orderDataType": "dom-text" },
+		 *          { "orderDataType": "dom-text", "type": "numeric" },
+		 *          { "orderDataType": "dom-select" },
+		 *          { "orderDataType": "dom-checkbox" }
+		 *        ]
+		 *      } );
+		 *    } );
+		 */
+		"sSortDataType": "std",
+	
+	
+		/**
+		 * The title of this column.
+		 *  @type string
+		 *  @default null <i>Derived from the 'TH' value for this column in the
+		 *    original HTML table.</i>
+		 *
+		 *  @name DataTable.defaults.column.title
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Using `columnDefs`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [
+		 *          { "title": "My column title", "targets": [ 0 ] }
+		 *        ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using `columns`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columns": [
+		 *          { "title": "My column title" },
+		 *          null,
+		 *          null,
+		 *          null,
+		 *          null
+		 *        ]
+		 *      } );
+		 *    } );
+		 */
+		"sTitle": null,
+	
+	
+		/**
+		 * The type allows you to specify how the data for this column will be
+		 * ordered. Four types (string, numeric, date and html (which will strip
+		 * HTML tags before ordering)) are currently available. Note that only date
+		 * formats understood by Javascript's Date() object will be accepted as type
+		 * date. For example: "Mar 26, 2008 5:03 PM". May take the values: 'string',
+		 * 'numeric', 'date' or 'html' (by default). Further types can be adding
+		 * through plug-ins.
+		 *  @type string
+		 *  @default null <i>Auto-detected from raw data</i>
+		 *
+		 *  @name DataTable.defaults.column.type
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Using `columnDefs`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [
+		 *          { "type": "html", "targets": [ 0 ] }
+		 *        ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using `columns`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columns": [
+		 *          { "type": "html" },
+		 *          null,
+		 *          null,
+		 *          null,
+		 *          null
+		 *        ]
+		 *      } );
+		 *    } );
+		 */
+		"sType": null,
+	
+	
+		/**
+		 * Defining the width of the column, this parameter may take any CSS value
+		 * (3em, 20px etc). DataTables applies 'smart' widths to columns which have not
+		 * been given a specific width through this interface ensuring that the table
+		 * remains readable.
+		 *  @type string
+		 *  @default null <i>Automatic</i>
+		 *
+		 *  @name DataTable.defaults.column.width
+		 *  @dtopt Columns
+		 *
+		 *  @example
+		 *    // Using `columnDefs`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columnDefs": [
+		 *          { "width": "20%", "targets": [ 0 ] }
+		 *        ]
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Using `columns`
+		 *    $(document).ready( function() {
+		 *      $('#example').dataTable( {
+		 *        "columns": [
+		 *          { "width": "20%" },
+		 *          null,
+		 *          null,
+		 *          null,
+		 *          null
+		 *        ]
+		 *      } );
+		 *    } );
+		 */
+		"sWidth": null
+	};
+	
+	_fnHungarianMap( DataTable.defaults.column );
+	
+	
+	
+	/**
+	 * DataTables settings object - this holds all the information needed for a
+	 * given table, including configuration, data and current application of the
+	 * table options. DataTables does not have a single instance for each DataTable
+	 * with the settings attached to that instance, but rather instances of the
+	 * DataTable "class" are created on-the-fly as needed (typically by a
+	 * $().dataTable() call) and the settings object is then applied to that
+	 * instance.
+	 *
+	 * Note that this object is related to {@link DataTable.defaults} but this
+	 * one is the internal data store for DataTables's cache of columns. It should
+	 * NOT be manipulated outside of DataTables. Any configuration should be done
+	 * through the initialisation options.
+	 *  @namespace
+	 *  @todo Really should attach the settings object to individual instances so we
+	 *    don't need to create new instances on each $().dataTable() call (if the
+	 *    table already exists). It would also save passing oSettings around and
+	 *    into every single function. However, this is a very significant
+	 *    architecture change for DataTables and will almost certainly break
+	 *    backwards compatibility with older installations. This is something that
+	 *    will be done in 2.0.
+	 */
+	DataTable.models.oSettings = {
+		/**
+		 * Primary features of DataTables and their enablement state.
+		 *  @namespace
+		 */
+		"oFeatures": {
+	
+			/**
+			 * Flag to say if DataTables should automatically try to calculate the
+			 * optimum table and columns widths (true) or not (false).
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type boolean
+			 */
+			"bAutoWidth": null,
+	
+			/**
+			 * Delay the creation of TR and TD elements until they are actually
+			 * needed by a driven page draw. This can give a significant speed
+			 * increase for Ajax source and Javascript source data, but makes no
+			 * difference at all for DOM and server-side processing tables.
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type boolean
+			 */
+			"bDeferRender": null,
+	
+			/**
+			 * Enable filtering on the table or not. Note that if this is disabled
+			 * then there is no filtering at all on the table, including fnFilter.
+			 * To just remove the filtering input use sDom and remove the 'f' option.
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type boolean
+			 */
+			"bFilter": null,
+	
+			/**
+			 * Table information element (the 'Showing x of y records' div) enable
+			 * flag.
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type boolean
+			 */
+			"bInfo": null,
+	
+			/**
+			 * Present a user control allowing the end user to change the page size
+			 * when pagination is enabled.
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type boolean
+			 */
+			"bLengthChange": null,
+	
+			/**
+			 * Pagination enabled or not. Note that if this is disabled then length
+			 * changing must also be disabled.
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type boolean
+			 */
+			"bPaginate": null,
+	
+			/**
+			 * Processing indicator enable flag whenever DataTables is enacting a
+			 * user request - typically an Ajax request for server-side processing.
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type boolean
+			 */
+			"bProcessing": null,
+	
+			/**
+			 * Server-side processing enabled flag - when enabled DataTables will
+			 * get all data from the server for every draw - there is no filtering,
+			 * sorting or paging done on the client-side.
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type boolean
+			 */
+			"bServerSide": null,
+	
+			/**
+			 * Sorting enablement flag.
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type boolean
+			 */
+			"bSort": null,
+	
+			/**
+			 * Multi-column sorting
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type boolean
+			 */
+			"bSortMulti": null,
+	
+			/**
+			 * Apply a class to the columns which are being sorted to provide a
+			 * visual highlight or not. This can slow things down when enabled since
+			 * there is a lot of DOM interaction.
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type boolean
+			 */
+			"bSortClasses": null,
+	
+			/**
+			 * State saving enablement flag.
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type boolean
+			 */
+			"bStateSave": null
+		},
+	
+	
+		/**
+		 * Scrolling settings for a table.
+		 *  @namespace
+		 */
+		"oScroll": {
+			/**
+			 * When the table is shorter in height than sScrollY, collapse the
+			 * table container down to the height of the table (when true).
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type boolean
+			 */
+			"bCollapse": null,
+	
+			/**
+			 * Width of the scrollbar for the web-browser's platform. Calculated
+			 * during table initialisation.
+			 *  @type int
+			 *  @default 0
+			 */
+			"iBarWidth": 0,
+	
+			/**
+			 * Viewport width for horizontal scrolling. Horizontal scrolling is
+			 * disabled if an empty string.
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type string
+			 */
+			"sX": null,
+	
+			/**
+			 * Width to expand the table to when using x-scrolling. Typically you
+			 * should not need to use this.
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type string
+			 *  @deprecated
+			 */
+			"sXInner": null,
+	
+			/**
+			 * Viewport height for vertical scrolling. Vertical scrolling is disabled
+			 * if an empty string.
+			 * Note that this parameter will be set by the initialisation routine. To
+			 * set a default use {@link DataTable.defaults}.
+			 *  @type string
+			 */
+			"sY": null
+		},
+	
+		/**
+		 * Language information for the table.
+		 *  @namespace
+		 *  @extends DataTable.defaults.oLanguage
+		 */
+		"oLanguage": {
+			/**
+			 * Information callback function. See
+			 * {@link DataTable.defaults.fnInfoCallback}
+			 *  @type function
+			 *  @default null
+			 */
+			"fnInfoCallback": null
+		},
+	
+		/**
+		 * Browser support parameters
+		 *  @namespace
+		 */
+		"oBrowser": {
+			/**
+			 * Indicate if the browser incorrectly calculates width:100% inside a
+			 * scrolling element (IE6/7)
+			 *  @type boolean
+			 *  @default false
+			 */
+			"bScrollOversize": false,
+	
+			/**
+			 * Determine if the vertical scrollbar is on the right or left of the
+			 * scrolling container - needed for rtl language layout, although not
+			 * all browsers move the scrollbar (Safari).
+			 *  @type boolean
+			 *  @default false
+			 */
+			"bScrollbarLeft": false,
+	
+			/**
+			 * Flag for if `getBoundingClientRect` is fully supported or not
+			 *  @type boolean
+			 *  @default false
+			 */
+			"bBounding": false,
+	
+			/**
+			 * Browser scrollbar width
+			 *  @type integer
+			 *  @default 0
+			 */
+			"barWidth": 0
+		},
+	
+	
+		"ajax": null,
+	
+	
+		/**
+		 * Array referencing the nodes which are used for the features. The
+		 * parameters of this object match what is allowed by sDom - i.e.
+		 *   <ul>
+		 *     <li>'l' - Length changing</li>
+		 *     <li>'f' - Filtering input</li>
+		 *     <li>'t' - The table!</li>
+		 *     <li>'i' - Information</li>
+		 *     <li>'p' - Pagination</li>
+		 *     <li>'r' - pRocessing</li>
+		 *   </ul>
+		 *  @type array
+		 *  @default []
+		 */
+		"aanFeatures": [],
+	
+		/**
+		 * Store data information - see {@link DataTable.models.oRow} for detailed
+		 * information.
+		 *  @type array
+		 *  @default []
+		 */
+		"aoData": [],
+	
+		/**
+		 * Array of indexes which are in the current display (after filtering etc)
+		 *  @type array
+		 *  @default []
+		 */
+		"aiDisplay": [],
+	
+		/**
+		 * Array of indexes for display - no filtering
+		 *  @type array
+		 *  @default []
+		 */
+		"aiDisplayMaster": [],
+	
+		/**
+		 * Map of row ids to data indexes
+		 *  @type object
+		 *  @default {}
+		 */
+		"aIds": {},
+	
+		/**
+		 * Store information about each column that is in use
+		 *  @type array
+		 *  @default []
+		 */
+		"aoColumns": [],
+	
+		/**
+		 * Store information about the table's header
+		 *  @type array
+		 *  @default []
+		 */
+		"aoHeader": [],
+	
+		/**
+		 * Store information about the table's footer
+		 *  @type array
+		 *  @default []
+		 */
+		"aoFooter": [],
+	
+		/**
+		 * Store the applied global search information in case we want to force a
+		 * research or compare the old search to a new one.
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @namespace
+		 *  @extends DataTable.models.oSearch
+		 */
+		"oPreviousSearch": {},
+	
+		/**
+		 * Store the applied search for each column - see
+		 * {@link DataTable.models.oSearch} for the format that is used for the
+		 * filtering information for each column.
+		 *  @type array
+		 *  @default []
+		 */
+		"aoPreSearchCols": [],
+	
+		/**
+		 * Sorting that is applied to the table. Note that the inner arrays are
+		 * used in the following manner:
+		 * <ul>
+		 *   <li>Index 0 - column number</li>
+		 *   <li>Index 1 - current sorting direction</li>
+		 * </ul>
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @type array
+		 *  @todo These inner arrays should really be objects
+		 */
+		"aaSorting": null,
+	
+		/**
+		 * Sorting that is always applied to the table (i.e. prefixed in front of
+		 * aaSorting).
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @type array
+		 *  @default []
+		 */
+		"aaSortingFixed": [],
+	
+		/**
+		 * Classes to use for the striping of a table.
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @type array
+		 *  @default []
+		 */
+		"asStripeClasses": null,
+	
+		/**
+		 * If restoring a table - we should restore its striping classes as well
+		 *  @type array
+		 *  @default []
+		 */
+		"asDestroyStripes": [],
+	
+		/**
+		 * If restoring a table - we should restore its width
+		 *  @type int
+		 *  @default 0
+		 */
+		"sDestroyWidth": 0,
+	
+		/**
+		 * Callback functions array for every time a row is inserted (i.e. on a draw).
+		 *  @type array
+		 *  @default []
+		 */
+		"aoRowCallback": [],
+	
+		/**
+		 * Callback functions for the header on each draw.
+		 *  @type array
+		 *  @default []
+		 */
+		"aoHeaderCallback": [],
+	
+		/**
+		 * Callback function for the footer on each draw.
+		 *  @type array
+		 *  @default []
+		 */
+		"aoFooterCallback": [],
+	
+		/**
+		 * Array of callback functions for draw callback functions
+		 *  @type array
+		 *  @default []
+		 */
+		"aoDrawCallback": [],
+	
+		/**
+		 * Array of callback functions for row created function
+		 *  @type array
+		 *  @default []
+		 */
+		"aoRowCreatedCallback": [],
+	
+		/**
+		 * Callback functions for just before the table is redrawn. A return of
+		 * false will be used to cancel the draw.
+		 *  @type array
+		 *  @default []
+		 */
+		"aoPreDrawCallback": [],
+	
+		/**
+		 * Callback functions for when the table has been initialised.
+		 *  @type array
+		 *  @default []
+		 */
+		"aoInitComplete": [],
+	
+	
+		/**
+		 * Callbacks for modifying the settings to be stored for state saving, prior to
+		 * saving state.
+		 *  @type array
+		 *  @default []
+		 */
+		"aoStateSaveParams": [],
+	
+		/**
+		 * Callbacks for modifying the settings that have been stored for state saving
+		 * prior to using the stored values to restore the state.
+		 *  @type array
+		 *  @default []
+		 */
+		"aoStateLoadParams": [],
+	
+		/**
+		 * Callbacks for operating on the settings object once the saved state has been
+		 * loaded
+		 *  @type array
+		 *  @default []
+		 */
+		"aoStateLoaded": [],
+	
+		/**
+		 * Cache the table ID for quick access
+		 *  @type string
+		 *  @default <i>Empty string</i>
+		 */
+		"sTableId": "",
+	
+		/**
+		 * The TABLE node for the main table
+		 *  @type node
+		 *  @default null
+		 */
+		"nTable": null,
+	
+		/**
+		 * Permanent ref to the thead element
+		 *  @type node
+		 *  @default null
+		 */
+		"nTHead": null,
+	
+		/**
+		 * Permanent ref to the tfoot element - if it exists
+		 *  @type node
+		 *  @default null
+		 */
+		"nTFoot": null,
+	
+		/**
+		 * Permanent ref to the tbody element
+		 *  @type node
+		 *  @default null
+		 */
+		"nTBody": null,
+	
+		/**
+		 * Cache the wrapper node (contains all DataTables controlled elements)
+		 *  @type node
+		 *  @default null
+		 */
+		"nTableWrapper": null,
+	
+		/**
+		 * Indicate if when using server-side processing the loading of data
+		 * should be deferred until the second draw.
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @type boolean
+		 *  @default false
+		 */
+		"bDeferLoading": false,
+	
+		/**
+		 * Indicate if all required information has been read in
+		 *  @type boolean
+		 *  @default false
+		 */
+		"bInitialised": false,
+	
+		/**
+		 * Information about open rows. Each object in the array has the parameters
+		 * 'nTr' and 'nParent'
+		 *  @type array
+		 *  @default []
+		 */
+		"aoOpenRows": [],
+	
+		/**
+		 * Dictate the positioning of DataTables' control elements - see
+		 * {@link DataTable.model.oInit.sDom}.
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @type string
+		 *  @default null
+		 */
+		"sDom": null,
+	
+		/**
+		 * Search delay (in mS)
+		 *  @type integer
+		 *  @default null
+		 */
+		"searchDelay": null,
+	
+		/**
+		 * Which type of pagination should be used.
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @type string
+		 *  @default two_button
+		 */
+		"sPaginationType": "two_button",
+	
+		/**
+		 * The state duration (for `stateSave`) in seconds.
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @type int
+		 *  @default 0
+		 */
+		"iStateDuration": 0,
+	
+		/**
+		 * Array of callback functions for state saving. Each array element is an
+		 * object with the following parameters:
+		 *   <ul>
+		 *     <li>function:fn - function to call. Takes two parameters, oSettings
+		 *       and the JSON string to save that has been thus far created. Returns
+		 *       a JSON string to be inserted into a json object
+		 *       (i.e. '"param": [ 0, 1, 2]')</li>
+		 *     <li>string:sName - name of callback</li>
+		 *   </ul>
+		 *  @type array
+		 *  @default []
+		 */
+		"aoStateSave": [],
+	
+		/**
+		 * Array of callback functions for state loading. Each array element is an
+		 * object with the following parameters:
+		 *   <ul>
+		 *     <li>function:fn - function to call. Takes two parameters, oSettings
+		 *       and the object stored. May return false to cancel state loading</li>
+		 *     <li>string:sName - name of callback</li>
+		 *   </ul>
+		 *  @type array
+		 *  @default []
+		 */
+		"aoStateLoad": [],
+	
+		/**
+		 * State that was saved. Useful for back reference
+		 *  @type object
+		 *  @default null
+		 */
+		"oSavedState": null,
+	
+		/**
+		 * State that was loaded. Useful for back reference
+		 *  @type object
+		 *  @default null
+		 */
+		"oLoadedState": null,
+	
+		/**
+		 * Source url for AJAX data for the table.
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @type string
+		 *  @default null
+		 */
+		"sAjaxSource": null,
+	
+		/**
+		 * Property from a given object from which to read the table data from. This
+		 * can be an empty string (when not server-side processing), in which case
+		 * it is  assumed an an array is given directly.
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @type string
+		 */
+		"sAjaxDataProp": null,
+	
+		/**
+		 * The last jQuery XHR object that was used for server-side data gathering.
+		 * This can be used for working with the XHR information in one of the
+		 * callbacks
+		 *  @type object
+		 *  @default null
+		 */
+		"jqXHR": null,
+	
+		/**
+		 * JSON returned from the server in the last Ajax request
+		 *  @type object
+		 *  @default undefined
+		 */
+		"json": undefined,
+	
+		/**
+		 * Data submitted as part of the last Ajax request
+		 *  @type object
+		 *  @default undefined
+		 */
+		"oAjaxData": undefined,
+	
+		/**
+		 * Function to get the server-side data.
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @type function
+		 */
+		"fnServerData": null,
+	
+		/**
+		 * Functions which are called prior to sending an Ajax request so extra
+		 * parameters can easily be sent to the server
+		 *  @type array
+		 *  @default []
+		 */
+		"aoServerParams": [],
+	
+		/**
+		 * Send the XHR HTTP method - GET or POST (could be PUT or DELETE if
+		 * required).
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @type string
+		 */
+		"sServerMethod": null,
+	
+		/**
+		 * Format numbers for display.
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @type function
+		 */
+		"fnFormatNumber": null,
+	
+		/**
+		 * List of options that can be used for the user selectable length menu.
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @type array
+		 *  @default []
+		 */
+		"aLengthMenu": null,
+	
+		/**
+		 * Counter for the draws that the table does. Also used as a tracker for
+		 * server-side processing
+		 *  @type int
+		 *  @default 0
+		 */
+		"iDraw": 0,
+	
+		/**
+		 * Indicate if a redraw is being done - useful for Ajax
+		 *  @type boolean
+		 *  @default false
+		 */
+		"bDrawing": false,
+	
+		/**
+		 * Draw index (iDraw) of the last error when parsing the returned data
+		 *  @type int
+		 *  @default -1
+		 */
+		"iDrawError": -1,
+	
+		/**
+		 * Paging display length
+		 *  @type int
+		 *  @default 10
+		 */
+		"_iDisplayLength": 10,
+	
+		/**
+		 * Paging start point - aiDisplay index
+		 *  @type int
+		 *  @default 0
+		 */
+		"_iDisplayStart": 0,
+	
+		/**
+		 * Server-side processing - number of records in the result set
+		 * (i.e. before filtering), Use fnRecordsTotal rather than
+		 * this property to get the value of the number of records, regardless of
+		 * the server-side processing setting.
+		 *  @type int
+		 *  @default 0
+		 *  @private
+		 */
+		"_iRecordsTotal": 0,
+	
+		/**
+		 * Server-side processing - number of records in the current display set
+		 * (i.e. after filtering). Use fnRecordsDisplay rather than
+		 * this property to get the value of the number of records, regardless of
+		 * the server-side processing setting.
+		 *  @type boolean
+		 *  @default 0
+		 *  @private
+		 */
+		"_iRecordsDisplay": 0,
+	
+		/**
+		 * The classes to use for the table
+		 *  @type object
+		 *  @default {}
+		 */
+		"oClasses": {},
+	
+		/**
+		 * Flag attached to the settings object so you can check in the draw
+		 * callback if filtering has been done in the draw. Deprecated in favour of
+		 * events.
+		 *  @type boolean
+		 *  @default false
+		 *  @deprecated
+		 */
+		"bFiltered": false,
+	
+		/**
+		 * Flag attached to the settings object so you can check in the draw
+		 * callback if sorting has been done in the draw. Deprecated in favour of
+		 * events.
+		 *  @type boolean
+		 *  @default false
+		 *  @deprecated
+		 */
+		"bSorted": false,
+	
+		/**
+		 * Indicate that if multiple rows are in the header and there is more than
+		 * one unique cell per column, if the top one (true) or bottom one (false)
+		 * should be used for sorting / title by DataTables.
+		 * Note that this parameter will be set by the initialisation routine. To
+		 * set a default use {@link DataTable.defaults}.
+		 *  @type boolean
+		 */
+		"bSortCellsTop": null,
+	
+		/**
+		 * Initialisation object that is used for the table
+		 *  @type object
+		 *  @default null
+		 */
+		"oInit": null,
+	
+		/**
+		 * Destroy callback functions - for plug-ins to attach themselves to the
+		 * destroy so they can clean up markup and events.
+		 *  @type array
+		 *  @default []
+		 */
+		"aoDestroyCallback": [],
+	
+	
+		/**
+		 * Get the number of records in the current record set, before filtering
+		 *  @type function
+		 */
+		"fnRecordsTotal": function ()
+		{
+			return _fnDataSource( this ) == 'ssp' ?
+				this._iRecordsTotal * 1 :
+				this.aiDisplayMaster.length;
+		},
+	
+		/**
+		 * Get the number of records in the current record set, after filtering
+		 *  @type function
+		 */
+		"fnRecordsDisplay": function ()
+		{
+			return _fnDataSource( this ) == 'ssp' ?
+				this._iRecordsDisplay * 1 :
+				this.aiDisplay.length;
+		},
+	
+		/**
+		 * Get the display end point - aiDisplay index
+		 *  @type function
+		 */
+		"fnDisplayEnd": function ()
+		{
+			var
+				len      = this._iDisplayLength,
+				start    = this._iDisplayStart,
+				calc     = start + len,
+				records  = this.aiDisplay.length,
+				features = this.oFeatures,
+				paginate = features.bPaginate;
+	
+			if ( features.bServerSide ) {
+				return paginate === false || len === -1 ?
+					start + records :
+					Math.min( start+len, this._iRecordsDisplay );
+			}
+			else {
+				return ! paginate || calc>records || len===-1 ?
+					records :
+					calc;
+			}
+		},
+	
+		/**
+		 * The DataTables object for this table
+		 *  @type object
+		 *  @default null
+		 */
+		"oInstance": null,
+	
+		/**
+		 * Unique identifier for each instance of the DataTables object. If there
+		 * is an ID on the table node, then it takes that value, otherwise an
+		 * incrementing internal counter is used.
+		 *  @type string
+		 *  @default null
+		 */
+		"sInstance": null,
+	
+		/**
+		 * tabindex attribute value that is added to DataTables control elements, allowing
+		 * keyboard navigation of the table and its controls.
+		 */
+		"iTabIndex": 0,
+	
+		/**
+		 * DIV container for the footer scrolling table if scrolling
+		 */
+		"nScrollHead": null,
+	
+		/**
+		 * DIV container for the footer scrolling table if scrolling
+		 */
+		"nScrollFoot": null,
+	
+		/**
+		 * Last applied sort
+		 *  @type array
+		 *  @default []
+		 */
+		"aLastSort": [],
+	
+		/**
+		 * Stored plug-in instances
+		 *  @type object
+		 *  @default {}
+		 */
+		"oPlugins": {},
+	
+		/**
+		 * Function used to get a row's id from the row's data
+		 *  @type function
+		 *  @default null
+		 */
+		"rowIdFn": null,
+	
+		/**
+		 * Data location where to store a row's id
+		 *  @type string
+		 *  @default null
+		 */
+		"rowId": null
+	};
+	
+	/**
+	 * Extension object for DataTables that is used to provide all extension
+	 * options.
+	 *
+	 * Note that the `DataTable.ext` object is available through
+	 * `jQuery.fn.dataTable.ext` where it may be accessed and manipulated. It is
+	 * also aliased to `jQuery.fn.dataTableExt` for historic reasons.
+	 *  @namespace
+	 *  @extends DataTable.models.ext
+	 */
+	
+	
+	/**
+	 * DataTables extensions
+	 * 
+	 * This namespace acts as a collection area for plug-ins that can be used to
+	 * extend DataTables capabilities. Indeed many of the build in methods
+	 * use this method to provide their own capabilities (sorting methods for
+	 * example).
+	 *
+	 * Note that this namespace is aliased to `jQuery.fn.dataTableExt` for legacy
+	 * reasons
+	 *
+	 *  @namespace
+	 */
+	DataTable.ext = _ext = {
+		/**
+		 * Buttons. For use with the Buttons extension for DataTables. This is
+		 * defined here so other extensions can define buttons regardless of load
+		 * order. It is _not_ used by DataTables core.
+		 *
+		 *  @type object
+		 *  @default {}
+		 */
+		buttons: {},
+	
+	
+		/**
+		 * Element class names
+		 *
+		 *  @type object
+		 *  @default {}
+		 */
+		classes: {},
+	
+	
+		/**
+		 * DataTables build type (expanded by the download builder)
+		 *
+		 *  @type string
+		 */
+		build:"bs4/pdfmake-0.1.36/dt-1.13.1/b-2.3.3/b-html5-2.3.3/b-print-2.3.3",
+	
+	
+		/**
+		 * Error reporting.
+		 * 
+		 * How should DataTables report an error. Can take the value 'alert',
+		 * 'throw', 'none' or a function.
+		 *
+		 *  @type string|function
+		 *  @default alert
+		 */
+		errMode: "alert",
+	
+	
+		/**
+		 * Feature plug-ins.
+		 * 
+		 * This is an array of objects which describe the feature plug-ins that are
+		 * available to DataTables. These feature plug-ins are then available for
+		 * use through the `dom` initialisation option.
+		 * 
+		 * Each feature plug-in is described by an object which must have the
+		 * following properties:
+		 * 
+		 * * `fnInit` - function that is used to initialise the plug-in,
+		 * * `cFeature` - a character so the feature can be enabled by the `dom`
+		 *   instillation option. This is case sensitive.
+		 *
+		 * The `fnInit` function has the following input parameters:
+		 *
+		 * 1. `{object}` DataTables settings object: see
+		 *    {@link DataTable.models.oSettings}
+		 *
+		 * And the following return is expected:
+		 * 
+		 * * {node|null} The element which contains your feature. Note that the
+		 *   return may also be void if your plug-in does not require to inject any
+		 *   DOM elements into DataTables control (`dom`) - for example this might
+		 *   be useful when developing a plug-in which allows table control via
+		 *   keyboard entry
+		 *
+		 *  @type array
+		 *
+		 *  @example
+		 *    $.fn.dataTable.ext.features.push( {
+		 *      "fnInit": function( oSettings ) {
+		 *        return new TableTools( { "oDTSettings": oSettings } );
+		 *      },
+		 *      "cFeature": "T"
+		 *    } );
+		 */
+		feature: [],
+	
+	
+		/**
+		 * Row searching.
+		 * 
+		 * This method of searching is complimentary to the default type based
+		 * searching, and a lot more comprehensive as it allows you complete control
+		 * over the searching logic. Each element in this array is a function
+		 * (parameters described below) that is called for every row in the table,
+		 * and your logic decides if it should be included in the searching data set
+		 * or not.
+		 *
+		 * Searching functions have the following input parameters:
+		 *
+		 * 1. `{object}` DataTables settings object: see
+		 *    {@link DataTable.models.oSettings}
+		 * 2. `{array|object}` Data for the row to be processed (same as the
+		 *    original format that was passed in as the data source, or an array
+		 *    from a DOM data source
+		 * 3. `{int}` Row index ({@link DataTable.models.oSettings.aoData}), which
+		 *    can be useful to retrieve the `TR` element if you need DOM interaction.
+		 *
+		 * And the following return is expected:
+		 *
+		 * * {boolean} Include the row in the searched result set (true) or not
+		 *   (false)
+		 *
+		 * Note that as with the main search ability in DataTables, technically this
+		 * is "filtering", since it is subtractive. However, for consistency in
+		 * naming we call it searching here.
+		 *
+		 *  @type array
+		 *  @default []
+		 *
+		 *  @example
+		 *    // The following example shows custom search being applied to the
+		 *    // fourth column (i.e. the data[3] index) based on two input values
+		 *    // from the end-user, matching the data in a certain range.
+		 *    $.fn.dataTable.ext.search.push(
+		 *      function( settings, data, dataIndex ) {
+		 *        var min = document.getElementById('min').value * 1;
+		 *        var max = document.getElementById('max').value * 1;
+		 *        var version = data[3] == "-" ? 0 : data[3]*1;
+		 *
+		 *        if ( min == "" && max == "" ) {
+		 *          return true;
+		 *        }
+		 *        else if ( min == "" && version < max ) {
+		 *          return true;
+		 *        }
+		 *        else if ( min < version && "" == max ) {
+		 *          return true;
+		 *        }
+		 *        else if ( min < version && version < max ) {
+		 *          return true;
+		 *        }
+		 *        return false;
+		 *      }
+		 *    );
+		 */
+		search: [],
+	
+	
+		/**
+		 * Selector extensions
+		 *
+		 * The `selector` option can be used to extend the options available for the
+		 * selector modifier options (`selector-modifier` object data type) that
+		 * each of the three built in selector types offer (row, column and cell +
+		 * their plural counterparts). For example the Select extension uses this
+		 * mechanism to provide an option to select only rows, columns and cells
+		 * that have been marked as selected by the end user (`{selected: true}`),
+		 * which can be used in conjunction with the existing built in selector
+		 * options.
+		 *
+		 * Each property is an array to which functions can be pushed. The functions
+		 * take three attributes:
+		 *
+		 * * Settings object for the host table
+		 * * Options object (`selector-modifier` object type)
+		 * * Array of selected item indexes
+		 *
+		 * The return is an array of the resulting item indexes after the custom
+		 * selector has been applied.
+		 *
+		 *  @type object
+		 */
+		selector: {
+			cell: [],
+			column: [],
+			row: []
+		},
+	
+	
+		/**
+		 * Internal functions, exposed for used in plug-ins.
+		 * 
+		 * Please note that you should not need to use the internal methods for
+		 * anything other than a plug-in (and even then, try to avoid if possible).
+		 * The internal function may change between releases.
+		 *
+		 *  @type object
+		 *  @default {}
+		 */
+		internal: {},
+	
+	
+		/**
+		 * Legacy configuration options. Enable and disable legacy options that
+		 * are available in DataTables.
+		 *
+		 *  @type object
+		 */
+		legacy: {
+			/**
+			 * Enable / disable DataTables 1.9 compatible server-side processing
+			 * requests
+			 *
+			 *  @type boolean
+			 *  @default null
+			 */
+			ajax: null
+		},
+	
+	
+		/**
+		 * Pagination plug-in methods.
+		 * 
+		 * Each entry in this object is a function and defines which buttons should
+		 * be shown by the pagination rendering method that is used for the table:
+		 * {@link DataTable.ext.renderer.pageButton}. The renderer addresses how the
+		 * buttons are displayed in the document, while the functions here tell it
+		 * what buttons to display. This is done by returning an array of button
+		 * descriptions (what each button will do).
+		 *
+		 * Pagination types (the four built in options and any additional plug-in
+		 * options defined here) can be used through the `paginationType`
+		 * initialisation parameter.
+		 *
+		 * The functions defined take two parameters:
+		 *
+		 * 1. `{int} page` The current page index
+		 * 2. `{int} pages` The number of pages in the table
+		 *
+		 * Each function is expected to return an array where each element of the
+		 * array can be one of:
+		 *
+		 * * `first` - Jump to first page when activated
+		 * * `last` - Jump to last page when activated
+		 * * `previous` - Show previous page when activated
+		 * * `next` - Show next page when activated
+		 * * `{int}` - Show page of the index given
+		 * * `{array}` - A nested array containing the above elements to add a
+		 *   containing 'DIV' element (might be useful for styling).
+		 *
+		 * Note that DataTables v1.9- used this object slightly differently whereby
+		 * an object with two functions would be defined for each plug-in. That
+		 * ability is still supported by DataTables 1.10+ to provide backwards
+		 * compatibility, but this option of use is now decremented and no longer
+		 * documented in DataTables 1.10+.
+		 *
+		 *  @type object
+		 *  @default {}
+		 *
+		 *  @example
+		 *    // Show previous, next and current page buttons only
+		 *    $.fn.dataTableExt.oPagination.current = function ( page, pages ) {
+		 *      return [ 'previous', page, 'next' ];
+		 *    };
+		 */
+		pager: {},
+	
+	
+		renderer: {
+			pageButton: {},
+			header: {}
+		},
+	
+	
+		/**
+		 * Ordering plug-ins - custom data source
+		 * 
+		 * The extension options for ordering of data available here is complimentary
+		 * to the default type based ordering that DataTables typically uses. It
+		 * allows much greater control over the the data that is being used to
+		 * order a column, but is necessarily therefore more complex.
+		 * 
+		 * This type of ordering is useful if you want to do ordering based on data
+		 * live from the DOM (for example the contents of an 'input' element) rather
+		 * than just the static string that DataTables knows of.
+		 * 
+		 * The way these plug-ins work is that you create an array of the values you
+		 * wish to be ordering for the column in question and then return that
+		 * array. The data in the array much be in the index order of the rows in
+		 * the table (not the currently ordering order!). Which order data gathering
+		 * function is run here depends on the `dt-init columns.orderDataType`
+		 * parameter that is used for the column (if any).
+		 *
+		 * The functions defined take two parameters:
+		 *
+		 * 1. `{object}` DataTables settings object: see
+		 *    {@link DataTable.models.oSettings}
+		 * 2. `{int}` Target column index
+		 *
+		 * Each function is expected to return an array:
+		 *
+		 * * `{array}` Data for the column to be ordering upon
+		 *
+		 *  @type array
+		 *
+		 *  @example
+		 *    // Ordering using `input` node values
+		 *    $.fn.dataTable.ext.order['dom-text'] = function  ( settings, col )
+		 *    {
+		 *      return this.api().column( col, {order:'index'} ).nodes().map( function ( td, i ) {
+		 *        return $('input', td).val();
+		 *      } );
+		 *    }
+		 */
+		order: {},
+	
+	
+		/**
+		 * Type based plug-ins.
+		 *
+		 * Each column in DataTables has a type assigned to it, either by automatic
+		 * detection or by direct assignment using the `type` option for the column.
+		 * The type of a column will effect how it is ordering and search (plug-ins
+		 * can also make use of the column type if required).
 		 *
 		 * @namespace
 		 */
-		DataTable.render = {
-			number: function ( thousands, decimal, precision, prefix, postfix ) {
-				return {
-					display: function ( d ) {
-						if ( typeof d !== 'number' && typeof d !== 'string' ) {
-							return d;
+		type: {
+			/**
+			 * Type detection functions.
+			 *
+			 * The functions defined in this object are used to automatically detect
+			 * a column's type, making initialisation of DataTables super easy, even
+			 * when complex data is in the table.
+			 *
+			 * The functions defined take two parameters:
+			 *
+		     *  1. `{*}` Data from the column cell to be analysed
+		     *  2. `{settings}` DataTables settings object. This can be used to
+		     *     perform context specific type detection - for example detection
+		     *     based on language settings such as using a comma for a decimal
+		     *     place. Generally speaking the options from the settings will not
+		     *     be required
+			 *
+			 * Each function is expected to return:
+			 *
+			 * * `{string|null}` Data type detected, or null if unknown (and thus
+			 *   pass it on to the other type detection functions.
+			 *
+			 *  @type array
+			 *
+			 *  @example
+			 *    // Currency type detection plug-in:
+			 *    $.fn.dataTable.ext.type.detect.push(
+			 *      function ( data, settings ) {
+			 *        // Check the numeric part
+			 *        if ( ! data.substring(1).match(/[0-9]/) ) {
+			 *          return null;
+			 *        }
+			 *
+			 *        // Check prefixed by currency
+			 *        if ( data.charAt(0) == '$' || data.charAt(0) == '&pound;' ) {
+			 *          return 'currency';
+			 *        }
+			 *        return null;
+			 *      }
+			 *    );
+			 */
+			detect: [],
+	
+	
+			/**
+			 * Type based search formatting.
+			 *
+			 * The type based searching functions can be used to pre-format the
+			 * data to be search on. For example, it can be used to strip HTML
+			 * tags or to de-format telephone numbers for numeric only searching.
+			 *
+			 * Note that is a search is not defined for a column of a given type,
+			 * no search formatting will be performed.
+			 * 
+			 * Pre-processing of searching data plug-ins - When you assign the sType
+			 * for a column (or have it automatically detected for you by DataTables
+			 * or a type detection plug-in), you will typically be using this for
+			 * custom sorting, but it can also be used to provide custom searching
+			 * by allowing you to pre-processing the data and returning the data in
+			 * the format that should be searched upon. This is done by adding
+			 * functions this object with a parameter name which matches the sType
+			 * for that target column. This is the corollary of <i>afnSortData</i>
+			 * for searching data.
+			 *
+			 * The functions defined take a single parameter:
+			 *
+		     *  1. `{*}` Data from the column cell to be prepared for searching
+			 *
+			 * Each function is expected to return:
+			 *
+			 * * `{string|null}` Formatted string that will be used for the searching.
+			 *
+			 *  @type object
+			 *  @default {}
+			 *
+			 *  @example
+			 *    $.fn.dataTable.ext.type.search['title-numeric'] = function ( d ) {
+			 *      return d.replace(/\n/g," ").replace( /<.*?>/g, "" );
+			 *    }
+			 */
+			search: {},
+	
+	
+			/**
+			 * Type based ordering.
+			 *
+			 * The column type tells DataTables what ordering to apply to the table
+			 * when a column is sorted upon. The order for each type that is defined,
+			 * is defined by the functions available in this object.
+			 *
+			 * Each ordering option can be described by three properties added to
+			 * this object:
+			 *
+			 * * `{type}-pre` - Pre-formatting function
+			 * * `{type}-asc` - Ascending order function
+			 * * `{type}-desc` - Descending order function
+			 *
+			 * All three can be used together, only `{type}-pre` or only
+			 * `{type}-asc` and `{type}-desc` together. It is generally recommended
+			 * that only `{type}-pre` is used, as this provides the optimal
+			 * implementation in terms of speed, although the others are provided
+			 * for compatibility with existing Javascript sort functions.
+			 *
+			 * `{type}-pre`: Functions defined take a single parameter:
+			 *
+		     *  1. `{*}` Data from the column cell to be prepared for ordering
+			 *
+			 * And return:
+			 *
+			 * * `{*}` Data to be sorted upon
+			 *
+			 * `{type}-asc` and `{type}-desc`: Functions are typical Javascript sort
+			 * functions, taking two parameters:
+			 *
+		     *  1. `{*}` Data to compare to the second parameter
+		     *  2. `{*}` Data to compare to the first parameter
+			 *
+			 * And returning:
+			 *
+			 * * `{*}` Ordering match: <0 if first parameter should be sorted lower
+			 *   than the second parameter, ===0 if the two parameters are equal and
+			 *   >0 if the first parameter should be sorted height than the second
+			 *   parameter.
+			 * 
+			 *  @type object
+			 *  @default {}
+			 *
+			 *  @example
+			 *    // Numeric ordering of formatted numbers with a pre-formatter
+			 *    $.extend( $.fn.dataTable.ext.type.order, {
+			 *      "string-pre": function(x) {
+			 *        a = (a === "-" || a === "") ? 0 : a.replace( /[^\d\-\.]/g, "" );
+			 *        return parseFloat( a );
+			 *      }
+			 *    } );
+			 *
+			 *  @example
+			 *    // Case-sensitive string ordering, with no pre-formatting method
+			 *    $.extend( $.fn.dataTable.ext.order, {
+			 *      "string-case-asc": function(x,y) {
+			 *        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+			 *      },
+			 *      "string-case-desc": function(x,y) {
+			 *        return ((x < y) ? 1 : ((x > y) ? -1 : 0));
+			 *      }
+			 *    } );
+			 */
+			order: {}
+		},
+	
+		/**
+		 * Unique DataTables instance counter
+		 *
+		 * @type int
+		 * @private
+		 */
+		_unique: 0,
+	
+	
+		//
+		// Depreciated
+		// The following properties are retained for backwards compatibility only.
+		// The should not be used in new projects and will be removed in a future
+		// version
+		//
+	
+		/**
+		 * Version check function.
+		 *  @type function
+		 *  @depreciated Since 1.10
+		 */
+		fnVersionCheck: DataTable.fnVersionCheck,
+	
+	
+		/**
+		 * Index for what 'this' index API functions should use
+		 *  @type int
+		 *  @deprecated Since v1.10
+		 */
+		iApiIndex: 0,
+	
+	
+		/**
+		 * jQuery UI class container
+		 *  @type object
+		 *  @deprecated Since v1.10
+		 */
+		oJUIClasses: {},
+	
+	
+		/**
+		 * Software version
+		 *  @type string
+		 *  @deprecated Since v1.10
+		 */
+		sVersion: DataTable.version
+	};
+	
+	
+	//
+	// Backwards compatibility. Alias to pre 1.10 Hungarian notation counter parts
+	//
+	$.extend( _ext, {
+		afnFiltering: _ext.search,
+		aTypes:       _ext.type.detect,
+		ofnSearch:    _ext.type.search,
+		oSort:        _ext.type.order,
+		afnSortData:  _ext.order,
+		aoFeatures:   _ext.feature,
+		oApi:         _ext.internal,
+		oStdClasses:  _ext.classes,
+		oPagination:  _ext.pager
+	} );
+	
+	
+	$.extend( DataTable.ext.classes, {
+		"sTable": "dataTable",
+		"sNoFooter": "no-footer",
+	
+		/* Paging buttons */
+		"sPageButton": "paginate_button",
+		"sPageButtonActive": "current",
+		"sPageButtonDisabled": "disabled",
+	
+		/* Striping classes */
+		"sStripeOdd": "odd",
+		"sStripeEven": "even",
+	
+		/* Empty row */
+		"sRowEmpty": "dataTables_empty",
+	
+		/* Features */
+		"sWrapper": "dataTables_wrapper",
+		"sFilter": "dataTables_filter",
+		"sInfo": "dataTables_info",
+		"sPaging": "dataTables_paginate paging_", /* Note that the type is postfixed */
+		"sLength": "dataTables_length",
+		"sProcessing": "dataTables_processing",
+	
+		/* Sorting */
+		"sSortAsc": "sorting_asc",
+		"sSortDesc": "sorting_desc",
+		"sSortable": "sorting", /* Sortable in both directions */
+		"sSortableAsc": "sorting_desc_disabled",
+		"sSortableDesc": "sorting_asc_disabled",
+		"sSortableNone": "sorting_disabled",
+		"sSortColumn": "sorting_", /* Note that an int is postfixed for the sorting order */
+	
+		/* Filtering */
+		"sFilterInput": "",
+	
+		/* Page length */
+		"sLengthSelect": "",
+	
+		/* Scrolling */
+		"sScrollWrapper": "dataTables_scroll",
+		"sScrollHead": "dataTables_scrollHead",
+		"sScrollHeadInner": "dataTables_scrollHeadInner",
+		"sScrollBody": "dataTables_scrollBody",
+		"sScrollFoot": "dataTables_scrollFoot",
+		"sScrollFootInner": "dataTables_scrollFootInner",
+	
+		/* Misc */
+		"sHeaderTH": "",
+		"sFooterTH": "",
+	
+		// Deprecated
+		"sSortJUIAsc": "",
+		"sSortJUIDesc": "",
+		"sSortJUI": "",
+		"sSortJUIAscAllowed": "",
+		"sSortJUIDescAllowed": "",
+		"sSortJUIWrapper": "",
+		"sSortIcon": "",
+		"sJUIHeader": "",
+		"sJUIFooter": ""
+	} );
+	
+	
+	var extPagination = DataTable.ext.pager;
+	
+	function _numbers ( page, pages ) {
+		var
+			numbers = [],
+			buttons = extPagination.numbers_length,
+			half = Math.floor( buttons / 2 ),
+			i = 1;
+	
+		if ( pages <= buttons ) {
+			numbers = _range( 0, pages );
+		}
+		else if ( page <= half ) {
+			numbers = _range( 0, buttons-2 );
+			numbers.push( 'ellipsis' );
+			numbers.push( pages-1 );
+		}
+		else if ( page >= pages - 1 - half ) {
+			numbers = _range( pages-(buttons-2), pages );
+			numbers.splice( 0, 0, 'ellipsis' ); // no unshift in ie6
+			numbers.splice( 0, 0, 0 );
+		}
+		else {
+			numbers = _range( page-half+2, page+half-1 );
+			numbers.push( 'ellipsis' );
+			numbers.push( pages-1 );
+			numbers.splice( 0, 0, 'ellipsis' );
+			numbers.splice( 0, 0, 0 );
+		}
+	
+		numbers.DT_el = 'span';
+		return numbers;
+	}
+	
+	
+	$.extend( extPagination, {
+		simple: function ( page, pages ) {
+			return [ 'previous', 'next' ];
+		},
+	
+		full: function ( page, pages ) {
+			return [  'first', 'previous', 'next', 'last' ];
+		},
+	
+		numbers: function ( page, pages ) {
+			return [ _numbers(page, pages) ];
+		},
+	
+		simple_numbers: function ( page, pages ) {
+			return [ 'previous', _numbers(page, pages), 'next' ];
+		},
+	
+		full_numbers: function ( page, pages ) {
+			return [ 'first', 'previous', _numbers(page, pages), 'next', 'last' ];
+		},
+		
+		first_last_numbers: function (page, pages) {
+	 		return ['first', _numbers(page, pages), 'last'];
+	 	},
+	
+		// For testing and plug-ins to use
+		_numbers: _numbers,
+	
+		// Number of number buttons (including ellipsis) to show. _Must be odd!_
+		numbers_length: 7
+	} );
+	
+	
+	$.extend( true, DataTable.ext.renderer, {
+		pageButton: {
+			_: function ( settings, host, idx, buttons, page, pages ) {
+				var classes = settings.oClasses;
+				var lang = settings.oLanguage.oPaginate;
+				var aria = settings.oLanguage.oAria.paginate || {};
+				var btnDisplay, btnClass;
+	
+				var attach = function( container, buttons ) {
+					var i, ien, node, button, tabIndex;
+					var disabledClass = classes.sPageButtonDisabled;
+					var clickHandler = function ( e ) {
+						_fnPageChange( settings, e.data.action, true );
+					};
+	
+					for ( i=0, ien=buttons.length ; i<ien ; i++ ) {
+						button = buttons[i];
+	
+						if ( Array.isArray( button ) ) {
+							var inner = $( '<'+(button.DT_el || 'div')+'/>' )
+								.appendTo( container );
+							attach( inner, button );
 						}
-		
-						var negative = d < 0 ? '-' : '';
-						var flo = parseFloat( d );
-		
-						// If NaN then there isn't much formatting that we can do - just
-						// return immediately, escaping any HTML (this was supposed to
-						// be a number after all)
-						if ( isNaN( flo ) ) {
-							return __htmlEscapeEntities( d );
+						else {
+							btnDisplay = null;
+							btnClass = button;
+							tabIndex = settings.iTabIndex;
+	
+							switch ( button ) {
+								case 'ellipsis':
+									container.append('<span class="ellipsis">&#x2026;</span>');
+									break;
+	
+								case 'first':
+									btnDisplay = lang.sFirst;
+	
+									if ( page === 0 ) {
+										tabIndex = -1;
+										btnClass += ' ' + disabledClass;
+									}
+									break;
+	
+								case 'previous':
+									btnDisplay = lang.sPrevious;
+	
+									if ( page === 0 ) {
+										tabIndex = -1;
+										btnClass += ' ' + disabledClass;
+									}
+									break;
+	
+								case 'next':
+									btnDisplay = lang.sNext;
+	
+									if ( pages === 0 || page === pages-1 ) {
+										tabIndex = -1;
+										btnClass += ' ' + disabledClass;
+									}
+									break;
+	
+								case 'last':
+									btnDisplay = lang.sLast;
+	
+									if ( pages === 0 || page === pages-1 ) {
+										tabIndex = -1;
+										btnClass += ' ' + disabledClass;
+									}
+									break;
+	
+								default:
+									btnDisplay = settings.fnFormatNumber( button + 1 );
+									btnClass = page === button ?
+										classes.sPageButtonActive : '';
+									break;
+							}
+	
+							if ( btnDisplay !== null ) {
+								node = $('<a>', {
+										'class': classes.sPageButton+' '+btnClass,
+										'aria-controls': settings.sTableId,
+										'aria-label': aria[ button ],
+										'data-dt-idx': button,
+										'tabindex': tabIndex,
+										'id': idx === 0 && typeof button === 'string' ?
+											settings.sTableId +'_'+ button :
+											null
+									} )
+									.html( btnDisplay )
+									.appendTo( container );
+	
+								_fnBindAction(
+									node, {action: button}, clickHandler
+								);
+							}
 						}
-		
-						flo = flo.toFixed( precision );
-						d = Math.abs( flo );
-		
-						var intPart = parseInt( d, 10 );
-						var floatPart = precision ?
-							decimal+(d - intPart).toFixed( precision ).substring( 2 ):
-							'';
-		
-						// If zero, then can't have a negative prefix
-						if (intPart === 0 && parseFloat(floatPart) === 0) {
-							negative = '';
-						}
-		
-						return negative + (prefix||'') +
-							intPart.toString().replace(
-								/\B(?=(\d{3})+(?!\d))/g, thousands
-							) +
-							floatPart +
-							(postfix||'');
 					}
 				};
-			},
-		
-			text: function () {
-				return {
-					display: __htmlEscapeEntities,
-					filter: __htmlEscapeEntities
-				};
+	
+				// IE9 throws an 'unknown error' if document.activeElement is used
+				// inside an iframe or frame. Try / catch the error. Not good for
+				// accessibility, but neither are frames.
+				var activeEl;
+	
+				try {
+					// Because this approach is destroying and recreating the paging
+					// elements, focus is lost on the select button which is bad for
+					// accessibility. So we want to restore focus once the draw has
+					// completed
+					activeEl = $(host).find(document.activeElement).data('dt-idx');
+				}
+				catch (e) {}
+	
+				attach( $(host).empty(), buttons );
+	
+				if ( activeEl !== undefined ) {
+					$(host).find( '[data-dt-idx='+activeEl+']' ).trigger('focus');
+				}
 			}
-		};
-		
-		
-		/*
-		 * This is really a good bit rubbish this method of exposing the internal methods
-		 * publicly... - To be fixed in 2.0 using methods on the prototype
-		 */
-		
-		
-		/**
-		 * Create a wrapper function for exporting an internal functions to an external API.
-		 *  @param {string} fn API function name
-		 *  @returns {function} wrapped function
-		 *  @memberof DataTable#internal
-		 */
-		function _fnExternApiFunc (fn)
+		}
+	} );
+	
+	
+	
+	// Built in type detection. See model.ext.aTypes for information about
+	// what is required from this methods.
+	$.extend( DataTable.ext.type.detect, [
+		// Plain numbers - first since V8 detects some plain numbers as dates
+		// e.g. Date.parse('55') (but not all, e.g. Date.parse('22')...).
+		function ( d, settings )
 		{
-			return function() {
-				var args = [_fnSettingsFromNode( this[DataTable.ext.iApiIndex] )].concat(
-					Array.prototype.slice.call(arguments)
-				);
-				return DataTable.ext.internal[fn].apply( this, args );
-			};
+			var decimal = settings.oLanguage.sDecimal;
+			return _isNumber( d, decimal ) ? 'num'+decimal : null;
+		},
+	
+		// Dates (only those recognised by the browser's Date.parse)
+		function ( d, settings )
+		{
+			// V8 tries _very_ hard to make a string passed into `Date.parse()`
+			// valid, so we need to use a regex to restrict date formats. Use a
+			// plug-in for anything other than ISO8601 style strings
+			if ( d && !(d instanceof Date) && ! _re_date.test(d) ) {
+				return null;
+			}
+			var parsed = Date.parse(d);
+			return (parsed !== null && !isNaN(parsed)) || _empty(d) ? 'date' : null;
+		},
+	
+		// Formatted numbers
+		function ( d, settings )
+		{
+			var decimal = settings.oLanguage.sDecimal;
+			return _isNumber( d, decimal, true ) ? 'num-fmt'+decimal : null;
+		},
+	
+		// HTML numeric
+		function ( d, settings )
+		{
+			var decimal = settings.oLanguage.sDecimal;
+			return _htmlNumeric( d, decimal ) ? 'html-num'+decimal : null;
+		},
+	
+		// HTML numeric, formatted
+		function ( d, settings )
+		{
+			var decimal = settings.oLanguage.sDecimal;
+			return _htmlNumeric( d, decimal, true ) ? 'html-num-fmt'+decimal : null;
+		},
+	
+		// HTML (this is strict checking - there must be html)
+		function ( d, settings )
+		{
+			return _empty( d ) || (typeof d === 'string' && d.indexOf('<') !== -1) ?
+				'html' : null;
+		}
+	] );
+	
+	
+	
+	// Filter formatting functions. See model.ext.ofnSearch for information about
+	// what is required from these methods.
+	// 
+	// Note that additional search methods are added for the html numbers and
+	// html formatted numbers by `_addNumericSort()` when we know what the decimal
+	// place is
+	
+	
+	$.extend( DataTable.ext.type.search, {
+		html: function ( data ) {
+			return _empty(data) ?
+				data :
+				typeof data === 'string' ?
+					data
+						.replace( _re_new_lines, " " )
+						.replace( _re_html, "" ) :
+					'';
+		},
+	
+		string: function ( data ) {
+			return _empty(data) ?
+				data :
+				typeof data === 'string' ?
+					data.replace( _re_new_lines, " " ) :
+					data;
+		}
+	} );
+	
+	
+	
+	var __numericReplace = function ( d, decimalPlace, re1, re2 ) {
+		if ( d !== 0 && (!d || d === '-') ) {
+			return -Infinity;
+		}
+	
+		// If a decimal place other than `.` is used, it needs to be given to the
+		// function so we can detect it and replace with a `.` which is the only
+		// decimal place Javascript recognises - it is not locale aware.
+		if ( decimalPlace ) {
+			d = _numToDecimal( d, decimalPlace );
+		}
+	
+		if ( d.replace ) {
+			if ( re1 ) {
+				d = d.replace( re1, '' );
+			}
+	
+			if ( re2 ) {
+				d = d.replace( re2, '' );
+			}
+		}
+	
+		return d * 1;
+	};
+	
+	
+	// Add the numeric 'deformatting' functions for sorting and search. This is done
+	// in a function to provide an easy ability for the language options to add
+	// additional methods if a non-period decimal place is used.
+	function _addNumericSort ( decimalPlace ) {
+		$.each(
+			{
+				// Plain numbers
+				"num": function ( d ) {
+					return __numericReplace( d, decimalPlace );
+				},
+	
+				// Formatted numbers
+				"num-fmt": function ( d ) {
+					return __numericReplace( d, decimalPlace, _re_formatted_numeric );
+				},
+	
+				// HTML numeric
+				"html-num": function ( d ) {
+					return __numericReplace( d, decimalPlace, _re_html );
+				},
+	
+				// HTML numeric, formatted
+				"html-num-fmt": function ( d ) {
+					return __numericReplace( d, decimalPlace, _re_html, _re_formatted_numeric );
+				}
+			},
+			function ( key, fn ) {
+				// Add the ordering method
+				_ext.type.order[ key+decimalPlace+'-pre' ] = fn;
+	
+				// For HTML types add a search formatter that will strip the HTML
+				if ( key.match(/^html\-/) ) {
+					_ext.type.search[ key+decimalPlace ] = _ext.type.search.html;
+				}
+			}
+		);
+	}
+	
+	
+	// Default sort methods
+	$.extend( _ext.type.order, {
+		// Dates
+		"date-pre": function ( d ) {
+			var ts = Date.parse( d );
+			return isNaN(ts) ? -Infinity : ts;
+		},
+	
+		// html
+		"html-pre": function ( a ) {
+			return _empty(a) ?
+				'' :
+				a.replace ?
+					a.replace( /<.*?>/g, "" ).toLowerCase() :
+					a+'';
+		},
+	
+		// string
+		"string-pre": function ( a ) {
+			// This is a little complex, but faster than always calling toString,
+			// http://jsperf.com/tostring-v-check
+			return _empty(a) ?
+				'' :
+				typeof a === 'string' ?
+					a.toLowerCase() :
+					! a.toString ?
+						'' :
+						a.toString();
+		},
+	
+		// string-asc and -desc are retained only for compatibility with the old
+		// sort methods
+		"string-asc": function ( x, y ) {
+			return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+		},
+	
+		"string-desc": function ( x, y ) {
+			return ((x < y) ? 1 : ((x > y) ? -1 : 0));
+		}
+	} );
+	
+	
+	// Numeric sorting types - order doesn't matter here
+	_addNumericSort( '' );
+	
+	
+	$.extend( true, DataTable.ext.renderer, {
+		header: {
+			_: function ( settings, cell, column, classes ) {
+				// No additional mark-up required
+				// Attach a sort listener to update on sort - note that using the
+				// `DT` namespace will allow the event to be removed automatically
+				// on destroy, while the `dt` namespaced event is the one we are
+				// listening for
+				$(settings.nTable).on( 'order.dt.DT', function ( e, ctx, sorting, columns ) {
+					if ( settings !== ctx ) { // need to check this this is the host
+						return;               // table, not a nested one
+					}
+	
+					var colIdx = column.idx;
+	
+					cell
+						.removeClass(
+							classes.sSortAsc +' '+
+							classes.sSortDesc
+						)
+						.addClass( columns[ colIdx ] == 'asc' ?
+							classes.sSortAsc : columns[ colIdx ] == 'desc' ?
+								classes.sSortDesc :
+								column.sSortingClass
+						);
+				} );
+			},
+	
+			jqueryui: function ( settings, cell, column, classes ) {
+				$('<div/>')
+					.addClass( classes.sSortJUIWrapper )
+					.append( cell.contents() )
+					.append( $('<span/>')
+						.addClass( classes.sSortIcon+' '+column.sSortingClassJUI )
+					)
+					.appendTo( cell );
+	
+				// Attach a sort listener to update on sort
+				$(settings.nTable).on( 'order.dt.DT', function ( e, ctx, sorting, columns ) {
+					if ( settings !== ctx ) {
+						return;
+					}
+	
+					var colIdx = column.idx;
+	
+					cell
+						.removeClass( classes.sSortAsc +" "+classes.sSortDesc )
+						.addClass( columns[ colIdx ] == 'asc' ?
+							classes.sSortAsc : columns[ colIdx ] == 'desc' ?
+								classes.sSortDesc :
+								column.sSortingClass
+						);
+	
+					cell
+						.find( 'span.'+classes.sSortIcon )
+						.removeClass(
+							classes.sSortJUIAsc +" "+
+							classes.sSortJUIDesc +" "+
+							classes.sSortJUI +" "+
+							classes.sSortJUIAscAllowed +" "+
+							classes.sSortJUIDescAllowed
+						)
+						.addClass( columns[ colIdx ] == 'asc' ?
+							classes.sSortJUIAsc : columns[ colIdx ] == 'desc' ?
+								classes.sSortJUIDesc :
+								column.sSortingClassJUI
+						);
+				} );
+			}
+		}
+	} );
+	
+	/*
+	 * Public helper functions. These aren't used internally by DataTables, or
+	 * called by any of the options passed into DataTables, but they can be used
+	 * externally by developers working with DataTables. They are helper functions
+	 * to make working with DataTables a little bit easier.
+	 */
+	
+	var __htmlEscapeEntities = function ( d ) {
+		if (Array.isArray(d)) {
+			d = d.join(',');
+		}
+	
+		return typeof d === 'string' ?
+			d
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;') :
+			d;
+	};
+	
+	// Common logic for moment, luxon or a date action
+	function __mld( dt, momentFn, luxonFn, dateFn, arg1 ) {
+		if (window.moment) {
+			return dt[momentFn]( arg1 );
+		}
+		else if (window.luxon) {
+			return dt[luxonFn]( arg1 );
 		}
 		
-		
-		/**
-		 * Reference to internal functions for use by plug-in developers. Note that
-		 * these methods are references to internal functions and are considered to be
-		 * private. If you use these methods, be aware that they are liable to change
-		 * between versions.
-		 *  @namespace
-		 */
-		$.extend( DataTable.ext.internal, {
-			_fnExternApiFunc: _fnExternApiFunc,
-			_fnBuildAjax: _fnBuildAjax,
-			_fnAjaxUpdate: _fnAjaxUpdate,
-			_fnAjaxParameters: _fnAjaxParameters,
-			_fnAjaxUpdateDraw: _fnAjaxUpdateDraw,
-			_fnAjaxDataSrc: _fnAjaxDataSrc,
-			_fnAddColumn: _fnAddColumn,
-			_fnColumnOptions: _fnColumnOptions,
-			_fnAdjustColumnSizing: _fnAdjustColumnSizing,
-			_fnVisibleToColumnIndex: _fnVisibleToColumnIndex,
-			_fnColumnIndexToVisible: _fnColumnIndexToVisible,
-			_fnVisbleColumns: _fnVisbleColumns,
-			_fnGetColumns: _fnGetColumns,
-			_fnColumnTypes: _fnColumnTypes,
-			_fnApplyColumnDefs: _fnApplyColumnDefs,
-			_fnHungarianMap: _fnHungarianMap,
-			_fnCamelToHungarian: _fnCamelToHungarian,
-			_fnLanguageCompat: _fnLanguageCompat,
-			_fnBrowserDetect: _fnBrowserDetect,
-			_fnAddData: _fnAddData,
-			_fnAddTr: _fnAddTr,
-			_fnNodeToDataIndex: _fnNodeToDataIndex,
-			_fnNodeToColumnIndex: _fnNodeToColumnIndex,
-			_fnGetCellData: _fnGetCellData,
-			_fnSetCellData: _fnSetCellData,
-			_fnSplitObjNotation: _fnSplitObjNotation,
-			_fnGetObjectDataFn: _fnGetObjectDataFn,
-			_fnSetObjectDataFn: _fnSetObjectDataFn,
-			_fnGetDataMaster: _fnGetDataMaster,
-			_fnClearTable: _fnClearTable,
-			_fnDeleteIndex: _fnDeleteIndex,
-			_fnInvalidate: _fnInvalidate,
-			_fnGetRowElements: _fnGetRowElements,
-			_fnCreateTr: _fnCreateTr,
-			_fnBuildHead: _fnBuildHead,
-			_fnDrawHead: _fnDrawHead,
-			_fnDraw: _fnDraw,
-			_fnReDraw: _fnReDraw,
-			_fnAddOptionsHtml: _fnAddOptionsHtml,
-			_fnDetectHeader: _fnDetectHeader,
-			_fnGetUniqueThs: _fnGetUniqueThs,
-			_fnFeatureHtmlFilter: _fnFeatureHtmlFilter,
-			_fnFilterComplete: _fnFilterComplete,
-			_fnFilterCustom: _fnFilterCustom,
-			_fnFilterColumn: _fnFilterColumn,
-			_fnFilter: _fnFilter,
-			_fnFilterCreateSearch: _fnFilterCreateSearch,
-			_fnEscapeRegex: _fnEscapeRegex,
-			_fnFilterData: _fnFilterData,
-			_fnFeatureHtmlInfo: _fnFeatureHtmlInfo,
-			_fnUpdateInfo: _fnUpdateInfo,
-			_fnInfoMacros: _fnInfoMacros,
-			_fnInitialise: _fnInitialise,
-			_fnInitComplete: _fnInitComplete,
-			_fnLengthChange: _fnLengthChange,
-			_fnFeatureHtmlLength: _fnFeatureHtmlLength,
-			_fnFeatureHtmlPaginate: _fnFeatureHtmlPaginate,
-			_fnPageChange: _fnPageChange,
-			_fnFeatureHtmlProcessing: _fnFeatureHtmlProcessing,
-			_fnProcessingDisplay: _fnProcessingDisplay,
-			_fnFeatureHtmlTable: _fnFeatureHtmlTable,
-			_fnScrollDraw: _fnScrollDraw,
-			_fnApplyToChildren: _fnApplyToChildren,
-			_fnCalculateColumnWidths: _fnCalculateColumnWidths,
-			_fnThrottle: _fnThrottle,
-			_fnConvertToWidth: _fnConvertToWidth,
-			_fnGetWidestNode: _fnGetWidestNode,
-			_fnGetMaxLenString: _fnGetMaxLenString,
-			_fnStringToCss: _fnStringToCss,
-			_fnSortFlatten: _fnSortFlatten,
-			_fnSort: _fnSort,
-			_fnSortAria: _fnSortAria,
-			_fnSortListener: _fnSortListener,
-			_fnSortAttachListener: _fnSortAttachListener,
-			_fnSortingClasses: _fnSortingClasses,
-			_fnSortData: _fnSortData,
-			_fnSaveState: _fnSaveState,
-			_fnLoadState: _fnLoadState,
-			_fnImplementState: _fnImplementState,
-			_fnSettingsFromNode: _fnSettingsFromNode,
-			_fnLog: _fnLog,
-			_fnMap: _fnMap,
-			_fnBindAction: _fnBindAction,
-			_fnCallbackReg: _fnCallbackReg,
-			_fnCallbackFire: _fnCallbackFire,
-			_fnLengthOverflow: _fnLengthOverflow,
-			_fnRenderer: _fnRenderer,
-			_fnDataSource: _fnDataSource,
-			_fnRowAttributes: _fnRowAttributes,
-			_fnExtend: _fnExtend,
-			_fnCalculateEnd: function () {} // Used by a lot of plug-ins, but redundant
-			                                // in 1.10, so this dead-end function is
-			                                // added to prevent errors
-		} );
-		
-		
-		// jQuery access
-		$.fn.dataTable = DataTable;
-		
-		// Provide access to the host jQuery object (circular reference)
-		DataTable.$ = $;
-		
-		// Legacy aliases
-		$.fn.dataTableSettings = DataTable.settings;
-		$.fn.dataTableExt = DataTable.ext;
-		
-		// With a capital `D` we return a DataTables API instance rather than a
-		// jQuery object
-		$.fn.DataTable = function ( opts ) {
-			return $(this).dataTable( opts ).api();
-		};
-		
-		// All properties that are available to $.fn.dataTable should also be
-		// available on $.fn.DataTable
-		$.each( DataTable, function ( prop, val ) {
-			$.fn.DataTable[ prop ] = val;
-		} );
+		return dateFn ? dt[dateFn]( arg1 ) : dt;
+	}
 	
-		return DataTable;
+	
+	var __mlWarning = false;
+	function __mldObj (d, format, locale) {
+		var dt;
+	
+		if (window.moment) {
+			dt = window.moment.utc( d, format, locale, true );
+	
+			if (! dt.isValid()) {
+				return null;
+			}
+		}
+		else if (window.luxon) {
+			dt = format && typeof d === 'string'
+				? window.luxon.DateTime.fromFormat( d, format )
+				: window.luxon.DateTime.fromISO( d );
+	
+			if (! dt.isValid) {
+				return null;
+			}
+	
+			dt.setLocale(locale);
+		}
+		else if (! format) {
+			// No format given, must be ISO
+			dt = new Date(d);
+		}
+		else {
+			if (! __mlWarning) {
+				alert('DataTables warning: Formatted date without Moment.js or Luxon - https://datatables.net/tn/17');
+			}
+	
+			__mlWarning = true;
+		}
+	
+		return dt;
+	}
+	
+	// Wrapper for date, datetime and time which all operate the same way with the exception of
+	// the output string for auto locale support
+	function __mlHelper (localeString) {
+		return function ( from, to, locale, def ) {
+			// Luxon and Moment support
+			// Argument shifting
+			if ( arguments.length === 0 ) {
+				locale = 'en';
+				to = null; // means toLocaleString
+				from = null; // means iso8601
+			}
+			else if ( arguments.length === 1 ) {
+				locale = 'en';
+				to = from;
+				from = null;
+			}
+			else if ( arguments.length === 2 ) {
+				locale = to;
+				to = from;
+				from = null;
+			}
+	
+			var typeName = 'datetime-' + to;
+	
+			// Add type detection and sorting specific to this date format - we need to be able to identify
+			// date type columns as such, rather than as numbers in extensions. Hence the need for this.
+			if (! DataTable.ext.type.order[typeName]) {
+				// The renderer will give the value to type detect as the type!
+				DataTable.ext.type.detect.unshift(function (d) {
+					return d === typeName ? typeName : false;
+				});
+	
+				// The renderer gives us Moment, Luxon or Date obects for the sorting, all of which have a
+				// `valueOf` which gives milliseconds epoch
+				DataTable.ext.type.order[typeName + '-asc'] = function (a, b) {
+					var x = a.valueOf();
+					var y = b.valueOf();
+	
+					return x === y
+						? 0
+						: x < y
+							? -1
+							: 1;
+				}
+	
+				DataTable.ext.type.order[typeName + '-desc'] = function (a, b) {
+					var x = a.valueOf();
+					var y = b.valueOf();
+	
+					return x === y
+						? 0
+						: x > y
+							? -1
+							: 1;
+				}
+			}
+		
+			return function ( d, type ) {
+				// Allow for a default value
+				if (d === null || d === undefined) {
+					if (def === '--now') {
+						// We treat everything as UTC further down, so no changes are
+						// made, as such need to get the local date / time as if it were
+						// UTC
+						var local = new Date();
+						d = new Date( Date.UTC(
+							local.getFullYear(), local.getMonth(), local.getDate(),
+							local.getHours(), local.getMinutes(), local.getSeconds()
+						) );
+					}
+					else {
+						d = '';
+					}
+				}
+	
+				if (type === 'type') {
+					// Typing uses the type name for fast matching
+					return typeName;
+				}
+	
+				if (d === '') {
+					return type !== 'sort'
+						? ''
+						: __mldObj('0000-01-01 00:00:00', null, locale);
+				}
+	
+				// Shortcut. If `from` and `to` are the same, we are using the renderer to
+				// format for ordering, not display - its already in the display format.
+				if ( to !== null && from === to && type !== 'sort' && type !== 'type' && ! (d instanceof Date) ) {
+					return d;
+				}
+	
+				var dt = __mldObj(d, from, locale);
+	
+				if (dt === null) {
+					return d;
+				}
+	
+				if (type === 'sort') {
+					return dt;
+				}
+				
+				var formatted = to === null
+					? __mld(dt, 'toDate', 'toJSDate', '')[localeString]()
+					: __mld(dt, 'format', 'toFormat', 'toISOString', to);
+	
+				// XSS protection
+				return type === 'display' ?
+					__htmlEscapeEntities( formatted ) :
+					formatted;
+			};
+		}
+	}
+	
+	// Based on locale, determine standard number formatting
+	// Fallback for legacy browsers is US English
+	var __thousands = ',';
+	var __decimal = '.';
+	
+	if (Intl) {
+		try {
+			var num = new Intl.NumberFormat().formatToParts(100000.1);
+		
+			for (var i=0 ; i<num.length ; i++) {
+				if (num[i].type === 'group') {
+					__thousands = num[i].value;
+				}
+				else if (num[i].type === 'decimal') {
+					__decimal = num[i].value;
+				}
+			}
+		}
+		catch (e) {
+			// noop
+		}
+	}
+	
+	// Formatted date time detection - use by declaring the formats you are going to use
+	DataTable.datetime = function ( format, locale ) {
+		var typeName = 'datetime-detect-' + format;
+	
+		if (! locale) {
+			locale = 'en';
+		}
+	
+		if (! DataTable.ext.type.order[typeName]) {
+			DataTable.ext.type.detect.unshift(function (d) {
+				var dt = __mldObj(d, format, locale);
+				return d === '' || dt ? typeName : false;
+			});
+	
+			DataTable.ext.type.order[typeName + '-pre'] = function (d) {
+				return __mldObj(d, format, locale) || 0;
+			}
+		}
+	}
+	
+	/**
+	 * Helpers for `columns.render`.
+	 *
+	 * The options defined here can be used with the `columns.render` initialisation
+	 * option to provide a display renderer. The following functions are defined:
+	 *
+	 * * `number` - Will format numeric data (defined by `columns.data`) for
+	 *   display, retaining the original unformatted data for sorting and filtering.
+	 *   It takes 5 parameters:
+	 *   * `string` - Thousands grouping separator
+	 *   * `string` - Decimal point indicator
+	 *   * `integer` - Number of decimal points to show
+	 *   * `string` (optional) - Prefix.
+	 *   * `string` (optional) - Postfix (/suffix).
+	 * * `text` - Escape HTML to help prevent XSS attacks. It has no optional
+	 *   parameters.
+	 *
+	 * @example
+	 *   // Column definition using the number renderer
+	 *   {
+	 *     data: "salary",
+	 *     render: $.fn.dataTable.render.number( '\'', '.', 0, '$' )
+	 *   }
+	 *
+	 * @namespace
+	 */
+	DataTable.render = {
+		date: __mlHelper('toLocaleDateString'),
+		datetime: __mlHelper('toLocaleString'),
+		time: __mlHelper('toLocaleTimeString'),
+		number: function ( thousands, decimal, precision, prefix, postfix ) {
+			// Auto locale detection
+			if (thousands === null || thousands === undefined) {
+				thousands = __thousands;
+			}
+	
+			if (decimal === null || decimal === undefined) {
+				decimal = __decimal;
+			}
+	
+			return {
+				display: function ( d ) {
+					if ( typeof d !== 'number' && typeof d !== 'string' ) {
+						return d;
+					}
+	
+					if (d === '' || d === null) {
+						return d;
+					}
+	
+					var negative = d < 0 ? '-' : '';
+					var flo = parseFloat( d );
+	
+					// If NaN then there isn't much formatting that we can do - just
+					// return immediately, escaping any HTML (this was supposed to
+					// be a number after all)
+					if ( isNaN( flo ) ) {
+						return __htmlEscapeEntities( d );
+					}
+	
+					flo = flo.toFixed( precision );
+					d = Math.abs( flo );
+	
+					var intPart = parseInt( d, 10 );
+					var floatPart = precision ?
+						decimal+(d - intPart).toFixed( precision ).substring( 2 ):
+						'';
+	
+					// If zero, then can't have a negative prefix
+					if (intPart === 0 && parseFloat(floatPart) === 0) {
+						negative = '';
+					}
+	
+					return negative + (prefix||'') +
+						intPart.toString().replace(
+							/\B(?=(\d{3})+(?!\d))/g, thousands
+						) +
+						floatPart +
+						(postfix||'');
+				}
+			};
+		},
+	
+		text: function () {
+			return {
+				display: __htmlEscapeEntities,
+				filter: __htmlEscapeEntities
+			};
+		}
+	};
+	
+	
+	/*
+	 * This is really a good bit rubbish this method of exposing the internal methods
+	 * publicly... - To be fixed in 2.0 using methods on the prototype
+	 */
+	
+	
+	/**
+	 * Create a wrapper function for exporting an internal functions to an external API.
+	 *  @param {string} fn API function name
+	 *  @returns {function} wrapped function
+	 *  @memberof DataTable#internal
+	 */
+	function _fnExternApiFunc (fn)
+	{
+		return function() {
+			var args = [_fnSettingsFromNode( this[DataTable.ext.iApiIndex] )].concat(
+				Array.prototype.slice.call(arguments)
+			);
+			return DataTable.ext.internal[fn].apply( this, args );
+		};
+	}
+	
+	
+	/**
+	 * Reference to internal functions for use by plug-in developers. Note that
+	 * these methods are references to internal functions and are considered to be
+	 * private. If you use these methods, be aware that they are liable to change
+	 * between versions.
+	 *  @namespace
+	 */
+	$.extend( DataTable.ext.internal, {
+		_fnExternApiFunc: _fnExternApiFunc,
+		_fnBuildAjax: _fnBuildAjax,
+		_fnAjaxUpdate: _fnAjaxUpdate,
+		_fnAjaxParameters: _fnAjaxParameters,
+		_fnAjaxUpdateDraw: _fnAjaxUpdateDraw,
+		_fnAjaxDataSrc: _fnAjaxDataSrc,
+		_fnAddColumn: _fnAddColumn,
+		_fnColumnOptions: _fnColumnOptions,
+		_fnAdjustColumnSizing: _fnAdjustColumnSizing,
+		_fnVisibleToColumnIndex: _fnVisibleToColumnIndex,
+		_fnColumnIndexToVisible: _fnColumnIndexToVisible,
+		_fnVisbleColumns: _fnVisbleColumns,
+		_fnGetColumns: _fnGetColumns,
+		_fnColumnTypes: _fnColumnTypes,
+		_fnApplyColumnDefs: _fnApplyColumnDefs,
+		_fnHungarianMap: _fnHungarianMap,
+		_fnCamelToHungarian: _fnCamelToHungarian,
+		_fnLanguageCompat: _fnLanguageCompat,
+		_fnBrowserDetect: _fnBrowserDetect,
+		_fnAddData: _fnAddData,
+		_fnAddTr: _fnAddTr,
+		_fnNodeToDataIndex: _fnNodeToDataIndex,
+		_fnNodeToColumnIndex: _fnNodeToColumnIndex,
+		_fnGetCellData: _fnGetCellData,
+		_fnSetCellData: _fnSetCellData,
+		_fnSplitObjNotation: _fnSplitObjNotation,
+		_fnGetObjectDataFn: _fnGetObjectDataFn,
+		_fnSetObjectDataFn: _fnSetObjectDataFn,
+		_fnGetDataMaster: _fnGetDataMaster,
+		_fnClearTable: _fnClearTable,
+		_fnDeleteIndex: _fnDeleteIndex,
+		_fnInvalidate: _fnInvalidate,
+		_fnGetRowElements: _fnGetRowElements,
+		_fnCreateTr: _fnCreateTr,
+		_fnBuildHead: _fnBuildHead,
+		_fnDrawHead: _fnDrawHead,
+		_fnDraw: _fnDraw,
+		_fnReDraw: _fnReDraw,
+		_fnAddOptionsHtml: _fnAddOptionsHtml,
+		_fnDetectHeader: _fnDetectHeader,
+		_fnGetUniqueThs: _fnGetUniqueThs,
+		_fnFeatureHtmlFilter: _fnFeatureHtmlFilter,
+		_fnFilterComplete: _fnFilterComplete,
+		_fnFilterCustom: _fnFilterCustom,
+		_fnFilterColumn: _fnFilterColumn,
+		_fnFilter: _fnFilter,
+		_fnFilterCreateSearch: _fnFilterCreateSearch,
+		_fnEscapeRegex: _fnEscapeRegex,
+		_fnFilterData: _fnFilterData,
+		_fnFeatureHtmlInfo: _fnFeatureHtmlInfo,
+		_fnUpdateInfo: _fnUpdateInfo,
+		_fnInfoMacros: _fnInfoMacros,
+		_fnInitialise: _fnInitialise,
+		_fnInitComplete: _fnInitComplete,
+		_fnLengthChange: _fnLengthChange,
+		_fnFeatureHtmlLength: _fnFeatureHtmlLength,
+		_fnFeatureHtmlPaginate: _fnFeatureHtmlPaginate,
+		_fnPageChange: _fnPageChange,
+		_fnFeatureHtmlProcessing: _fnFeatureHtmlProcessing,
+		_fnProcessingDisplay: _fnProcessingDisplay,
+		_fnFeatureHtmlTable: _fnFeatureHtmlTable,
+		_fnScrollDraw: _fnScrollDraw,
+		_fnApplyToChildren: _fnApplyToChildren,
+		_fnCalculateColumnWidths: _fnCalculateColumnWidths,
+		_fnThrottle: _fnThrottle,
+		_fnConvertToWidth: _fnConvertToWidth,
+		_fnGetWidestNode: _fnGetWidestNode,
+		_fnGetMaxLenString: _fnGetMaxLenString,
+		_fnStringToCss: _fnStringToCss,
+		_fnSortFlatten: _fnSortFlatten,
+		_fnSort: _fnSort,
+		_fnSortAria: _fnSortAria,
+		_fnSortListener: _fnSortListener,
+		_fnSortAttachListener: _fnSortAttachListener,
+		_fnSortingClasses: _fnSortingClasses,
+		_fnSortData: _fnSortData,
+		_fnSaveState: _fnSaveState,
+		_fnLoadState: _fnLoadState,
+		_fnImplementState: _fnImplementState,
+		_fnSettingsFromNode: _fnSettingsFromNode,
+		_fnLog: _fnLog,
+		_fnMap: _fnMap,
+		_fnBindAction: _fnBindAction,
+		_fnCallbackReg: _fnCallbackReg,
+		_fnCallbackFire: _fnCallbackFire,
+		_fnLengthOverflow: _fnLengthOverflow,
+		_fnRenderer: _fnRenderer,
+		_fnDataSource: _fnDataSource,
+		_fnRowAttributes: _fnRowAttributes,
+		_fnExtend: _fnExtend,
+		_fnCalculateEnd: function () {} // Used by a lot of plug-ins, but redundant
+		                                // in 1.10, so this dead-end function is
+		                                // added to prevent errors
+	} );
+	
+	
+	// jQuery access
+	$.fn.dataTable = DataTable;
+	
+	// Provide access to the host jQuery object (circular reference)
+	DataTable.$ = $;
+	
+	// Legacy aliases
+	$.fn.dataTableSettings = DataTable.settings;
+	$.fn.dataTableExt = DataTable.ext;
+	
+	// With a capital `D` we return a DataTables API instance rather than a
+	// jQuery object
+	$.fn.DataTable = function ( opts ) {
+		return $(this).dataTable( opts ).api();
+	};
+	
+	// All properties that are available to $.fn.dataTable should also be
+	// available on $.fn.DataTable
+	$.each( DataTable, function ( prop, val ) {
+		$.fn.DataTable[ prop ] = val;
+	} );
+
+	return DataTable;
 }));
 
 
@@ -74984,14 +66097,6 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
  * ©2011-2017 SpryMedia Ltd - datatables.net/license
  */
 
-/**
- * DataTables integration for Bootstrap 4. This requires Bootstrap 4 and
- * DataTables 1.10 or newer.
- *
- * This file sets the defaults and adds options to DataTables to style its
- * controls using Bootstrap. See http://datatables.net/manual/styling/bootstrap
- * for further information.
- */
 (function( factory ){
 	if ( typeof define === 'function' && define.amd ) {
 		// AMD
@@ -75003,15 +66108,21 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 		// CommonJS
 		module.exports = function (root, $) {
 			if ( ! root ) {
+				// CommonJS environments without a window global must pass a
+				// root. This will give an error otherwise
 				root = window;
 			}
 
-			if ( ! $ || ! $.fn.dataTable ) {
-				// Require DataTables, which attaches to jQuery, including
-				// jQuery if needed and have a $ property so we can access the
-				// jQuery object that is used
-				$ = require('datatables.net')(root, $).$;
+			if ( ! $ ) {
+				$ = typeof window !== 'undefined' ? // jQuery's factory checks for a global window
+					require('jquery') :
+					require('jquery')( root );
 			}
+
+			if ( ! $.fn.dataTable ) {
+				require('datatables.net')(root, $);
+			}
+
 
 			return factory( $, root, root.document );
 		};
@@ -75024,6 +66135,16 @@ this.pdfMake = this.pdfMake || {}; this.pdfMake.vfs = {
 'use strict';
 var DataTable = $.fn.dataTable;
 
+
+
+/**
+ * DataTables integration for Bootstrap 4. This requires Bootstrap 4 and
+ * DataTables 1.10 or newer.
+ *
+ * This file sets the defaults and adds options to DataTables to style its
+ * controls using Bootstrap. See http://datatables.net/manual/styling/bootstrap
+ * for further information.
+ */
 
 /* Set the defaults for DataTables initialisation */
 $.extend( true, DataTable.defaults, {
@@ -75051,7 +66172,7 @@ DataTable.ext.renderer.pageButton.bootstrap = function ( settings, host, idx, bu
 	var classes = settings.oClasses;
 	var lang    = settings.oLanguage.oPaginate;
 	var aria = settings.oLanguage.oAria.paginate || {};
-	var btnDisplay, btnClass, counter=0;
+	var btnDisplay, btnClass;
 
 	var attach = function( container, buttons ) {
 		var i, ien, node, button;
@@ -75120,7 +66241,7 @@ DataTable.ext.renderer.pageButton.bootstrap = function ( settings, host, idx, bu
 								'href': '#',
 								'aria-controls': settings.sTableId,
 								'aria-label': aria[ button ],
-								'data-dt-idx': counter,
+								'data-dt-idx': button,
 								'tabindex': settings.iTabIndex,
 								'class': 'page-link'
 							} )
@@ -75131,8 +66252,6 @@ DataTable.ext.renderer.pageButton.bootstrap = function ( settings, host, idx, bu
 					settings.oApi._fnBindAction(
 						node, {action: button}, clickHandler
 					);
-
-					counter++;
 				}
 			}
 		}
@@ -75166,7 +66285,7 @@ return DataTable;
 }));
 
 
-/*! Buttons for DataTables 2.2.2
+/*! Buttons for DataTables 2.3.3
  * ©2016-2022 SpryMedia Ltd - datatables.net/license
  */
 
@@ -75181,11 +66300,19 @@ return DataTable;
 		// CommonJS
 		module.exports = function (root, $) {
 			if ( ! root ) {
+				// CommonJS environments without a window global must pass a
+				// root. This will give an error otherwise
 				root = window;
 			}
 
-			if ( ! $ || ! $.fn.dataTable ) {
-				$ = require('datatables.net')(root, $).$;
+			if ( ! $ ) {
+				$ = typeof window !== 'undefined' ? // jQuery's factory checks for a global window
+					require('jquery') :
+					require('jquery')( root );
+			}
+
+			if ( ! $.fn.dataTable ) {
+				require('datatables.net')(root, $);
 			}
 
 			return factory( $, root, root.document );
@@ -75198,6 +66325,7 @@ return DataTable;
 }(function( $, window, document, undefined ) {
 'use strict';
 var DataTable = $.fn.dataTable;
+
 
 
 // Used for namespacing events added to the document by each instance, so they
@@ -75435,7 +66563,7 @@ $.extend( Buttons.prototype, {
 
 		$(button.node)
 			.addClass( this.c.dom.button.disabled )
-			.attr('disabled', true);
+			.prop('disabled', true);
 
 		return this;
 	},
@@ -75490,7 +66618,7 @@ $.extend( Buttons.prototype, {
 		var button = this._nodeToButton( node );
 		$(button.node)
 			.removeClass( this.c.dom.button.disabled )
-			.removeAttr('disabled');
+			.prop('disabled', false);
 
 		return this;
 	},
@@ -76032,7 +67160,7 @@ $.extend( Buttons.prototype, {
 				className: this.c.dom.splitDropdown.className,
 				closeButton: false,
 				attr: {
-					'aria-haspopup': true,
+					'aria-haspopup': 'dialog',
 					'aria-expanded': false
 				},
 				align: this.c.dom.splitDropdown.align,
@@ -76043,7 +67171,7 @@ $.extend( Buttons.prototype, {
 			this._addKey(dropButtonConfig);
 
 			var splitAction = function ( e, dt, button, config ) {
-				_dtButtons.split.action.call( dt.button($('div.dt-btn-split-wrapper')[0] ), e, dt, button, config );
+				_dtButtons.split.action.call( dt.button(splitDiv), e, dt, button, config );
 	
 				$(dt.table().node()).triggerHandler( 'buttons-action.dt', [
 					dt.button( button ), dt, button, config 
@@ -76394,7 +67522,7 @@ $.extend( Buttons.prototype, {
 				}
 			);
 
-			$(dt.buttons( '[aria-haspopup="true"][aria-expanded="true"]' ).nodes())
+			$(dt.buttons( '[aria-haspopup="dialog"][aria-expanded="true"]' ).nodes())
 				.attr('aria-expanded', 'false');
 
 			$('div.dt-button-background').off( 'click.dtb-collection' );
@@ -76411,7 +67539,7 @@ $.extend( Buttons.prototype, {
 			return;
 		}
 
-		var existingExpanded = $(dt.buttons( '[aria-haspopup="true"][aria-expanded="true"]' ).nodes());
+		var existingExpanded = $(dt.buttons( '[aria-haspopup="dialog"][aria-expanded="true"]' ).nodes());
 		if ( existingExpanded.length ) {
 			// Reuse the current position if the button that was triggered is inside an existing collection
 			if (hostNode.closest('div.dt-button-collection').length) {
@@ -76440,7 +67568,11 @@ $.extend( Buttons.prototype, {
 			.addClass(options.collectionLayout)
 			.addClass(options.splitAlignClass)
 			.addClass(mod)
-			.css('display', 'none');
+			.css('display', 'none')
+			.attr({
+				'aria-modal': true,
+				role: 'dialog'
+			});
 
 		content = $(content)
 			.addClass(options.contentClassName)
@@ -76627,6 +67759,34 @@ $.extend( Buttons.prototype, {
 				.on( 'keyup.dtb-collection', function (e) {
 					if ( e.keyCode === 27 ) {
 						close();
+					}
+				} )
+				.on( 'keydown.dtb-collection', function (e) {
+					// Focus trap for tab key
+					var elements = $('a, button', content);
+					var active = document.activeElement;
+
+					if (e.keyCode !== 9) { // tab
+						return;
+					}
+
+					if (elements.index(active) === -1) {
+						// If current focus is not inside the popover
+						elements.first().focus();
+						e.preventDefault();
+					}
+					else if (e.shiftKey) {
+						// Reverse tabbing order when shift key is pressed
+						if (active === elements[0]) {
+							elements.last().focus();
+							e.preventDefault();
+						}
+					}
+					else {
+						if (active === elements.last()[0]) {
+							elements.first().focus();
+							e.preventDefault();
+						}
 					}
 				} );
 		}, 0);
@@ -76973,7 +68133,7 @@ Buttons.defaults = {
  * @type {string}
  * @static
  */
-Buttons.version = '2.2.2';
+Buttons.version = '2.3.3';
 
 
 $.extend( _dtButtons, {
@@ -76993,9 +68153,15 @@ $.extend( _dtButtons, {
 			else {
 				this.popover(config._collection, config);
 			}
+
+			// When activated using a key - auto focus on the
+			// first item in the popover
+			if (e.type === 'keypress') {
+				$('a, button', config._collection).eq(0).focus();
+			}
 		},
 		attr: {
-			'aria-haspopup': true
+			'aria-haspopup': 'dialog'
 		}
 		// Also the popover options, defined in Buttons.popover
 	},
@@ -77012,7 +68178,7 @@ $.extend( _dtButtons, {
 			this.popover(config._collection, config);
 		},
 		attr: {
-			'aria-haspopup': true
+			'aria-haspopup': 'dialog'
 		}
 		// Also the popover options, defined in Buttons.popover
 	},
@@ -77642,7 +68808,7 @@ if ( DataTable.ext.features ) {
 }
 
 
-return Buttons;
+return DataTable;
 }));
 
 
@@ -77661,11 +68827,19 @@ return Buttons;
 		// CommonJS
 		module.exports = function (root, $) {
 			if ( ! root ) {
+				// CommonJS environments without a window global must pass a
+				// root. This will give an error otherwise
 				root = window;
 			}
 
-			if ( ! $ || ! $.fn.dataTable ) {
-				$ = require('datatables.net-bs4')(root, $).$;
+			if ( ! $ ) {
+				$ = typeof window !== 'undefined' ? // jQuery's factory checks for a global window
+					require('jquery') :
+					require('jquery')( root );
+			}
+
+			if ( ! $.fn.dataTable ) {
+				require('datatables.net-bs4')(root, $);
 			}
 
 			if ( ! $.fn.dataTable.Buttons ) {
@@ -77682,6 +68856,8 @@ return Buttons;
 }(function( $, window, document, undefined ) {
 'use strict';
 var DataTable = $.fn.dataTable;
+
+
 
 $.extend( true, DataTable.Buttons.defaults, {
 	dom: {
@@ -77731,7 +68907,8 @@ $.extend( true, DataTable.Buttons.defaults, {
 DataTable.ext.buttons.collection.className += ' dropdown-toggle';
 DataTable.ext.buttons.collection.rightAlignClassName = 'dropdown-menu-right';
 
-return DataTable.Buttons;
+
+return DataTable;
 }));
 
 
@@ -77754,11 +68931,19 @@ return DataTable.Buttons;
 		// CommonJS
 		module.exports = function (root, $, jszip, pdfmake) {
 			if ( ! root ) {
+				// CommonJS environments without a window global must pass a
+				// root. This will give an error otherwise
 				root = window;
 			}
 
-			if ( ! $ || ! $.fn.dataTable ) {
-				$ = require('datatables.net')(root, $).$;
+			if ( ! $ ) {
+				$ = typeof window !== 'undefined' ? // jQuery's factory checks for a global window
+					require('jquery') :
+					require('jquery')( root );
+			}
+
+			if ( ! $.fn.dataTable ) {
+				require('datatables.net')(root, $);
 			}
 
 			if ( ! $.fn.dataTable.Buttons ) {
@@ -77776,27 +68961,32 @@ return DataTable.Buttons;
 'use strict';
 var DataTable = $.fn.dataTable;
 
+
+
 // Allow the constructor to pass in JSZip and PDFMake from external requires.
 // Otherwise, use globally defined variables, if they are available.
+var useJszip;
+var usePdfmake;
+
 function _jsZip () {
-	return jszip || window.JSZip;
+	return useJszip || window.JSZip;
 }
 function _pdfMake () {
-	return pdfmake || window.pdfMake;
+	return usePdfmake || window.pdfMake;
 }
 
 DataTable.Buttons.pdfMake = function (_) {
 	if ( ! _ ) {
 		return _pdfMake();
 	}
-	pdfmake = _;
+	usePdfmake = _;
 }
 
 DataTable.Buttons.jszip = function (_) {
 	if ( ! _ ) {
 		return _jsZip();
 	}
-	jszip = _;
+	useJszip = _;
 }
 
 
@@ -78520,7 +69710,7 @@ var _excelSpecials = [
 	{ match: /^\([\d,]+\.\d{2}\)$/,         style: 62, fmt: function (d) { return -1 * d.replace(/[\(\)]/g, ''); } },  // Negative numbers indicated by brackets - 2d.p.
 	{ match: /^\-?[\d,]+$/,                 style: 63 }, // Numbers with thousand separators
 	{ match: /^\-?[\d,]+\.\d{2}$/,          style: 64 },
-	{ match: /^[\d]{4}\-[\d]{2}\-[\d]{2}$/, style: 67, fmt: function (d) {return Math.round(25569 + (Date.parse(d) / (86400 * 1000)));}} //Date yyyy-mm-dd
+	{ match: /^[\d]{4}\-[01][\d]\-[0123][\d]$/, style: 67, fmt: function (d) {return Math.round(25569 + (Date.parse(d) / (86400 * 1000)));}} //Date yyyy-mm-dd
 ];
 
 
@@ -78989,18 +70179,28 @@ DataTable.ext.buttons.excelHtml5 = {
 		var jszip = _jsZip();
 		var zip = new jszip();
 		var zipConfig = {
+			compression: "DEFLATE",
 			type: 'blob',
 			mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 		};
 
 		_addToZip( zip, xlsx );
 
+		// Modern Excel has a 218 character limit on the file name + path of the file (why!?)
+		// https://support.microsoft.com/en-us/office/excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
+		// So we truncate to allow for this.
+		var filename = exportInfo.filename;
+
+		if (filename > 175) {
+			filename = filename.substr(0, 175);
+		}
+
 		if ( zip.generateAsync ) {
 			// JSZip 3+
 			zip
 				.generateAsync( zipConfig )
 				.then( function ( blob ) {
-					_saveAs( blob, exportInfo.filename );
+					_saveAs( blob, filename );
 					that.processing( false );
 				} );
 		}
@@ -79008,7 +70208,7 @@ DataTable.ext.buttons.excelHtml5 = {
 			// JSZip 2.5
 			_saveAs(
 				zip.generate( zipConfig ),
-				exportInfo.filename
+				filename
 			);
 			this.processing( false );
 		}
@@ -79196,7 +70396,7 @@ DataTable.ext.buttons.pdfHtml5 = {
 };
 
 
-return DataTable.Buttons;
+return DataTable;
 }));
 
 
@@ -79216,11 +70416,19 @@ return DataTable.Buttons;
 		// CommonJS
 		module.exports = function (root, $) {
 			if ( ! root ) {
+				// CommonJS environments without a window global must pass a
+				// root. This will give an error otherwise
 				root = window;
 			}
 
-			if ( ! $ || ! $.fn.dataTable ) {
-				$ = require('datatables.net')(root, $).$;
+			if ( ! $ ) {
+				$ = typeof window !== 'undefined' ? // jQuery's factory checks for a global window
+					require('jquery') :
+					require('jquery')( root );
+			}
+
+			if ( ! $.fn.dataTable ) {
+				require('datatables.net')(root, $);
 			}
 
 			if ( ! $.fn.dataTable.Buttons ) {
@@ -79237,6 +70445,7 @@ return DataTable.Buttons;
 }(function( $, window, document, undefined ) {
 'use strict';
 var DataTable = $.fn.dataTable;
+
 
 
 var _link = document.createElement( 'a' );
@@ -79419,7 +70628,7 @@ DataTable.ext.buttons.print = {
 };
 
 
-return DataTable.Buttons;
+return DataTable;
 }));
 
 

@@ -12,6 +12,7 @@
 html{
   /*font-size: 90%;*/ 
   box-sizing: border-box; /*hack [ara box model*/
+  
 }
 *, *:before, *:after {
   box-sizing: inherit;
@@ -28,7 +29,7 @@ background-color: #dfdddd;
 }
 
 /* Input Forms*/
-input, input[type="password"]{
+.form, input[type="password"]{
   outline: none;
   padding: 5px;
  position: relative;
@@ -38,6 +39,10 @@ input, input[type="password"]{
   border-radius: 3px;
   border: 1 px solid #eee;
   margin: 20px auto;
+}
+
+.ancho{
+  width: 0;
 }
 
 .ojo{
@@ -75,7 +80,7 @@ header a {
 }
 
 
-/*Boton auzl de navegacion entre paginas*/
+/*Boton auzl de navegacion entre paginas
 .btn_nav{
   background:  #63a5e4;  
   display: inline-block;
@@ -89,7 +94,7 @@ header a {
   box-shadow: 0px 3px 0px #373c3c;
   border-radius: 8px;
 }
-
+*/
 
 
 
@@ -126,8 +131,14 @@ header a {
   transition: color 1s;
 }
 
-
-
+.tabla_nombre_doce table{
+  border-collapse: separate;
+  border-spacing: 10px;
+}
+.tabla_nombre_doce th, td{
+  padding: 10px;
+  border: 1px solid black;
+}
 
 .button_index:hover{
   color: #000000;
@@ -194,7 +205,6 @@ header a {
 /*Animacion boton ventana aresto de botones*/
 
 
-
 .button_res{
   text-decoration: none;
   text-transform: uppercase;
@@ -225,21 +235,9 @@ header a {
 .button_res:hover::before{
   width: 102%;/*limite hacia la derecha*/
 }
-/*Final Animacion boton "resto de botones*/
-.btn_admin{
-  background: rgb(226, 226, 226);
-  color: rgb(27, 231, 214);
-  display: inline-block;
-  color: rgb(255, 255, 255);
-  font-size: 1.25em;
-  margin: 15px;
-  padding: 5px 0px;
-  text-align: center;
-  width:150px;
-  text-decoration: none;
-  box-shadow: 0px 3px 0px #373c3c;
-  border-radius: 8px;
-}
+
+
+
 /*boton de mis grupos*/
 .btn_grupos{
   background: #00a82d;
@@ -258,7 +256,7 @@ header a {
   top: -100px;
   left: -100px;
 }
-/*responsividad de boton mis grupos*/
+/* boton mis grupos*/
 @media (min-width: 480px){/*celular*/
     .btn_grupos{
       top: -100;
@@ -321,16 +319,12 @@ header a {
 
 
 .centrar{
-  display: grid;
-  justify-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/*Clase para la tabla del formulario y tabla de asignar materias*/
-.posicion{
-  position: relative;
-  top: 35px;
-  left: 355px;
-}
+
 
 .pos_materias{
   text-align: left;
@@ -396,7 +390,7 @@ color: white;
 
 .tabla_docente{
   background-color: rgb(255, 255, 255);
-  text-align: left;
+
   border-collapse: collapse;
   width: 50%;
 }
@@ -416,18 +410,14 @@ color: white;
   width: 50%;
   position: relative;
   left: 25%;
- 
+
 }
-@media (max-width: 600px ){
-    
-}
+
 
 .th_al, .td_al {
   padding: .5%;
 }
-#separacion{
-  padding: 0%;
-}
+
 .thead_al{
   background-color: #246355;
   border-bottom: solid 5px #0F362D;
@@ -455,6 +445,8 @@ color: white;
   top: -19px;
   padding: 5%;
 }
+
+
 .th_alu, .td_alu{
   padding: 0%;
 }
@@ -467,16 +459,7 @@ color: white;
 background-color: #3ab608;
 color: white;
 }
-/*
-.form_docentes{
-  background-color: rgb(197, 196, 196);
-  border-radius: 3px;
-  color: rgb(0, 0, 0);
-  padding: 20px;
-  margin: 0 auto;
-  width: 500px;
-}
-*/
+
 .btn_tabla{
   padding: 5px;
   color: rgb(0, 0, 0);
@@ -491,9 +474,7 @@ color: white;
 .th_al, .td_al{
   padding: .5%;
 }
-#separacion{
-  padding: 0%;
-}
+
 .thead_al{
   background-color: #246355;
   border-bottom: 5px #0F362D;
@@ -520,10 +501,11 @@ color: white;
   text-align: center;
   border-collapse: collapse;
   width: 50%;
-  position: relative;
-  top: -80px;
-  left: 25rem;
+  
+ 
 }
+
+
 
 .thead_do{
   background-color: #246355;
@@ -531,6 +513,17 @@ color: white;
   color: white;
 }
 /*fin tabla datos  docentes*/
+
+.tabla_notificaciones{
+  background-color: rgb(236, 236, 236);
+  text-align: left;
+  border-collapse: collapse;
+  width: 50%;
+  position: relative;
+ 
+  padding: 5%;
+}
+
 
 /*tabla nombres docentes*/
 .tabla_nombre_doce{
@@ -559,17 +552,7 @@ color: white;
   border-radius: 3px;
   cursor: pointer;
 }
-.btn_tabla_eliminar_docente{
-  padding: 3px;
-  color: rgb(0, 0, 0);
-  background: #d35858;
-  width: 100px;
-  margin: 5px auto;
-  margin-top: 0;
-  border: 0;
-  border-radius: 3px;
-  cursor: pointer;
-}
+
 /*fin  tabla nombres docentes*/
 
 /*tablas datos escuelas*/
@@ -634,30 +617,14 @@ padding: 5px;
   cursor: pointer;
 }
 
-.btn_form_signup{
-  padding: 5px;
-  color: rgb(0, 0, 0);
-  background: #63a5e4;
-  width: 100px;
-  margin: 15px auto;
-  margin-top: 0;
-  border: 0;
-  border-radius: 3px;
-  cursor: pointer;
-  position: relative;
-  left: 110px;
-}
+
 
 /*Tabla actividades internas */
 .tabla_act{
   background-color: rgb(236, 236, 236);
   text-align: center;
   border-collapse: collapse;
-  width: 40%;
   position: relative;
-  left: 35%;
-  top: 5px;
-  padding: 5%;
 }
 
 .thead_act{
@@ -824,9 +791,15 @@ overflow: hidden;
 
 .posicion_nombre{
   display: flex;
-  justify-content: center;
+  justify-content: left;
+  padding-left: 5%;
+  color: white;
   }
-
+.estilo_nombre{
+  font-size: 18px;
+  color: #000000;
+  text-decoration: none;
+}
 
   /*posicion botones admin*/
 
@@ -844,77 +817,9 @@ overflow: hidden;
 }
 
 
-/*Estilo imagen 1*/
-.card{
-  position: relative;
-  width: 250px;
-  height: 250px;
-  background-color: var(--verde);
-  color: #242329;
-  text-align: center;
-  border: 5px solid #fff;
-  overflow: hidden;
-}
-
-.card__data{
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  transform: translateY(-250px);
-  transition: transform .5s;
-}
-
-.card__img{
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform .5s;
-}
-
-.card__title{
-  font-size: 26px;
-  text-transform: uppercase;
-  color: rgb(255, 255, 255);
-  padding: 5px;
-  background-color: #242329;
-  margin-top: 25px;
-}
-
-.card__description{
-  padding: 10px;
-  margin-bottom: 15px;
-}
-
-.card__btn{
-  display: inline-block;
-  text-decoration: none;
-  padding: 5px 10px;
-  color: #242329;
-  background-color: rgb(255, 255, 255);
-  transition: background-color .25s;
-}
-
-.card__btn:hover{
-  background-color: #242329;
-  color: rgb(255, 255, 255);
-}
-
-.card:hover .card__data{
-  transform: translateY(0px);
-}
-
-.card:hover .card__img{
-  transform: translateX(250px);
-  transition-delay: 0s;
-}
-
-
 /*Estilo imagen 2*/
 .card2{
   position: relative;
-  
   width: 250px;
   height: 250px;
   background-color: var(--verde);
@@ -978,145 +883,10 @@ overflow: hidden;
   transition-delay: 0s;
 }
 
-/*Estilo imagen 3*/
-.card3{
-  position: relative;
-  
-  width: 250px;
-  height: 250px;
-  background-color: var(--verde);
-  color: #242329;
-  text-align: center;
-  border: 5px solid #fff;
-  overflow: hidden;
-}
-
-.card3__data{
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  transform: translateY(-250px);
-  transition: transform .5s;
-}
-
-.card3__img{
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform .5s;
-}
-
-.card3__title{
-  font-size: 26px;
-  text-transform: uppercase;
-  color: #fff;
-  padding: 5px;
-  background-color: #242329;
-  margin-top: 25px;
-}
-
-.card3__description{
-  padding: 10px;
-  margin-bottom: 15px;
-}
-
-.card3__btn{
-  display: inline-block;
-  text-decoration: none;
-  padding: 5px 10px;
-  color: #242329;
-  background-color: #fff;
-  transition: background-color .25s;
-}
-
-.card3__btn:hover{
-  background-color: #242329;
-  color: #fff;
-}
-
-.card3:hover .card3__data{
-  transform: translateY(0px);
-}
-
-.card3:hover .card3__img{
-  transform: translateX(250px);
-  transition-delay: 0s;
-}
-
-
-/*Estilo imagen 4*/
-.card4{
-  position: relative;
-  
-  width: 250px;
-  height: 250px;
-  background-color: var(--verde);
-  color: #242329;
-  text-align: center;
-  border: 5px solid #fff;
-  overflow: hidden;
-}
-
-.card4__data{
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  transform: translateY(-250px);
-  transition: transform .5s;
-}
-
-.card4__img{
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform .5s;
-}
-
-.card4__title{
-  font-size: 26px;
-  text-transform: uppercase;
-  color: #fff;
-  padding: 5px;
-  background-color: #242329;
-  margin-top: 25px;
-}
-
-.card4__description{
-  padding: 10px;
-  margin-bottom: 15px;
-}
-
-.card4__btn{
-  display: inline-block;
-  text-decoration: none;
-  padding: 5px 10px;
-  color: #242329;
-  background-color: #fff;
-  transition: background-color .25s;
-}
-
-.card4__btn:hover{
-  background-color: #242329;
-  color: #fff;
-}
-
-.card4:hover .card4__data{
-  transform: translateY(0px);
-}
-
-.card4:hover .card4__img{
-  transform: translateX(250px);
-  transition-delay: 0s;
-}
 
 
 /*Codigo responsivo de las imagenes del index*/
 @media (min-width: 768px ){
- 
   .contenedor{
     max-width: 50rem;
     position: relative;
@@ -1138,10 +908,9 @@ overflow: hidden;
 }
 
 
-@media (max-width: 500PX){
+@media (max-width: 500px){
   .container{
     display: flex;
-    
     overflow-x: scroll;
     padding: 24px;
     width: 300px;
@@ -1158,7 +927,6 @@ overflow: hidden;
     scroll-snap-align: start;
   }
 }
- 
   
   .servicios{ 
     margin-top: 4rem;
@@ -1173,6 +941,223 @@ overflow: hidden;
     align-items: center;
   }
 
+.parent{
+  display: grid;
+  grid-template-columns: auto auto auto;
+  grid-row-gap: 20px;
+  grid-column-gap: 20px ;
+
+}
+
+
+#left{
+  background: rgb(38, 38, 38) ;
+}
+#right{
+  background: #030303f8;
+  border: 3rem solid #0406071e;
+}
+
+#grid{
+  height: 100vh;
+  transition: 300ms;
+  display: grid;
+  grid-template-columns: 15px auto;
+
+}
+
+#grid:has(#left:hover){
+  grid-template-columns: 15% auto;
+}
+
+
+
+.responsiva{
+  max-width: 90%;
+  height: auto;
+}
+
+@media (max-width: 558px){/*tablet*/
+  .responsiva{
+    width: 50%;
+    height: auto;
+  }
+}
+
+
+
+
+/*Clases para las imagenes del carrousel*/
+.tam-carrousel{
+  max-width: 800px;
+  height: auto;
+  object-fit: cover;
+}
+
+.color-slider{
+  color: #059aef;
+}
+
+
+
+/*graficas moviendose*/
+.habilidades{
+  width: 600px;
+  margin: auto;
+  border: 1px solid #cccccc00;
+  padding: 10px;
+}
+/*
+.container{
+  width: 90%;
+  background-color: #fffdfd;
+}
+*/
+.skills{
+  text-align: right;
+  padding: 10px;
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+}
+
+.html{
+  background-color: #7bff22;
+  animation: fillhtml 2s forwards;
+  border-radius: 15px;
+}
+.css{
+  background-color: #ddf360;
+  animation: fillcss 2s forwards;
+  border-radius: 15px;
+}
+.javascript{
+  background-color: #3f33e2;
+  animation: filljavascript 2s forwards;
+  border-radius: 10px;
+}
+
+@keyframes fillhtml{
+  0%{width: 0;}
+  100%{width: 99%;}
+}
+
+@keyframes fillcss{
+  0%{width: 0;}
+  100%{width: 70%;}
+}
+
+@keyframes filljavascript{
+  0%{width: 0;}
+  100%{width: 50%;}
+}
+/*Fin graficas moviendose 1*/
+
+
+/*GrAFICAS Moviendose 2*/
+
+.habilidades2{
+  width: 600px;
+  margin: auto;
+  border: 1px solid #cccccc00;
+  padding: 10px;
+}
+/*
+.container{
+  width: 90%;
+  background-color: #fffdfd;
+}
+*/
+.skills2{
+  text-align: right;
+  padding: 10px;
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+}
+
+.html2{
+  background-color: #7bff22;
+  animation: fillhtml2 2s forwards;
+  border-radius: 15px;
+}
+.css2{
+  background-color: #ddf360;
+  animation: fillcss2 2s forwards;
+  border-radius: 15px;
+}
+.javascript2{
+  background-color: #3f33e2;
+  animation: filljavascript2 2s forwards;
+  border-radius: 10px;
+}
+
+@keyframes fillhtml2{
+  0%{width: 0;}
+  100%{width: 75%;}
+}
+
+@keyframes fillcss2{
+  0%{width: 0;}
+  100%{width: 95%;}
+}
+
+@keyframes filljavascript2{
+  0%{width: 0;}
+  100%{width: 60%;}
+}
+/*fin Moviendose 2*/
+
+/*GrAFICAS Moviendose 3*/
+
+.habilidades3{
+  width: 600px;
+  margin: auto;
+  border: 1px solid #cccccc00;
+  padding: 10px;
+}
+/*
+.container{
+  width: 90%;
+  background-color: #fffdfd;
+}
+*/
+.skills3{
+  text-align: right;
+  padding: 10px;
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+}
+
+.html3{
+  background-color: #7bff22;
+  animation: fillhtml3 2s forwards;
+  border-radius: 15px;
+}
+.css3{
+  background-color: #ddf360;
+  animation: fillcss3 2s forwards;
+  border-radius: 15px;
+}
+.javascript3{
+  background-color: #3f33e2;
+  animation: filljavascript3 2s forwards;
+  border-radius: 10px;
+}
+
+@keyframes fillhtml3{
+  0%{width: 0;}
+  100%{width: 50%;}
+}
+
+@keyframes fillcss3{
+  0%{width: 0;}
+  100%{width: 75%;}
+}
+
+@keyframes filljavascript3{
+  0%{width: 0;}
+  100%{width: 100%;}
+}
+/*GrAFICAS Moviendose 3*/
 
 
 
@@ -1180,4 +1165,257 @@ overflow: hidden;
 
 
 
+
+
+/*dando estetica a boton de excel*/
+.buttonDownload {
+  display: inline-block;
+  position: relative;
+  padding: 10px 25px;
+  background-color: #4CC713;
+  color: white;
+  font-family: sans-serif;
+  text-decoration: none;
+  font-size: 0.9em;
+  text-align: center;
+  text-indent: 15px;
+  border: none;
+ }
+ 
+ .buttonDownload:hover {
+  background-color: #45a21a;
+  color: white;
+ }
+ 
+ .buttonDownload:before, .buttonDownload:after {
+  content: ' ';
+  display: block;
+  position: absolute;
+  left: 15px;
+  top: 52%;
+ }
+ 
+ .buttonDownload:before {
+  width: 10px;
+  height: 2px;
+  border-style: solid;
+  border-width: 0 2px 2px;
+ }
+ 
+ .buttonDownload:after {
+  width: 0;
+  height: 0;
+  margin-left: 3px;
+  margin-top: -7px;
+  border-style: solid;
+  border-width: 4px 4px 0 4px;
+  border-color: transparent;
+  border-top-color: inherit;
+  animation: downloadArrow 1s linear infinite;
+  animation-play-state: paused;
+ }
+ 
+ .buttonDownload:hover:before {
+  border-color: #cdefbd;
+ }
+ 
+ .buttonDownload:hover:after {
+  border-top-color: #cdefbd;
+  animation-play-state: running;
+ }
+ 
+ @keyframes downloadArrow {
+  0% {
+   margin-top: -7px;
+   opacity: 1;
+  }
+ 
+  0.001% {
+   margin-top: -15px;
+   opacity: 0.4;
+  }
+ 
+  50% {
+   opacity: 1;
+  }
+ 
+  100% {
+   margin-top: 0;
+   opacity: 0.4;
+  }
+ }
+
+
+
+
+
+
+
+
+
+ /*estilo footer*/
+ .site-footer
+{
+  background-color:#26272b;
+  padding:45px 0 20px;
+  font-size:15px;
+  line-height:24px;
+  color:#737373;
+}
+.site-footer hr
+{
+  border-top-color:#bbb;
+  opacity:0.5
+}
+.site-footer hr.small
+{
+  margin:20px 0
+}
+.site-footer h6
+{
+  color:#fff;
+  font-size:16px;
+  text-transform:uppercase;
+  margin-top:5px;
+  letter-spacing:2px
+}
+.site-footer a
+{
+  color:#737373;
+}
+.site-footer a:hover
+{
+  color:#3366cc;
+  text-decoration:none;
+}
+.footer-links
+{
+  padding-left:0;
+  list-style:none
+}
+.footer-links li
+{
+  display:block
+}
+.footer-links a
+{
+  color:#737373
+}
+.footer-links a:active,.footer-links a:focus,.footer-links a:hover
+{
+  color:#3366cc;
+  text-decoration:none;
+}
+.footer-links.inline li
+{
+  display:inline-block
+}
+.site-footer .social-icons
+{
+  text-align:right
+}
+.site-footer .social-icons a
+{
+  width:40px;
+  height:40px;
+  line-height:40px;
+  margin-left:6px;
+  margin-right:0;
+  border-radius:100%;
+  background-color:#33353d
+}
+.copyright-text
+{
+  margin:0
+}
+@media (max-width:991px)
+{
+  .site-footer [class^=col-]
+  {
+    margin-bottom:30px
+  }
+}
+@media (max-width:767px)
+{
+  .site-footer
+  {
+    padding-bottom:0
+  }
+  .site-footer .copyright-text,.site-footer .social-icons
+  {
+    text-align:center
+  }
+}
+.social-icons
+{
+  padding-left:0;
+  margin-bottom:0;
+  list-style:none
+}
+.social-icons li
+{
+  display:inline-block;
+  margin-bottom:4px
+}
+.social-icons li.title
+{
+  margin-right:15px;
+  text-transform:uppercase;
+  color:#96a2b2;
+  font-weight:700;
+  font-size:13px
+}
+.social-icons a{
+  background-color:#eceeef;
+  color:#818a91;
+  font-size:16px;
+  display:inline-block;
+  line-height:44px;
+  width:44px;
+  height:44px;
+  text-align:center;
+  margin-right:8px;
+  border-radius:100%;
+  -webkit-transition:all .2s linear;
+  -o-transition:all .2s linear;
+  transition:all .2s linear
+}
+.social-icons a:active,.social-icons a:focus,.social-icons a:hover
+{
+  color:#fff;
+  background-color:#29aafe
+}
+.social-icons.size-sm a
+{
+  line-height:34px;
+  height:34px;
+  width:34px;
+  font-size:14px
+}
+.social-icons a.facebook:hover
+{
+  background-color:#3b5998
+}
+.social-icons a.twitter:hover
+{
+  background-color:#00aced
+}
+.social-icons a.linkedin:hover
+{
+  background-color:#007bb6
+}
+.social-icons a.dribbble:hover
+{
+  background-color:#ea4c89
+}
+@media (max-width:767px)
+{
+  .social-icons li.title
+  {
+    display:block;
+    margin-right:0;
+    font-weight:600
+  }
+}
+ 
 

@@ -14,7 +14,7 @@ if(isset($_SESSION['ID'])){
  
 if(isset($_POST['validar'])){/*Valida si el boton validar a enviado la informacion*/ 
               /*Si ya se hizo click para que no se inserto informacion */
- $sql = "UPDATE users SET nombre=:nombre, sexo=:sexo, curp=:curp, rfc=:rfc, estudios=:estudios, ingreso=:ingreso,  matutino=:matutino, vespertino=:vespertino, primero=:primero, segundo=:segundo, tercero=:tercero WHERE id = :id " ; 
+ $sql = "UPDATE users SET nombre=:nombre, sexo=:sexo, curp=:curp, rfc=:rfc, estudios=:estudios, ingreso=:ingreso,  matutino=:matutino, vespertino=:vespertino, primero=:primero, segundo=:segundo, tercero=:tercero, mensaje=:mensaje WHERE id = :id " ; 
     $stmt = $conn->prepare($sql);
     $stmt->bindParam(':nombre', $_POST['nombre']);
     $stmt->bindParam(':sexo', $_POST['sexo']);
@@ -30,6 +30,7 @@ if(isset($_POST['validar'])){/*Valida si el boton validar a enviado la informaci
     $stmt->bindParam(':primero', $_POST['primero']);
     $stmt->bindParam(':segundo', $_POST['segundo']);
     $stmt->bindParam(':tercero', $_POST['tercero']);
+    $stmt->bindParam(':mensaje', $_POST['mensaje']);
     
     $stmt->bindParam(':id', $docente_id);
 
@@ -45,15 +46,17 @@ if(isset($_POST['validar'])){/*Valida si el boton validar a enviado la informaci
 
 <head>
     <meta charset="utf-8">
-    <title>Login</title>
+    <title>Actualizar Datos</title>
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
+<!---Logo de la pagina---->
+<link rel="shortcut icon" href="assets/img/edomex-logo.png" type="image/x-icon">
 
 </head>
 
 <body>
     <?php require 'partials/header.php' ?>
-    <a href="index.php" class="btn_volver">Volver</a>
+    <a href="docente.php" class="btn btn-primary">Volver</a>
 
     <?php
        if(!empty ($message)){
@@ -165,76 +168,45 @@ if(isset($_POST['validar'])){/*Valida si el boton validar a enviado la informaci
                         <option value="Preparatoria">Preparatoria</option>
                         <option value="Secundaria" selected>Secundaria</option>
                         <?php
+                     }else if ($user['estudios']=='') {     
+                      ?>
+                        <option value="Doctorado">Doctorado</option>
+                        <option value="Maestria">Maestria</option>
+                        <option value="Ingenieria">Ingenieria</option>
+                        <option value="Licenciatura">Licenciatura</option>
+                        <option value="Preparatoria">Preparatoria</option>
+                        <option value="Secundaria" >Secundaria</option>
+                        <option value="" selected>Sin seleccionar</option>
+                        <?php
                      }
                      ?>
                     </select>
                 </td>
             </tr>
-            <!---
-              
-
-              <tr>
-                     <td width="50%">Materias</td>
-                     <td width="50%">
-                            <select name="mate1" id="">
-                                   <option value="">1° Grado</option> 
-                                   <option value="1">Español</option> 
-                                   <option value="2">Historia</option>
-                                   <option value="3">Ciencias nat</option> 
-                                   <option value="4">Matematicas</option>
-                                   <option value="5">Algebra</option>
-                                   <option value="6">Geometria</option>
-                            </select>
-                            <select name="mate1" id="">
-                                   <option value="">2° Grado</option> 
-                                   <option value="1">Español</option> 
-                                   <option value="2">Historia</option>
-                                   <option value="3">Ciencias nat</option> 
-                                   <option value="4">Matematicas</option>
-                                   <option value="5">Algebra</option>
-                                   <option value="6">Geometria</option>
-                            </select>
-                            <select name="mate1" id="">
-                                   <option value="">3° Grado</option> 
-                                   <option value="1">Español</option> 
-                                   <option value="2">Historia</option>
-                                   <option value="3">Ciencias nat</option> 
-                                   <option value="4">Matematicas</option>
-                                   <option value="5">Algebra</option>
-                                   <option value="6">Geometria</option>
-                            </select>
-                            
-                     </td>
-
-              </tr>
-                     --->
+          
             <tr>
                 <!--Aqui se pone el año de ingreso--->
                 <td width="50%">Año de ingreso</td>
                 <td width="50%"><input type="date" class="form-control" value="<?php echo $user['ingreso'];?>"
                         name="ingreso" id=""></td>
             </tr>
-            <!--
-              <tr>
-                     Esta parte es la que quiero en automatico con el dato de arriba
-                     <td width="50%">Años en servicio</td>
-                     <td width="50%"><input type="number" name="anios" id="" placeholder="Años en servicio"></td>
-              </tr>
-       -->
+            
             <tr>
                 <td width="50%">Turnos</td>
                 <?php
               if($user['matutino']==1 && $user['vespertino']==1){
               ?>
-                <td width="50%"><input type="checkbox" checked name="matutino" value="1">Matutino
+                <td width="50%"><input type="checkbox" checked name="matutino" value="1">Matutino</td>
 
-                    <input type="checkbox" checked name="vespertino" value="1">Vespertino
-                </td>
+                <tr>
+                <td></td>
+                 <td width="50%">  <input type="checkbox" checked name="vespertino" value="1">Vespertino</td> 
+                 </tr>
                 <?php
               }else if($user['matutino']==1){
                             ?>
-                <td width="50%"><input type="checkbox" checked name="matutino" value="1">Matutino
-                    <input type="checkbox" name="vespertino" value="1">Vespertino
+                <td width="50%"><input type="checkbox" checked name="matutino" value="1">Matutino </td>
+                <td width="50%"><input type="checkbox" name="vespertino" value="1">Vespertino </td>
                     <?php
                      }else {
                             ?>
@@ -291,6 +263,14 @@ if(isset($_POST['validar'])){/*Valida si el boton validar a enviado la informaci
               }
               ?>
             </tr>
+
+            <tr>
+                <td width="50%">Notificaciones</td>
+                <td width="50%"><input class="form-control" name="mensaje" type="text" value="<?php echo $user['mensaje'];?>"
+                      </td>
+            </tr>
+
+
             <!----
               <tr>
               <td width="50%">Rol:</td>
@@ -323,9 +303,62 @@ if(isset($_POST['validar'])){/*Valida si el boton validar a enviado la informaci
 --->
         <br>
         <br>
-        <input type="submit" value="Enviar" class="btn_form" name="validar">
+        <input type="submit" value="Enviar" class="btn btn-info" name="validar">
     </form>
     </div>
 </body>
+
+
+<!-- Site footer -->
+<footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-12 col-md-6">
+            <h6>Editar usuarios</h6>
+            <p class="text-justify">
+              
+               En esta seccion se encuentra un formulario para editar los datos del docente
+               asi mismo se pueden enviar mensajes dede esta seccion personalizados al personal.
+            </p>
+          </div>
+
+          <div class="col-xs-6 col-md-3">
+            <h6>Categorias</h6>
+            <ul class="footer-links">
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+            </ul>
+          </div>
+
+          <div class="col-xs-6 col-md-3">
+            <h6>Quick Links</h6>
+            <ul class="footer-links">
+              <li><a href="">Asignar materias</a></li>
+              <li><a href="">Mensaje</a></li>
+              <li><a href="">Asignar Grupos</a></li>
+              
+            </ul>
+          </div>
+        </div>
+        <hr>
+      </div>
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8 col-sm-6 col-xs-12">
+            <p class="copyright-text">Copyright &copy; 2023 All Rights Reserved by 
+       
+            </p>
+          </div>
+
+          
+        </div>
+      </div>
+</footer>
+
+
 
 </html>

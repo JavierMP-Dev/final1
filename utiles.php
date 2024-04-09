@@ -7,6 +7,7 @@ $usuarios ="SELECT * FROM alumnos";
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -16,51 +17,55 @@ $usuarios ="SELECT * FROM alumnos";
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="./css/bootstrap.min.css">
 </head>
+
 <body>
-<?php require 'partials/header.php' ?>
-<div>   
-<h2>Utiles</h2>    
-<a href="index.php" class="btn_volver">Volver</a></div>  
+    <?php require 'partials/header.php' ?>
+    <div>
+        <h2>Utiles</h2>
+        <a href="index.php" type="button" class="btn btn-warning">Volver</a>
+    </div>
 
-   <form action="#" method="post">
-            <tr>
-                <td width="50%">Filtro</td>
-                 <td width="50%">
-                    <select name="filtro_grado" id="">
-                        <option value="1">Mostrar todos</option>
-                        <option value="2">Primero</option> 
-                        <option value="3">Segundo</option>
-                        <option value="4">Tercero</option>
-                    </select>
-                    <select name="filtro_grupo" id="">
-                        <option value="">Grupo</option>
-                        <option value="1">A</option>
-                        <option value="2">B</option> 
-                        <option value="3">C</option>
-                        <option value="4">D</option>
-                        <option value="5">E</option>
-                        <option value="6">F</option>
-                    </select>
-                 </td>
-            </tr>
-         <br>
-         <br>
-        <input type="submit" value="Buscar"  class="btn_form"  name="validar">
-    
+    <form action="#" method="post" style="margin: auto; width: 250px;">
+        <tr>
+            <td width="50%">Filtro</td>
+            <td width="50%">
+                <select name="filtro_grado" class="form-select mt-3">
+                    <option value="1">Mostrar todos</option>
+                    <option value="2">Primero</option>
+                    <option value="3">Segundo</option>
+                    <option value="4">Tercero</option>
+                </select>
+                <select name="filtro_grupo" class="form-select mt-3">
+                    <option value="">Grupo</option>
+                    <option value="1">A</option>
+                    <option value="2">B</option>
+                    <option value="3">C</option>
+                    <option value="4">D</option>
+                    <option value="5">E</option>
+                    <option value="6">F</option>
+                </select>
+            </td>
+        </tr>
+        <br>
+        <input type="submit" value="Buscar" class="btn_form" name="validar">
 
-    <table class="tabla_act">
-             
-             <thead class="thead_act">
-                  <tr>
-                    <th>Ver</th><th>Alumnos</th> <th>Grado</th> <th>Grupo</th> 
-                  </tr>  
-             </thead>
 
-        <?php
+        <table class="tabla_act">
+
+            <thead class="thead_act">
+                <tr>
+                    <th>Ver</th>
+                    <th>Alumnos</th>
+                    <th>Grado</th>
+                    <th>Grupo</th>
+                </tr>
+            </thead>
+
+            <?php
         if(isset($_POST['validar'])){
             $sql = ""; 
         if($_POST['filtro_grado'] == '1'){
-            echo "Buscar por todos";
+            //echo "Buscar por todos";
             $sql="SELECT*FROM alumno ";
         }else if($_POST['filtro_grado'] == '2'){//filtro por grado
             echo "Buscar primero";
@@ -144,15 +149,21 @@ $usuarios ="SELECT * FROM alumnos";
          $contador =0;
          while($row=mysqli_fetch_assoc($resultado)){
             $contador++;  
-                    ?> 
+        ?>
 
-       <form action="https://formspree.io/f/xvoyqybz"  method="POST">
-        <tr>
-             <!---Check box de filtro de maestros--->
-             <td> <input type="checkbox" value=<?php echo $row["nombre"]; ?>  name="Alumno" id="tema1" class="valores"></td>
-                    <td class="separacion"><strong> <div ><?php echo $row["nombre"]; ?></div> </strong></td>
-                    <td class="separacion"><strong> <div ><?php echo $row["grado"]; ?></div> </strong></td>
-                    <td class="separacion"><strong> <div ><?php 
+            <form action="https://formspree.io/f/mvonknqp" method="POST" >
+                <tr>
+                    <!---Check box de filtro de maestros--->
+                    <td class="separacion"> <input type="checkbox" value=<?php echo $row["nombre"]; ?> name="Alumno" id="tema1"
+                            class="valores"></td>
+                    <td class="separacion"><strong>
+                            <div><?php echo $row["nombre"]; ?></div>
+                        </strong></td>
+                    <td class="separacion"><strong>
+                            <div><?php echo $row["grado"]; ?></div>
+                        </strong></td>
+                    <td class="separacion"><strong>
+                            <div><?php 
                      if ($row["grupo"]=='1'){
                         echo "A";
                       }else if ($row["grupo"]=='2'){
@@ -166,51 +177,60 @@ $usuarios ="SELECT * FROM alumnos";
                       }else if ($row["grupo"]=='6'){
                         echo "F";
                       }
-                    ?></div> </strong></td>
-                </tr>   
-        <?php
+                    ?></div>
+                        </strong></td>
+                       
+                </tr>
+                <?php
         }
-        echo "Total filtrados--->".$contador;
+       // echo "Total filtrados--->".$contador;
+       
             }
               ?>
-          <input type="submit" value="Enviar"  class="btn_form" name="validar">
-          
-  </form>
+               <select name="select" class="form-select mt-3">
+                    <option value="">Motivo</option>
+                    <option value="utiles">Utiles</option>
+                    <option value="libros">Libros</option>
+                </select>
+            <br>
+        </table>
+        <br>
+                <input type="submit" value="Enviar" class="btn_form" name="validar">
 
+            </form>
+<!----
+        <br>
+        <p>
+            <br><br>
+            <button type="button" class="btn_form" id="boton"> Mostrar seleccionados </button>
 
-    </table>
+            <br>
 
-<br>
-    <p>
-    <br><br><br><br><br><br><br><br>
-          <button type="button" class="btn_form" id="boton"> Mostar seleccionados </button>
-      
-        <br>    
-        
-              <h2>Valores seleccionados</h2>
-              <ul id="lista" class="list-group">  </ul>
+        <h2>Valores seleccionados</h2>
+        <ul id="lista" class="list-group"> </ul>
 
-              <script>
-                var boton = document.getElementById('boton');
-                var lista = document.getElementById('lista');
-                var checks= document.querySelectorAll('.valores');
+        <script>
+        var boton = document.getElementById('boton');
+        var lista = document.getElementById('lista');
+        var checks = document.querySelectorAll('.valores');
 
-                boton.addEventListener('click', function(){
-            lista.innerHTML ='';
-            checks.forEach((e)=>{
-              console.log(e.value)
-              if (e.checked ==true){
-                var elemento = document.createElement('li');
-                elemento.className ='list-group-item';
-                elemento.innerHTML = e.value;
-                lista.appendChild(elemento);
-              }
-                  });
-                });
-              </script> 
+        boton.addEventListener('click', function() {
+            lista.innerHTML = '';
+            checks.forEach((e) => {
+                console.log(e.value)
+                if (e.checked == true) {
+                    var elemento = document.createElement('li');
+                    elemento.className = 'list-group-item';
+                    elemento.innerHTML = e.value;
+                    lista.appendChild(elemento);
+                }
+            });
+        });
+        </script>
+--->
 
-  
 
 
 </body>
+
 </html>

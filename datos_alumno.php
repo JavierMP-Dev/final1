@@ -31,13 +31,10 @@ include ('database.php');
     <div class="container">
         <div class="row">
 
-            <div class="jumbotron">
-                <h1 class="display-3">Informacion</h1>
+          
+                <h1 >Informacion</h1>
 
-                <p class="lead"></p>
-                <hr class="my-2">
-
-                </p>
+               
             </div>
 
         </div>
@@ -48,7 +45,16 @@ include ('database.php');
    $resultado = mysqli_query($conexion, $usuarios);
               while($row=mysqli_fetch_assoc($resultado)){   
               ?>
-        <table class="tabla_alumno">
+
+
+
+        <button onclick="exportTableToExcel('datos_alumno')" class="buttonDownload">Exportar a Excel</button>
+<br><br>        
+
+
+
+
+        <table class="tabla_alumno" id="datos_alumno">
             <thead class="thead_al">
                 <tr>
                     <th class="th_al">Campo</th>
@@ -259,9 +265,90 @@ include ('database.php');
               }
               ?>
     </div>
+<br><br>
+    <a href="subir_datos_alumno.php" class="btn btn-info btn-lg">Actualizar</a>
+<br><br>
 
-    <a href="subir_datos_alumno.php" class="btn_nav">Actualizar</a>
+
+
+
+
+
+
+<!--Funcion para exportar la tabla a excel--->
+<script>
+                function exportTableToExcel(tableID) {
+  var wb = XLSX.utils.table_to_book(document.getElementById(tableID));
+  var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+  function s2ab(s) {
+    var buf = new ArrayBuffer(s.length);
+    var view = new Uint8Array(buf);
+    for (var i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+    return buf;
+  }
+
+  saveAs(new Blob([s2ab(wbout)], {type:"application/octet-stream"}), 'datos_alumno.xlsx');
+}
+
+              </script>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="FileSaver.js-master/src/FileSaver.js"></script>
+
 
 </body>
+
+<!-- Site footer -->
+<footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-12 col-md-6">
+            <h6>Datos alumno</h6>
+            <p class="text-justify">
+        
+               En esta seccion se encuentran los datos de loa alumnos,
+               acomodados en forma de tabla para su facil lectura
+               asi mismo un boton que permite descargarlos en formato excel.
+            </p>
+          </div>
+
+          <div class="col-xs-6 col-md-3">
+            <h6>Categorias</h6>
+            <ul class="footer-links">
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+              <li><a href=""></a></li>
+            </ul>
+          </div>
+
+          <div class="col-xs-6 col-md-3">
+            <h6>Quick Links</h6>
+            <ul class="footer-links">
+              <li><a href="">Asignar materias</a></li>
+              <li><a href="">Mensaje</a></li>
+              <li><a href="">Asignar Grupos</a></li>
+              
+            </ul>
+          </div>
+        </div>
+        <hr>
+      </div>
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8 col-sm-6 col-xs-12">
+            <p class="copyright-text">Copyright &copy; 2023 All Rights Reserved by 
+       
+            </p>
+          </div>
+
+          
+        </div>
+      </div>
+</footer>
+
 
 </html>

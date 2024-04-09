@@ -1,6 +1,8 @@
 <?php
 session_start();
 
+require 'database.php';
+
 include ('database.php');
  $message = '';
  $docente_id;
@@ -12,6 +14,9 @@ include ('database.php');
     }
  $usuarios ="SELECT * FROM users WHERE id = '$docente_id' ";
 //echo $docente_id;
+
+
+
 ?>
 
 <!DOCTYPE html>
@@ -25,38 +30,41 @@ include ('database.php');
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="./css/bootstrap.min.css">
+     <!---Logo de la pagina---->
+<link rel="shortcut icon" href="assets/img/edomex-logo.png" type="image/x-icon">
+
 </head>
 
 <body>
 
     <?php require 'partials/header.php' ?>
 
-    <div class="container">
-        <div class="row">
 
-            <div class="jumbotron">
-                <h1 class="display-3">Perfil</h1>
 
-                <p class="lead"></p>
-                <hr class="my-2">
-
-                </p>
+            <div class="">
+                <h1 class="">Perfil</h1>
+                <a href="docente.php" class="btn btn-primary">Volver</a>
+                
             </div>
+<!----Clase de la foto de perfil ---->
+<!----
 
-        </div>
-    </div>
-    <!----Clase de la foto de perfil ---->
-
-
-    <div id="main_container">
         <div class="circulo">
             <img src="assets/img/perfil.png" class="imagen" alt="">
         </div>
+--->
         <?php
    $resultado = mysqli_query($conexion, $usuarios);
               while($row=mysqli_fetch_assoc($resultado)){   
               ?>
-        <table class="tabla_doce">
+              
+
+              <br><br>
+        <button onclick="exportTableToExcel('datos_docente')" class="buttonDownload">Exportar a Excel</button>
+<br><br>
+
+    <div class="centrar">
+        <table class="tabla_doce" id="datos_docente" >
             <thead class="thead_do">
                 <tr>
                     <th>Campo</th>
@@ -155,9 +163,9 @@ include ('database.php');
             <!--
               -->
         </table>
+     </div>
 
-
-
+<br><br><br>
         <script>
         function mostrarid<?= $row['id_docente'];?>() {
             top.location.href = "datos_maestro.php?ID=" + <?= $row['id_docente'];?>;
@@ -169,7 +177,44 @@ include ('database.php');
               ?>
     </div>
 
-    <a href="subir_datos_docente.php" class="btn_nav_datos_doce">Actualizar</a>
+    <a href="subir_datos_docente.php" class="btn btn-info">Actualizar</a>
+
+
+
+
+
+
+<!--Funcion para exportar la tabla a excel--->
+<script>
+                function exportTableToExcel(tableID) {
+  var wb = XLSX.utils.table_to_book(document.getElementById(tableID));
+  var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+  function s2ab(s) {
+    var buf = new ArrayBuffer(s.length);
+    var view = new Uint8Array(buf);
+    for (var i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+    return buf;
+  }
+
+  saveAs(new Blob([s2ab(wbout)], {type:"application/octet-stream"}), 'datos_docente.xlsx');
+}
+
+              </script>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="FileSaver.js-master/src/FileSaver.js"></script>
+
+
+
+
+
+
+
 </body>
+
+
+
+
 
 </html>

@@ -4,6 +4,7 @@ $message = '';
 $usuarios ="SELECT * FROM users";
 
 echo $_GET['ID'];
+echo "";
 $id_docente = $_GET['ID'];
 
 $consulta = "SELECT FROM users WHERE ID = 'nombre'";
