@@ -49,9 +49,14 @@ if(isset($_POST['validar'])){/*Valida si el boton validar a enviado la informaci
     <title>Actualizar Datos</title>
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
+<<<<<<< HEAD
 <!---Logo de la pagina---->
 <link rel="shortcut icon" href="assets/img/edomex-logo.png" type="image/x-icon">
 
+=======
+<!---Logo para mostrarse en la pestaña de la pagina-->
+<link rel="shortcut icon" href="assets/img/logo_favi.png" type="image/x-icon">
+>>>>>>> rama1
 </head>
 
 <body>

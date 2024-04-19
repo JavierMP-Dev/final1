@@ -20,6 +20,8 @@ $stmt->execute([$id_evento]);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="assets/css/style.css">
     <title>Eliminar Eventos</title>
+    <!---Logo para mostrarse en la pestaña de la pagina-->
+    <link rel="shortcut icon" href="assets/img/logo_favi.png" type="image/x-icon">
 </head>
 <body>
 <?php require 'partials/header.php' ?>
