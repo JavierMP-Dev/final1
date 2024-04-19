@@ -48,7 +48,8 @@ if(isset($_POST['validar'])){/*Valida si el boton validar a enviado la informaci
     <title>Login</title>
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
-
+<!---Logo para mostrarse en la pestaña de la pagina-->
+<link rel="shortcut icon" href="assets/img/logo_favi.png" type="image/x-icon">
 </head>
 
 <body>

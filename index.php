@@ -48,7 +48,7 @@
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link rel="preload" href="assets/css/style.css" as="style">
     <link rel="stylesheet" href="assets/css/style.css">
-
+    <link rel="shortcut icon" href="assets/img/logo_favi.png" type="image/x-icon">
 
 </head>
 <!---

@@ -3,9 +3,9 @@
 $server = 'localhost';
 $username = 'root';
 $password = '';
-$database = 'php_login_database';
+$database = 'secundaria';
 
-$conexion=mysqli_connect("localhost", "root", "", "php_login_database");
+$conexion=mysqli_connect("localhost", "root", "", "secundaria");
 mysqli_set_charset($conexion, "utf8");
 
 try {

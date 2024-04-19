@@ -14,7 +14,8 @@ $usuarios ="SELECT * FROM alumno";
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="./css/bootstrap.min.css">
-
+<!---Logo para mostrarse en la pestaña de la pagina-->
+<link rel="shortcut icon" href="assets/img/logo_favi.png" type="image/x-icon">
 </head>
 
 <body>
