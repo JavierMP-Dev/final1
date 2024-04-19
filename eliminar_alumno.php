@@ -22,6 +22,7 @@ $stmt->execute([$id_alumno]);
     <title>Eliminar</title>
     <!---Logo para mostrarse en la pestaña de la pagina-->
     <link rel="shortcut icon" href="assets/img/logo_favi.png" type="image/x-icon">
+    <!--Agregando un comentario de prueba en la rama 1-->
 </head>
 <body>
 <?php require 'partials/header.php' ?>
