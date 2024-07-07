@@ -9,13 +9,8 @@
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="./css/bootstrap.min.css">
-<<<<<<< HEAD
     <!---Logo de la pagina---->
     <link rel="shortcut icon" href="assets/img/edomex-logo.png" type="image/x-icon">
-=======
-    <!---Logo para mostrarse en la pestaña de la pagina-->
-    <link rel="shortcut icon" href="assets/img/logo_favi.png" type="image/x-icon">
->>>>>>> rama1
 </head>
 
 <body>
@@ -28,7 +23,7 @@
         <a href="evento.php" class="btn btn-info btn-lg">Eventos Proximos</a>
         <a href="gasto.php" class="btn btn-info btn-lg">Gastos</a>
 
-        <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+        <!---aqui añadir espacio sin necesidad de etiquta br---->
 
 </body>
 <br><br><br><br><br><br><br>
@@ -75,7 +70,7 @@
       <div class="container">
         <div class="row">
           <div class="col-md-8 col-sm-6 col-xs-12">
-            <p class="copyright-text">Copyright &copy; 2023 All Rights Reserved by 
+            <p class="copyright-text">Copyright &copy; 2022 All Rights Reserved by 
        
             </p>
           </div>
