@@ -29,6 +29,6 @@ $stmt->execute([$id_evento]);
     <h1>Registro eliminado</h1>
     <a href="evento.php" ctype="button" class="btn btn-info">Volver</a>
     <br>    
-    <img src="assets/img/eliminar.png" class="" alt="">     
+    <img src="assets/img/eliminar.png" class="" alt="icono elimnar">     
 </body>
 </html>
