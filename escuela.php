@@ -46,10 +46,10 @@
           <div class="col-xs-6 col-md-3">
             <h6>Categorias</h6>
             <ul class="footer-links">
-              <li><a href=""></a></li>
-              <li><a href=""></a></li>
-              <li><a href=""></a></li>
-              <li><a href=""></a></li>
+              <li><a href="">link 1</a></li>
+              <li><a href="">link 2</a></li>
+              <li><a href="">link 3</a></li>
+              <li><a href="">link 4</a></li>
               <li><a href=""></a></li>
               <li><a href=""></a></li>
             </ul>
