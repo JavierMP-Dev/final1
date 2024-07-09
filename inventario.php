@@ -48,7 +48,7 @@ if(isset($_POST['AGREGAR_RUBRO'])){
 
 
     <a href="inventario.php" class="btn btn-info btn-lg">Inventarios</a>
-        <a href="evento.php" class="btn btn-info btn-lg">Eventos Proximos</a>
+        <a href="evento.php" class="btn btn-info btn-lg">Eventos </a>
         <a href="gasto.php" class="btn btn-info btn-lg">Gastos</a>
 
 <br><br>
@@ -217,12 +217,12 @@ if(isset($_POST['AGREGAR_RUBRO'])){
           <div class="col-xs-6 col-md-3">
             <h6>Categorias</h6>
             <ul class="footer-links">
+              <li><a href="">link 1</a></li>
+              <li><a href="">link 2</a></li>
+              <li><a href="">link 3</a></li>
+              <li><a href="">link 4s</a></li>
               <li><a href=""></a></li>
-              <li><a href=""></a></li>
-              <li><a href=""></a></li>
-              <li><a href=""></a></li>
-              <li><a href=""></a></li>
-              <li><a href=""></a></li>
+              <li><a href=""></a></li>s
             </ul>
           </div>
 

@@ -107,7 +107,7 @@ $sql = "UPDATE alumno SET nombre=:nombre, sexo=:sexo, email=:email, curp=:curp, 
             </tr>
 
             <tr>
-                <td width="50%">Clave CURP</td>
+                <td width="50%">CURP</td>
                 <td width="50%"><input name="curp" type="text" class="form-control" value="<?php echo $user['curp'];?>"
                         required placeholder="CURP"></td>
             </tr>
