@@ -222,7 +222,7 @@ if(isset($_POST['AGREGAR_RUBRO'])){
               <li><a href="">link 3</a></li>
               <li><a href="">link 4s</a></li>
               <li><a href=""></a></li>
-              <li><a href=""></a></li>s
+              <li><a href=""></a></li>
             </ul>
           </div>
 
